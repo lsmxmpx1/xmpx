@@ -55,8 +55,9 @@ export async function GET() {
       hotCourses,
       stats,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Recommend API error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : "获取推荐失败";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

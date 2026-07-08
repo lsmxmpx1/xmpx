@@ -8,7 +8,8 @@ export async function GET() {
       orderBy: { sortOrder: "asc" },
     });
     return NextResponse.json(plans);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "服务器错误";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

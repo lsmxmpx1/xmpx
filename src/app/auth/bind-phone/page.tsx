@@ -40,8 +40,9 @@ export default function BindPhonePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setCountdown(60);
-    } catch (err: any) {
-      setError(err.message || "发送失败");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "发送失败";
+      setError(errorMessage);
     }
     setSending(false);
   }
@@ -86,8 +87,9 @@ export default function BindPhonePage() {
 
       router.push("/");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "绑定失败");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "绑定失败";
+      setError(errorMessage);
     }
     setLoading(false);
   }

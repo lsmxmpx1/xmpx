@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const courseId = searchParams.get("courseId");
 
-  const where: any = { institutionId: inst.id };
+  const where: { institutionId: string; courseId?: string } = { institutionId: inst.id };
   if (courseId) where.courseId = courseId;
 
   const contacts = await prisma.contact.findMany({

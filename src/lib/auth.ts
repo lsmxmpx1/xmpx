@@ -98,7 +98,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id || "";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         token.role = user.role || "USER";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         token.phone = user.phone || null;
       }
       // 支持客户端更新 session（如绑定手机号后）
@@ -111,7 +113,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session.user.role = token.role;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session.user.phone = token.phone || null;
       }
       return session;

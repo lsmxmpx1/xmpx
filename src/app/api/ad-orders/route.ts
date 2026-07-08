@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -25,8 +25,9 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(orders);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "获取失败";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -80,7 +81,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(order, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "创建失败";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

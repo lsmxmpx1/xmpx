@@ -17,8 +17,6 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
-    const state = url.searchParams.get("state") || "/";
-
     // 生产环境：用 code 向微信服务器换取 access_token 和用户信息
     let wechatOpenId: string;
     let wechatNickname = "";

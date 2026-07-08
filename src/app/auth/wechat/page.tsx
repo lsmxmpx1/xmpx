@@ -103,8 +103,9 @@ export default function WechatLoginPage() {
       if (!res.ok) throw new Error(data.error);
       setCountdown(60);
       setErrorMsg("");
-    } catch (err: any) {
-      setErrorMsg(err.message || "发送失败");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "发送失败";
+      setErrorMsg(errorMessage);
     }
     setSending(false);
   }
@@ -141,35 +142,9 @@ export default function WechatLoginPage() {
       setStatus("success");
       router.push("/");
       router.refresh();
-    } catch (err: any) {
-      setErrorMsg(err.message || "绑定失败");
-    }
-    setLoading(false);
-  }
-
-  // 已绑定手机号的用户重新登录
-  async function handleExistingUserLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg("");
-
-    try {
-      const phone = (document.getElementById("bindPhone") as HTMLInputElement).value;
-
-      const res = await signIn("phonecode", {
-        phone,
-        code: smsCode,
-        redirect: false,
-      });
-
-      if (res?.error) {
-        throw new Error("登录失败，请检查验证码");
-      }
-
-      router.push("/");
-      router.refresh();
-    } catch (err: any) {
-      setErrorMsg(err.message || "登录失败");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "绑定失败";
+      setErrorMsg(errorMessage);
     }
     setLoading(false);
   }
@@ -287,7 +262,7 @@ export default function WechatLoginPage() {
                 <span className="text-sm">等待微信扫码...</span>
               </div>
               <p className="text-xs text-gray-400 mt-3">
-                请使用微信"扫一扫"扫描二维码
+                请使用微信&ldquo;扫一扫&rdquo;扫描二维码
               </p>
             </div>
           )}

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "需要提供 courseId 或 institutionId" }, { status: 400 });
   }
 
-  const where: any = {};
+  const where: { courseId?: string; institutionId?: string } = {};
   if (courseId) where.courseId = courseId;
   if (institutionId) where.institutionId = institutionId;
 

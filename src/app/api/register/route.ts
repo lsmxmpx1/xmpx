@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, userId: user.id });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "注册失败" }, { status: 500 });
   }
 }

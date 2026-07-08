@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { formatPrice, formatDate } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import type { Metadata } from "next";
 import ContactButton from "@/components/ContactButton";
 import FavoriteButton from "@/components/FavoriteButton";

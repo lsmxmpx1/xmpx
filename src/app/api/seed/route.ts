@@ -218,7 +218,7 @@ export async function GET() {
       },
     ];
 
-    let institutions = [];
+    const institutions = [];
     for (const data of instsData) {
       const inst = await prisma.institution.upsert({
         where: { slug: data.slug },
@@ -404,7 +404,8 @@ export async function GET() {
       adPlans: adPlans.length,
       testUser: "test@example.com / 123456",
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "服务器错误";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

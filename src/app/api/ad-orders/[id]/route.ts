@@ -94,8 +94,9 @@ export async function PUT(
       order: updatedOrder,
       message: `支付成功！${order.plan.name}已激活，有效期至 ${endDate.toLocaleDateString("zh-CN")}`,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "操作失败";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -136,7 +137,8 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true, message: "订单已取消" });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "服务器错误";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

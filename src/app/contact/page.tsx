@@ -40,7 +40,7 @@ export default function ContactPage() {
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="text-3xl mb-3">💬</div>
             <h3 className="font-bold mb-2">在线咨询</h3>
-            <p className="text-gray-600">直接在课程或机构页面点击"在线咨询"按钮</p>
+            <p className="text-gray-600">直接在课程或机构页面点击&ldquo;在线咨询&rdquo;按钮</p>
           </div>
         </div>
 
@@ -48,11 +48,11 @@ export default function ContactPage() {
         <div className="space-y-4">
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-bold mb-1">如何入驻平台？</h3>
-            <p className="text-sm text-gray-600">注册账号后，进入个人中心点击"机构入驻"，填写相关信息提交审核即可。</p>
+            <p className="text-sm text-gray-600">注册账号后，进入个人中心点击&ldquo;机构入驻&rdquo;，填写相关信息提交审核即可。</p>
           </div>
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-bold mb-1">如何联系机构？</h3>
-            <p className="text-sm text-gray-600">在机构详情页和课程详情页都有"在线咨询"按钮，可直接留言或查看联系方式。</p>
+            <p className="text-sm text-gray-600">在机构详情页和课程详情页都有&ldquo;在线咨询&rdquo;按钮，可直接留言或查看联系方式。</p>
           </div>
           <div className="bg-white border rounded-xl p-5">
             <h3 className="font-bold mb-1">信息不准确怎么办？</h3>

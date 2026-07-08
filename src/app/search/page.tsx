@@ -1,9 +1,22 @@
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+type CourseWithRelations = Prisma.CourseGetPayload<{
+  include: { institution: true; category: true };
+}>;
+
+type InstitutionResult = {
+  id: string;
+  name: string;
+  district?: string | null;
+  rating: number;
+  courseCount: number;
+};
 
 export function generateMetadata({ searchParams }: { searchParams: { q?: string } }): Metadata {
   return {
@@ -19,8 +32,8 @@ export default async function SearchPage({
 }) {
   const query = searchParams.q || "";
 
-  let courses: any[] = [];
-  let institutions: any[] = [];
+  let courses: CourseWithRelations[] = [];
+  let institutions: InstitutionResult[] = [];
 
   if (query) {
     [courses, institutions] = await Promise.all([

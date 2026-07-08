@@ -12,11 +12,11 @@ interface Contact {
   course: { title: string } | null;
 }
 
-type FilterKey = "all" | "course" | "institution";
+export default function ContactManager() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState<FilterKey>("all");
+  const [filter, setFilter] = useState<"all" | "course" | "institution">("all");
 
   async function loadContacts() {
     setLoading(true);
@@ -66,23 +66,26 @@ type FilterKey = "all" | "course" | "institution";
           </p>
         </div>
         <div className="flex gap-2">
-          {[
-            { key: "all" as FilterKey, label: "全部" },
-            { key: "course" as FilterKey, label: "课程咨询" },
-            { key: "institution" as FilterKey, label: "机构咨询" },
-          ].map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filter === f.key
-                  ? "bg-purple-600 text-white"
-                  : "bg-white border text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+          {([ "all", "course", "institution" ] as const).map((key) => {
+            const labels: Record<"all" | "course" | "institution", string> = {
+              all: "全部",
+              course: "课程咨询",
+              institution: "机构咨询",
+            };
+            return (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filter === key
+                    ? "bg-purple-600 text-white"
+                    : "bg-white border text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {labels[key]}
+              </button>
+            );
+          })}
         </div>
       </div>
 

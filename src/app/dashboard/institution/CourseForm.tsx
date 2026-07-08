@@ -31,7 +31,7 @@ interface CourseFormProps {
   institutionId: string;
 }
 
-export default function CourseForm({ mode, initialData, categories, institutionId: _institutionId }: CourseFormProps) {
+export default function CourseForm({ mode, initialData, categories }: CourseFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState(initialData?.title || "");
   const [categoryId, setCategoryId] = useState(initialData?.categoryId || categories[0]?.id || "");
