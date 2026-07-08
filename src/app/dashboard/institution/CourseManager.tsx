@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import CourseForm from "./CourseForm";
 
 interface Course {
@@ -138,7 +139,7 @@ export default function CourseManager({ categories, institutionId, canPublish }:
             >
               <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-purple-50 flex items-center justify-center">
                 {course.cover ? (
-                  <img src={course.cover} alt={course.title} className="w-full h-full object-cover"  />
+                  <Image src={course.cover} alt={course.title} width={56} height={56} className="object-cover"  />
                 ) : (
                   <span className="text-2xl">📖</span>
                 )}

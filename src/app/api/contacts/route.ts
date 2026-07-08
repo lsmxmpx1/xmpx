@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
   const inst = await prisma.institution.findUnique({ where: { ownerId: userId } });
   if (!inst) {
     return NextResponse.json({ error: "您还没有机构" }, { status: 404 });

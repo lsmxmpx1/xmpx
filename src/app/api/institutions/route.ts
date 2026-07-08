@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   try {
     const body = await request.json();
@@ -72,7 +72,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   try {
     const body = await request.json();
@@ -120,7 +120,7 @@ export async function GET() {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   try {
     const inst = await prisma.institution.findUnique({

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
+import Image from "next/image";
 
 interface ImageUploadProps {
   // Single mode: value is a string URL, multiple mode: value is comma-separated URLs
@@ -33,7 +34,7 @@ export default function ImageUpload({
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
-  const images = value ? value.split(",").filter(Boolean) : [];
+  const images = useMemo(() => (value ? value.split(",").filter(Boolean) : []), [value]);
 
   const handleFiles = useCallback(async (files: FileList) => {
     setError("");
@@ -129,7 +130,7 @@ export default function ImageUpload({
             key={index}
             className={`relative ${ASPECT_CLASSES[aspectRatio]} w-24 rounded-xl overflow-hidden border group`}
           >
-            <img src={img} alt={`图片 ${index + 1}`} className="w-full h-full object-cover" />
+            <Image src={img} alt={`图片 ${index + 1}`} width={96} height={96} className="object-cover" />
             {!disabled && (
               <button
                 type="button"

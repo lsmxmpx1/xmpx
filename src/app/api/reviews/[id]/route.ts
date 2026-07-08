@@ -12,7 +12,7 @@ export async function PUT(
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
   const body = await request.json();
   const { rating, content } = body;
 
@@ -61,7 +61,7 @@ export async function DELETE(
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const review = await prisma.review.findUnique({ where: { id: params.id } });
   if (!review) return NextResponse.json({ error: "评价不存在" }, { status: 404 });

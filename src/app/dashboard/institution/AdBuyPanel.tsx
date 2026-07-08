@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 
 interface AdPlan {
   id: string;
@@ -60,7 +59,7 @@ export default function AdBuyPanel() {
       else setError(plansData.error || "加载套餐失败");
 
       if (ordersRes.ok) setOrders(Array.isArray(ordersData) ? ordersData : []);
-    } catch (e) {
+    } catch {
       setError("网络错误，请稍后重试");
     } finally {
       setLoading(false);
@@ -93,7 +92,7 @@ export default function AdBuyPanel() {
       } else {
         setError(data.error || "下单失败");
       }
-    } catch (e) {
+    } catch {
       setError("网络错误，请稍后重试");
     } finally {
       setBuying(null);
@@ -114,7 +113,7 @@ export default function AdBuyPanel() {
       } else {
         setError(data.error || "支付失败");
       }
-    } catch (e) {
+    } catch {
       setError("网络错误，请稍后重试");
     } finally {
       setBuying(null);
@@ -127,7 +126,7 @@ export default function AdBuyPanel() {
       if (res.ok) {
         fetchData();
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
   };

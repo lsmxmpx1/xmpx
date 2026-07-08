@@ -12,11 +12,11 @@ interface Contact {
   course: { title: string } | null;
 }
 
-export default function ContactManager() {
+type FilterKey = "all" | "course" | "institution";
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState<"all" | "course" | "institution">("all");
+  const [filter, setFilter] = useState<FilterKey>("all");
 
   async function loadContacts() {
     setLoading(true);
@@ -67,13 +67,13 @@ export default function ContactManager() {
         </div>
         <div className="flex gap-2">
           {[
-            { key: "all", label: "全部" },
-            { key: "course", label: "课程咨询" },
-            { key: "institution", label: "机构咨询" },
+            { key: "all" as FilterKey, label: "全部" },
+            { key: "course" as FilterKey, label: "课程咨询" },
+            { key: "institution" as FilterKey, label: "机构咨询" },
           ].map((f) => (
             <button
               key={f.key}
-              onClick={() => setFilter(f.key as any)}
+              onClick={() => setFilter(f.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === f.key
                   ? "bg-purple-600 text-white"

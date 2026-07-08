@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -42,7 +43,7 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
   let isFavorited = false;
   let currentUserId: string | undefined;
   if (session?.user) {
-    currentUserId = (session.user as any).id;
+    currentUserId = session.user.id;
     const fav = await prisma.favorite.findFirst({
       where: { userId: currentUserId, courseId: course.id },
     });
@@ -76,12 +77,13 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
         <div className="lg:col-span-2 space-y-8">
           {/* Cover image */}
           {course.cover && (
-            <div className="rounded-2xl overflow-hidden shadow-sm h-48 md:h-64">
-              <img
+            <div className="rounded-2xl overflow-hidden shadow-sm h-48 md:h-64 relative">
+              <Image
                 src={course.cover}
                 alt={course.title}
-                className="w-full h-full object-cover"
-                
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 66vw"
               />
             </div>
           )}
@@ -186,9 +188,9 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   {relatedCourses.map((c) => (
                     <Link key={c.id} href={`/courses/${c.id}`} className="card group overflow-hidden">
-                      <div className="h-36 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
+                      <div className="h-36 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden relative">
                         {c.cover ? (
-                          <img src={c.cover} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"  />
+                          <Image src={c.cover} alt={c.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="25vw" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-4xl">📖</div>
                         )}

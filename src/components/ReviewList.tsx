@@ -46,6 +46,7 @@ export default function ReviewList({
       // silent fail
     }
     setLoading(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, institutionId, refreshKey]);
 
   useEffect(() => {

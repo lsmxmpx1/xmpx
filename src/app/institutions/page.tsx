@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { DISTRICTS } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function InstitutionsPage({
   const page = parseInt(searchParams.page || "1");
   const pageSize = 12;
 
-  const where: any = { status: "APPROVED" };
+  const where: Prisma.InstitutionWhereInput = { status: "APPROVED" };
   if (searchParams.district) where.district = searchParams.district;
   if (searchParams.q) {
     where.OR = [
@@ -28,7 +29,7 @@ export default async function InstitutionsPage({
     ];
   }
 
-  let orderBy: any = { rating: "desc" };
+  let orderBy: Prisma.InstitutionOrderByWithRelationInput = { rating: "desc" };
   if (searchParams.sort === "courses") orderBy = { courseCount: "desc" };
   if (searchParams.sort === "reviews") orderBy = { reviewCount: "desc" };
 
@@ -83,7 +84,7 @@ export default async function InstitutionsPage({
               {SORT_OPTIONS.map((s) => (
                 <li key={s.key}>
                   <Link
-                    href={`/institutions?${new URLSearchParams({ ...searchParams, sort: s.key } as any).toString()}`}
+                    href={`/institutions?${new URLSearchParams(Object.entries({ ...searchParams, sort: s.key }).filter(([, v]) => v !== undefined).map(([k, v]) => [k, v ?? ""])).toString()}`}
                     className={`block px-3 py-2 rounded-lg text-sm ${searchParams.sort === s.key || (!searchParams.sort && s.key === "") ? "bg-primary-50 text-primary-600 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
                   >
                     {s.label}
@@ -180,7 +181,7 @@ export default async function InstitutionsPage({
               {Array.from({ length: totalPages }, (_, i) => (
                 <Link
                   key={i}
-                  href={`/institutions?${new URLSearchParams({ ...searchParams, page: String(i + 1) } as any).toString()}`}
+                  href={`/institutions?${new URLSearchParams(Object.entries({ ...searchParams, page: String(i + 1) }).filter(([, v]) => v !== undefined).map(([k, v]) => [k, v ?? ""])).toString()}`}
                   className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium ${page === i + 1 ? "bg-primary-600 text-white" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
                 >
                   {i + 1}

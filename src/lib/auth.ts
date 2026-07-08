@@ -97,9 +97,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
-        token.phone = (user as any).phone;
+        token.id = user.id || "";
+        token.role = user.role || "USER";
+        token.phone = user.phone || null;
       }
       // 支持客户端更新 session（如绑定手机号后）
       if (trigger === "update" && session) {
@@ -110,9 +110,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        (session.user as any).phone = token.phone;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.phone = token.phone || null;
       }
       return session;
     },

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 
@@ -24,7 +25,7 @@ export default async function CoursesPage({
     : null;
 
   // Build where clause: if parent category selected, include all children
-  const where: any = { status: "ACTIVE" };
+  const where: Prisma.CourseWhereInput = { status: "ACTIVE" };
   if (selectedCat) {
     if (selectedCat.parentId === null) {
       // Parent category - match this category or any of its children
@@ -195,7 +196,7 @@ export default async function CoursesPage({
               {Array.from({ length: totalPages }, (_, i) => (
                 <Link
                   key={i}
-                  href={`/courses?${new URLSearchParams({ ...searchParams, page: String(i + 1) } as any).toString()}`}
+                  href={`/courses?${new URLSearchParams(Object.entries({ ...searchParams, page: String(i + 1) }).filter(([, v]) => v !== undefined).map(([k, v]) => [k, v ?? ""])).toString()}`}
                   className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium ${page === i + 1 ? "bg-primary-600 text-white" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
                 >
                   {i + 1}
