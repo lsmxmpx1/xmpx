@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>厦门培训网 — 部署及维护手册</title>
+<style>
+  :root {
+    --primary: #7c3aed;
+    --primary-light: #ede9fe;
+    --primary-dark: #5b21b6;
+    --accent: #ec4899;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --code-bg: #1e293b;
+    --code-text: #e2e8f0;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --success: #22c55e;
+    --success-bg: #f0fdf4;
+    --warning: #f59e0b;
+    --warning-bg: #fffbeb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  /* Cover */
+  .cover {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--accent) 100%);
+    color: #fff;
+    padding: 80px 40px 60px;
+    text-align: center;
+  }
+  .cover h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; letter-spacing: 2px; }
+  .cover .subtitle { font-size: 1.1rem; opacity: 0.9; margin-bottom: 8px; }
+  .cover .meta { font-size: 0.9rem; opacity: 0.75; }
+  .cover .meta span { margin: 0 12px; }
+
+  /* Layout */
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin: -30px auto 40px;
+    max-width: 900px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .toc h2 { font-size: 1.15rem; color: var(--primary); margin-bottom: 16px; }
+  .toc ol { list-style: none; columns: 2; column-gap: 32px; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: var(--text); text-decoration: none; font-size: 0.92rem; transition: color 0.15s; }
+  .toc a:hover { color: var(--primary); }
+
+  /* Sections */
+  section { padding: 32px 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  h3 { font-size: 1.15rem; font-weight: 600; margin: 24px 0 12px; color: var(--text); }
+
+  p { margin-bottom: 12px; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.92rem;
+  }
+  th { background: var(--primary-light); color: var(--primary-dark); font-weight: 600; text-align: left; }
+  th, td { padding: 10px 14px; border: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* Code */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 16px 20px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 14px 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  code { font-family: "Cascadia Code", "Fira Code", "Consolas", monospace; }
+  pre code { background: none; padding: 0; color: inherit; }
+  :not(pre) > code {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88rem;
+  }
+
+  /* Callouts */
+  .callout {
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 0.92rem;
+    border-left: 4px solid;
+  }
+  .callout-title { font-weight: 700; margin-bottom: 4px; }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); color: #991b1b; }
+  .callout.warning { background: var(--warning-bg); border-color: var(--warning); color: #92400e; }
+  .callout.success { background: var(--success-bg); border-color: var(--success); color: #166534; }
+  .callout.info { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .badge.purple { background: var(--primary); color: #fff; }
+  .badge.pink { background: var(--accent); color: #fff; }
+  .badge.gray { background: var(--border); color: var(--text-muted); }
+
+  /* Architecture diagram */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 20px 0;
+    text-align: center;
+  }
+  .arch-layer {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .arch-box {
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    min-width: 120px;
+    text-align: center;
+  }
+  .arch-arrow { color: var(--text-muted); font-size: 1.2rem; }
+  .arch-frontend { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+  .arch-backend { background: #fce7f3; color: #9d174d; border: 1px solid #f9a8d4; }
+  .arch-data { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+  .arch-infra { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* File tree */
+  .file-tree {
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 20px 24px;
+    border-radius: 10px;
+    font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    margin: 14px 0;
+    overflow-x: auto;
+  }
+  .file-tree .dir { color: #60a5fa; font-weight: 600; }
+  .file-tree .file { color: #93c5fd; }
+  .file-tree .desc { color: #64748b; }
+
+  /* Steps */
+  .steps { list-style: none; counter-reset: step; margin: 16px 0; }
+  .steps li {
+    counter-increment: step;
+    padding: 8px 0 8px 42px;
+    position: relative;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 6px;
+    width: 28px; height: 28px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .cover h1 { font-size: 1.8rem; }
+    .toc ol { columns: 1; }
+    h2 { font-size: 1.3rem; }
+    pre { font-size: 0.78rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 封面 ===== -->
+<div class="cover">
+  <h1>厦门培训网</h1>
+  <div class="subtitle">部署及维护手册</div>
+  <div class="subtitle" style="font-size:0.95rem;">Deployment &amp; Maintenance Guide</div>
+  <div class="meta">
+    <span>版本：v1.0</span>
+    <span>技术栈：Next.js 14 + Prisma 7 + NextAuth v5</span>
+    <span>更新日期：2026年7月</span>
+  </div>
+</div>
+
+<!-- ===== 目录 ===== -->
+<div class="toc">
+  <h2>目录</h2>
+  <ol>
+    <li><a href="#sec1">1. 项目概览</a></li>
+    <li><a href="#sec2">2. 技术架构</a></li>
+    <li><a href="#sec3">3. 环境要求</a></li>
+    <li><a href="#sec4">4. 本地开发环境搭建</a></li>
+    <li><a href="#sec5">5. 环境变量配置</a></li>
+    <li><a href="#sec6">6. 数据库管理</a></li>
+    <li><a href="#sec7">7. 生产部署 — Vercel</a></li>
+    <li><a href="#sec8">8. 生产部署 — VPS / Docker</a></li>
+    <li><a href="#sec9">9. Nginx 反向代理配置</a></li>
+    <li><a href="#sec10">10. SSL 证书配置</a></li>
+    <li><a href="#sec11">11. 域名与 DNS 配置</a></li>
+    <li><a href="#sec12">12. 日常维护操作</a></li>
+    <li><a href="#sec13">13. 数据备份与恢复</a></li>
+    <li><a href="#sec14">14. 性能优化</a></li>
+    <li><a href="#sec15">15. 安全加固</a></li>
+    <li><a href="#sec16">16. SEO 维护</a></li>
+    <li><a href="#sec17">17. 监控与告警</a></li>
+    <li><a href="#sec18">18. 版本更新流程</a></li>
+    <li><a href="#sec19">19. 故障排查指南</a></li>
+    <li><a href="#sec20">20. 附录</a></li>
+  </ol>
+</div>
+
+<div class="container">
+
+<!-- ===== 1. 项目概览 ===== -->
+<section id="sec1">
+  <h2><span class="num">1</span>项目概览</h2>
+  <p>厦门培训网是一个面向厦门本地教育培训市场的信息服务平台，聚合培训机构、课程、资讯等内容，为用户提供一站式培训信息检索服务，同时为培训机构提供展示与获客渠道，通过广告位实现商业化变现。</p>
+
+  <h3>核心功能模块</h3>
+  <table>
+    <thead>
+      <tr><th width="18%">模块</th><th width="52%">说明</th><th>状态</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>首页门户</td><td>分类导航、热门课程、推荐机构、资讯摘要、搜索入口</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>课程系统</td><td>课程列表、分类筛选、详情页、搜索、咨询报名</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>机构系统</td><td>机构列表、详情页、评分评价、入驻申请</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>文章资讯</td><td>教育资讯、政策解读、学习方法等文章发布</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>用户认证</td><td>注册、登录（邮箱/手机号）、JWT 会话管理</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>用户中心</td><td>机构入驻管理、课程收藏</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>咨询报名</td><td>用户对课程/机构提交咨询信息，后台查看</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+      <tr><td>广告系统</td><td>广告位管理、展示统计（数据模型已建，管理后台待开发）</td><td><span class="badge gray">部分完成</span></td></tr>
+      <tr><td>SEO 体系</td><td>SSR/SSG、动态 metadata、sitemap.xml、robots.txt</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已上线</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>技术栈一览</h3>
+  <table>
+    <thead>
+      <tr><th width="20%">层级</th><th width="30%">技术</th><th>版本</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>前端框架</td><td>Next.js (App Router)</td><td>14.2.35</td></tr>
+      <tr><td>UI 框架</td><td>React + Tailwind CSS</td><td>18 / 3.4.1</td></tr>
+      <tr><td>语言</td><td>TypeScript</td><td>5.x</td></tr>
+      <tr><td>ORM</td><td>Prisma</td><td>7.8.0</td></tr>
+      <tr><td>数据库</td><td>SQLite（开发）/ PostgreSQL（生产推荐）</td><td>—</td></tr>
+      <tr><td>数据库适配器</td><td>@prisma/adapter-libsql</td><td>7.8.0</td></tr>
+      <tr><td>认证</td><td>NextAuth.js (Auth.js v5 beta)</td><td>5.0.0-beta.31</td></tr>
+      <tr><td>密码加密</td><td>bcryptjs</td><td>3.0.3</td></tr>
+      <tr><td>代码规范</td><td>ESLint + ESLint Config Next</td><td>8 / 14.2.35</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 2. 技术架构 ===== -->
+<section id="sec2">
+  <h2><span class="num">2</span>技术架构</h2>
+
+  <div class="arch-diagram">
+    <div class="arch-layer">
+      <div class="arch-box arch-frontend">Next.js<br>App Router</div>
+      <div class="arch-box arch-frontend">React 18<br>Server Components</div>
+      <div class="arch-box arch-frontend">Tailwind CSS</div>
+    </div>
+    <div class="arch-arrow">▼</div>
+    <div class="arch-layer">
+      <div class="arch-box arch-backend">API Routes<br>(/api/*)</div>
+      <div class="arch-box arch-backend">NextAuth v5<br>JWT Session</div>
+      <div class="arch-box arch-backend">Server Actions</div>
+    </div>
+    <div class="arch-arrow">▼</div>
+    <div class="arch-layer">
+      <div class="arch-box arch-data">Prisma 7 ORM</div>
+      <div class="arch-box arch-data">LibSQL Adapter</div>
+      <div class="arch-box arch-data">SQLite / PostgreSQL</div>
+    </div>
+    <div class="arch-arrow">▼</div>
+    <div class="arch-layer">
+      <div class="arch-box arch-infra">Vercel / VPS</div>
+      <div class="arch-box arch-infra">Nginx</div>
+      <div class="arch-box arch-infra">Let's Encrypt SSL</div>
+    </div>
+  </div>
+
+  <h3>项目目录结构</h3>
+  <div class="file-tree">
+<span class="dir">xiamenpeixun/</span>
+├── <span class="dir">prisma/</span>
+│   └── schema.prisma              <span class="desc"># 数据模型定义（User, Category, Institution, Course, Review, Favorite, Article, Advertisement, Contact）</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">app/</span>                        <span class="desc"># Next.js App Router 路由</span>
+│   │   ├── <span class="dir">api/</span>                    <span class="desc"># API 路由</span>
+│   │   │   ├── <span class="dir">auth/[...nextauth]/</span> <span class="desc"># NextAuth 认证端点</span>
+│   │   │   ├── <span class="dir">register/</span>           <span class="desc"># 用户注册 API</span>
+│   │   │   ├── <span class="dir">institutions/</span>       <span class="desc"># 机构入驻 API</span>
+│   │   │   ├── <span class="dir">contact/</span>            <span class="desc"># 咨询报名 API</span>
+│   │   │   └── <span class="dir">seed/</span>               <span class="desc"># 种子数据 API（仅开发环境）</span>
+│   │   ├── <span class="dir">courses/</span>                <span class="desc"># 课程页面（列表/详情/分类）</span>
+│   │   ├── <span class="dir">institutions/</span>           <span class="desc"># 机构页面（列表/详情）</span>
+│   │   ├── <span class="dir">articles/</span>               <span class="desc"># 文章资讯页面</span>
+│   │   ├── <span class="dir">search/</span>                 <span class="desc"># 搜索页面</span>
+│   │   ├── <span class="dir">auth/</span>                   <span class="desc"># 登录/注册页面</span>
+│   │   ├── <span class="dir">dashboard/</span>              <span class="desc"># 用户中心/机构管理</span>
+│   │   ├── layout.tsx             <span class="desc"># 全局布局（Header/Footer/Providers）</span>
+│   │   ├── page.tsx               <span class="desc"># 首页</span>
+│   │   ├── sitemap.ts             <span class="desc"># 动态站点地图</span>
+│   │   └── robots.ts              <span class="desc"># 爬虫规则</span>
+│   ├── <span class="dir">components/</span>                 <span class="desc"># 可复用组件</span>
+│   │   ├── <span class="dir">layout/</span>                 <span class="desc"># Header, Footer</span>
+│   │   ├── ContactButton.tsx      <span class="desc"># 咨询报名弹窗组件</span>
+│   │   └── Providers.tsx          <span class="desc"># NextAuth SessionProvider</span>
+│   ├── <span class="dir">lib/</span>                        <span class="desc"># 工具库</span>
+│   │   ├── prisma.ts              <span class="desc"># Prisma 客户端单例</span>
+│   │   ├── auth.ts                <span class="desc"># NextAuth 配置</span>
+│   │   ├── constants.ts           <span class="desc"># 站点常量（名称、域名、区域列表等）</span>
+│   │   └── utils.ts               <span class="desc"># 工具函数（日期格式化、价格格式化等）</span>
+│   └── <span class="dir">generated/prisma/</span>          <span class="desc"># Prisma 7 自动生成的客户端（gitignore）</span>
+├── .env                           <span class="desc"># Prisma 配置环境变量</span>
+├── .env.local                     <span class="desc"># 运行时环境变量（gitignore）</span>
+├── next.config.mjs                <span class="desc"># Next.js 配置</span>
+├── prisma.config.ts               <span class="desc"># Prisma 7 配置</span>
+├── tailwind.config.ts             <span class="desc"># Tailwind CSS 配置</span>
+├── tsconfig.json                  <span class="desc"># TypeScript 配置</span>
+└── package.json                   <span class="desc"># 依赖与脚本</span>
+  </div>
+
+  <h3>数据模型关系图</h3>
+  <table>
+    <thead>
+      <tr><th width="18%">模型</th><th width="12%">关系</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>User</td><td>1:N → Review, Favorite</td><td>用户，支持 USER / ADMIN 角色</td></tr>
+      <tr><td>User</td><td>1:1 → Institution</td><td>用户可拥有一个机构（ownerId）</td></tr>
+      <tr><td>Category</td><td>自引用 1:N</td><td>分类，支持父子层级</td></tr>
+      <tr><td>Institution</td><td>1:N → Course, Review, Favorite, Advertisement</td><td>培训机构</td></tr>
+      <tr><td>Course</td><td>1:N → Review, Favorite</td><td>课程，属于机构和分类</td></tr>
+      <tr><td>Review</td><td>N:1 → User, Institution?, Course?</td><td>评价，关联用户和机构/课程</td></tr>
+      <tr><td>Favorite</td><td>N:1 → User, Course?, Institution?</td><td>收藏，唯一约束防止重复</td></tr>
+      <tr><td>Article</td><td>独立</td><td>文章资讯</td></tr>
+      <tr><td>Advertisement</td><td>N:1 → Institution?</td><td>广告位，关联机构可选</td></tr>
+      <tr><td>Contact</td><td>独立</td><td>用户咨询报名记录</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 3. 环境要求 ===== -->
+<section id="sec3">
+  <h2><span class="num">3</span>环境要求</h2>
+
+  <h3>开发环境</h3>
+  <table>
+    <thead><tr><th width="25%">项目</th><th>最低版本</th><th>推荐版本</th></tr></thead>
+    <tbody>
+      <tr><td>Node.js</td><td>18.17+</td><td>20.x LTS 或 22.x LTS</td></tr>
+      <tr><td>npm</td><td>9.x</td><td>10.x</td></tr>
+      <tr><td>操作系统</td><td>—</td><td>Windows 10+ / macOS 12+ / Ubuntu 22.04+</td></tr>
+      <tr><td>编辑器</td><td>—</td><td>VS Code + ESLint 插件</td></tr>
+      <tr><td>Git</td><td>2.30+</td><td>最新稳定版</td></tr>
+    </tbody>
+  </table>
+
+  <h3>生产环境</h3>
+  <table>
+    <thead><tr><th width="25%">项目</th><th width="30%">最低配置</th><th>推荐配置</th></tr></thead>
+    <tbody>
+      <tr><td>CPU</td><td>1 核</td><td>2 核+</td></tr>
+      <tr><td>内存</td><td>1 GB</td><td>2 GB+</td></tr>
+      <tr><td>磁盘</td><td>10 GB SSD</td><td>20 GB+ SSD</td></tr>
+      <tr><td>带宽</td><td>1 Mbps</td><td>3 Mbps+</td></tr>
+      <tr><td>操作系统</td><td>—</td><td>Ubuntu 22.04 LTS / Debian 12</td></tr>
+      <tr><td>Node.js</td><td colspan="2">20.x LTS（生产环境务必使用 LTS 版本）</td></tr>
+      <tr><td>数据库</td><td>SQLite（小型站点）</td><td>PostgreSQL 16（中大型推荐迁移）</td></tr>
+      <tr><td>Web 服务器</td><td colspan="2">Nginx（反向代理 + 静态资源）</td></tr>
+      <tr><td>SSL</td><td colspan="2">Let's Encrypt 免费证书（自动续期）</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <div class="callout-title">Vercel 部署免运维</div>
+    如果使用 Vercel 部署，无需自备服务器、Nginx 和 SSL，Vercel 自动提供 CDN、HTTPS 和边缘缓存。推荐初期使用 Vercel 快速上线，流量增长后迁移至 VPS。
+  </div>
+</section>
+
+<!-- ===== 4. 本地开发环境搭建 ===== -->
+<section id="sec4">
+  <h2><span class="num">4</span>本地开发环境搭建</h2>
+
+  <h3>4.1 克隆项目</h3>
+  <pre><code>git clone &lt;仓库地址&gt; xiamenpeixun
+cd xiamenpeixun</code></pre>
+
+  <h3>4.2 安装依赖</h3>
+  <pre><code>npm install</code></pre>
+
+  <div class="callout warning">
+    <div class="callout-title">Prisma 7 注意事项</div>
+    Prisma 7 不再默认将客户端生成到 <code>node_modules/@prisma/client</code>，而是在 <code>schema.prisma</code> 中通过 <code>output = "../src/generated/prisma"</code> 指定输出路径。<code>npm install</code> 后需手动执行 <code>npx prisma generate</code> 生成客户端代码。
+  </div>
+
+  <h3>4.3 配置环境变量</h3>
+  <p>项目根目录已有 <code>.env</code> 和 <code>.env.local</code> 两个文件：</p>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li><code>.env</code> — Prisma CLI 读取的数据库连接地址（提交到 Git）</li>
+    <li><code>.env.local</code> — Next.js 运行时读取的密钥和 URL（不提交到 Git）</li>
+  </ul>
+  <p>首次搭建需修改 <code>.env.local</code> 中的 <code>NEXTAUTH_SECRET</code>，使用以下命令生成新密钥：</p>
+  <pre><code># 生成随机密钥
+openssl rand -hex 32
+
+# 将输出值填入 .env.local
+NEXTAUTH_SECRET=&lt;生成的密钥&gt;
+NEXTAUTH_URL=http://localhost:3000</code></pre>
+
+  <h3>4.4 生成 Prisma 客户端并初始化数据库</h3>
+  <pre><code># 生成 Prisma 客户端代码
+npx prisma generate
+
+# 创建 SQLite 数据库文件并应用 schema
+npx prisma db push
+
+# 播种初始数据（通过 API 路由）
+# 先启动开发服务器
+npm run dev
+
+# 然后在浏览器访问：
+# http://localhost:3000/api/seed</code></pre>
+
+  <h3>4.5 启动开发服务器</h3>
+  <pre><code>npm run dev</code></pre>
+  <p>浏览器访问 <code>http://localhost:3000</code> 即可。</p>
+
+  <h3>4.6 测试账号</h3>
+  <table>
+    <thead><tr><th>邮箱</th><th>密码</th><th>角色</th></tr></thead>
+    <tbody>
+      <tr><td>test@example.com</td><td>123456</td><td>普通用户（USER）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.7 常用开发命令</h3>
+  <pre><code>npm run dev      # 启动开发服务器（热重载）
+npm run build    # 生产构建
+npm run start    # 以生产模式启动（需先 build）
+npm run lint     # 运行 ESLint 代码检查</code></pre>
+</section>
+
+<!-- ===== 5. 环境变量配置 ===== -->
+<section id="sec5">
+  <h2><span class="num">5</span>环境变量配置</h2>
+
+  <h3>5.1 完整环境变量清单</h3>
+  <table>
+    <thead>
+      <tr><th width="22%">变量名</th><th width="14%">文件</th><th width="30%">说明</th><th>示例值</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>DATABASE_URL</code></td>
+        <td>.env</td>
+        <td>数据库连接字符串（Prisma CLI 读取）</td>
+        <td><code>file:./dev.db</code>（SQLite）<br><code>postgresql://user:pass@host:5432/dbname</code>（PG）</td>
+      </tr>
+      <tr>
+        <td><code>NEXTAUTH_SECRET</code></td>
+        <td>.env.local</td>
+        <td>NextAuth JWT 签名密钥，<strong>生产环境必须更换</strong></td>
+        <td><code>openssl rand -hex 32</code> 生成</td>
+      </tr>
+      <tr>
+        <td><code>NEXTAUTH_URL</code></td>
+        <td>.env.local</td>
+        <td>站点正式域名（影响回调 URL 生成）</td>
+        <td><code>https://www.xiamenpeixun.com</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout danger">
+    <div class="callout-title">安全警告</div>
+    生产环境的 <code>NEXTAUTH_SECRET</code> 必须使用 <code>openssl rand -hex 32</code> 重新生成，绝不能使用开发环境的密钥。密钥泄露会导致所有用户 JWT 令牌可被伪造。
+  </div>
+
+  <h3>5.2 不同环境的环境变量对照</h3>
+  <table>
+    <thead><tr><th width="15%">环境</th><th>DATABASE_URL</th><th>NEXTAUTH_URL</th><th>NEXTAUTH_SECRET</th></tr></thead>
+    <tbody>
+      <tr><td>本地开发</td><td><code>file:./dev.db</code></td><td><code>http://localhost:3000</code></td><td>开发用密钥</td></tr>
+      <tr><td>生产 (Vercel)</td><td>环境变量面板配置</td><td><code>https://www.xiamenpeixun.com</code></td><td>新生成的强密钥</td></tr>
+      <tr><td>生产 (VPS)</td><td><code>.env.local</code> 文件</td><td><code>https://www.xiamenpeixun.com</code></td><td>新生成的强密钥</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 6. 数据库管理 ===== -->
+<section id="sec6">
+  <h2><span class="num">6</span>数据库管理</h2>
+
+  <h3>6.1 Prisma 常用命令</h3>
+  <pre><code># 生成 Prisma 客户端代码（修改 schema.prisma 后执行）
+npx prisma generate
+
+# 将 schema 变更推送到数据库（开发环境快速同步）
+npx prisma db push
+
+# 创建数据库迁移文件（生产环境推荐）
+npx prisma migrate dev --name &lt;迁移名称&gt;
+
+# 应用迁移到生产数据库
+npx prisma migrate deploy
+
+# 打开 Prisma Studio 可视化管理界面
+npx prisma studio
+
+# 重置数据库（危险！删除所有数据后重新创建）
+npx prisma migrate reset</code></pre>
+
+  <div class="callout danger">
+    <div class="callout-title">禁止在生产环境使用 db push</div>
+    <code>npx prisma db push</code> 会直接修改数据库结构且不生成迁移文件，可能导致数据丢失。生产环境必须使用 <code>npx prisma migrate deploy</code>。
+  </div>
+
+  <h3>6.2 Prisma Studio 数据管理</h3>
+  <pre><code>npx prisma studio</code></pre>
+  <p>默认在 <code>http://localhost:5555</code> 打开可视化界面，可直接浏览和编辑所有数据表。</p>
+
+  <h3>6.3 播种数据</h3>
+  <p>项目通过 <code>/api/seed</code> API 路由执行播种，包含：</p>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>7 个课程分类（中小学辅导、艺术兴趣、体育运动、职业技能、学历提升、考证培训、语言留学）</li>
+    <li>12 家培训机构（覆盖厦门6个区）</li>
+    <li>20 门课程</li>
+    <li>6 篇文章</li>
+    <li>1 个测试用户账号</li>
+  </ul>
+  <pre><code># 确保开发服务器正在运行
+npm run dev
+
+# 访问播种接口
+curl http://localhost:3000/api/seed
+# 或在浏览器中打开 http://localhost:3000/api/seed</code></pre>
+
+  <div class="callout warning">
+    <div class="callout-title">安全提醒</div>
+    播种接口 <code>/api/seed</code> 没有鉴权保护，<strong>生产环境部署前必须移除或禁用此路由</strong>（删除 <code>src/app/api/seed/route.ts</code> 或添加环境变量判断）。
+  </div>
+
+  <h3>6.4 迁移到 PostgreSQL（生产推荐）</h3>
+  <p>当数据量增长或需要多实例部署时，建议迁移到 PostgreSQL：</p>
+  <ol style="padding-left:20px; margin:8px 0 12px;">
+    <li>修改 <code>prisma/schema.prisma</code> 中 datasource provider 为 <code>postgresql</code></li>
+    <li>修改 <code>.env</code> 中 <code>DATABASE_URL</code> 为 PostgreSQL 连接字符串</li>
+    <li>执行 <code>npx prisma migrate dev --name init-postgresql</code> 创建初始迁移</li>
+    <li>使用 <code>npx prisma db push</code> 或编写数据迁移脚本将 SQLite 数据导入 PostgreSQL</li>
+    <li>更新 <code>src/lib/prisma.ts</code>，移除 LibSQL 适配器，改用标准 PrismaClient 初始化</li>
+  </ol>
+  <pre><code>// 迁移到 PostgreSQL 后的 prisma.ts
+import { PrismaClient } from "@/generated/prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;</code></pre>
+</section>
+
+<!-- ===== 7. Vercel 部署 ===== -->
+<section id="sec7">
+  <h2><span class="num">7</span>生产部署 — Vercel（推荐）</h2>
+  <p>Vercel 是 Next.js 的官方托管平台，零配置部署，自动 CI/CD、HTTPS、CDN 和边缘缓存。</p>
+
+  <h3>7.1 部署步骤</h3>
+  <ol class="steps">
+    <li>将代码推送到 GitHub / GitLab / Bitbucket 仓库</li>
+    <li>登录 <a href="https://vercel.com">vercel.com</a>，点击 "Add New Project"</li>
+    <li>导入 Git 仓库，Vercel 自动识别 Next.js 项目</li>
+    <li>在 "Environment Variables" 中配置：
+      <pre><code>DATABASE_URL=file:./dev.db
+NEXTAUTH_SECRET=&lt;openssl rand -hex 32 生成的密钥&gt;
+NEXTAUTH_URL=https://www.xiamenpeixun.com</code></pre>
+    </li>
+    <li>Build Command 保持默认 <code>next build</code>（Vercel 自动检测）</li>
+    <li>点击 "Deploy"，等待构建完成（约 2-3 分钟）</li>
+    <li>部署成功后，在 Settings → Functions 中确认 Serverless Functions 正常</li>
+    <li>在 Settings → Domains 中添加自定义域名</li>
+  </ol>
+
+  <h3>7.2 Vercel 数据库方案</h3>
+  <table>
+    <thead><tr><th width="20%">方案</th><th>说明</th><th>适用场景</th></tr></thead>
+    <tbody>
+      <tr><td>Vercel Postgres</td><td>Vercel 托管的 PostgreSQL，与项目同区域</td><td>推荐，免费额度够初期使用</td></tr>
+      <tr><td>Turso (LibSQL)</td><td>边缘分布式 SQLite，兼容当前适配器</td><td>无需改代码，免费额度大</td></tr>
+      <tr><td>外部 PostgreSQL</td><td>自建或云托管 PG（Supabase / Neon / RDS）</td><td>中大型站点</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <div class="callout-title">Turso 无缝迁移</div>
+    如果选择 Turso 作为生产数据库，只需将 <code>DATABASE_URL</code> 改为 Turso 提供的 <code>libsql://</code> 连接字符串并添加 <code>DATABASE_AUTH_TOKEN</code> 环境变量即可，无需修改任何代码（项目已使用 <code>@prisma/adapter-libsql</code>）。
+  </div>
+
+  <h3>7.3 Vercel 自动部署</h3>
+  <p>配置完成后，每次推送到 <code>main</code> 分支会自动触发生产部署，推送到其他分支会生成 Preview Deployment。可在 Vercel Dashboard → Deployments 中查看构建日志和回滚。</p>
+
+  <h3>7.4 构建钩子（可选）</h3>
+  <p>如需在构建后执行 Prisma 迁移，在 <code>package.json</code> 中添加 postbuild 脚本：</p>
+  <pre><code>"scripts": {
+  "build": "prisma generate &amp;&amp; next build",
+  "postinstall": "prisma generate"
+}</code></pre>
+</section>
+
+<!-- ===== 8. VPS / Docker 部署 ===== -->
+<section id="sec8">
+  <h2><span class="num">8</span>生产部署 — VPS / Docker</h2>
+
+  <h3>8.1 VPS 直接部署（PM2 进程管理）</h3>
+  <ol class="steps">
+    <li>SSH 登录服务器，安装 Node.js 20 LTS：
+      <pre><code>curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+sudo npm install -g pm2</code></pre>
+    </li>
+    <li>克隆项目代码：
+      <pre><code>cd /var/www
+git clone &lt;仓库地址&gt; xiamenpeixun
+cd xiamenpeixun</code></pre>
+    </li>
+    <li>安装依赖并构建：
+      <pre><code>npm ci
+npx prisma generate
+npm run build</code></pre>
+    </li>
+    <li>配置环境变量：
+      <pre><code>cp .env.local.example .env.local
+# 编辑 .env.local，填入生产密钥
+nano .env.local</code></pre>
+    </li>
+    <li>初始化数据库：
+      <pre><code>npx prisma migrate deploy
+# 或首次部署：npx prisma db push</code></pre>
+    </li>
+    <li>使用 PM2 启动：
+      <pre><code>pm2 start npm --name "xiamenpeixun" -- start
+pm2 save
+pm2 startup  # 设置开机自启</code></pre>
+    </li>
+    <li>验证服务：
+      <pre><code>curl http://localhost:3000
+pm2 status
+pm2 logs xiamenpeixun</code></pre>
+    </li>
+  </ol>
+
+  <h3>8.2 Docker 部署</h3>
+  <p>创建 <code>Dockerfile</code>：</p>
+  <pre><code>FROM node:20-alpine AS base
+
+# 安装依赖
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# 构建
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx prisma generate
+RUN npm run build
+
+# 生产镜像
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src/generated ./src/generated
+
+USER nextjs
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]</code></pre>
+
+  <p>构建并运行：</p>
+  <pre><code># 构建镜像
+docker build -t xiamenpeixun:latest .
+
+# 运行容器
+docker run -d \
+  --name xiamenpeixun \
+  -p 3000:3000 \
+  -v /var/www/xiamenpeixun-data:/app/prisma \
+  -e DATABASE_URL="file:./prisma/dev.db" \
+  -e NEXTAUTH_SECRET="$(openssl rand -hex 32)" \
+  -e NEXTAUTH_URL="https://www.xiamenpeixun.com" \
+  --restart unless-stopped \
+  xiamenpeixun:latest</code></pre>
+
+  <div class="callout warning">
+    <div class="callout-title">standalone 输出</div>
+    Docker 部署需要在 <code>next.config.mjs</code> 中添加 <code>output: "standalone"</code> 配置，以生成独立运行包，减小镜像体积。
+  </div>
+
+  <h3>8.3 Docker Compose 编排</h3>
+  <p>创建 <code>docker-compose.yml</code>：</p>
+  <pre><code>version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./prisma/dev.db
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=https://www.xiamenpeixun.com
+    volumes:
+      - app-data:/app/prisma
+    restart: unless-stopped
+
+volumes:
+  app-data:</code></pre>
+  <pre><code># 启动
+docker compose up -d
+
+# 查看日志
+docker compose logs -f
+
+# 停止
+docker compose down</code></pre>
+</section>
+
+<!-- ===== 9. Nginx 配置 ===== -->
+<section id="sec9">
+  <h2><span class="num">9</span>Nginx 反向代理配置</h2>
+  <p>VPS 部署时需配置 Nginx 将 80/443 端口流量转发到 Next.js 的 3000 端口。</p>
+
+  <h3>9.1 安装 Nginx</h3>
+  <pre><code>sudo apt-get install -y nginx</code></pre>
+
+  <h3>9.2 站点配置</h3>
+  <p>创建 <code>/etc/nginx/sites-available/xiamenpeixun</code>：</p>
+  <pre><code>server {
+    listen 80;
+    server_name www.xiamenpeixun.com xiamenpeixun.com;
+
+    # 重定向到 HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name www.xiamenpeixun.com xiamenpeixun.com;
+
+    # SSL 证书路径（见第10节）
+    ssl_certificate /etc/letsencrypt/live/www.xiamenpeixun.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/www.xiamenpeixun.com/privkey.pem;
+
+    # SSL 优化
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    # 安全头
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 反向代理到 Next.js
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Next.js 静态资源缓存
+    location /_next/static/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_cache_valid 200 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # 上传文件大小限制
+    client_max_body_size 10M;
+}</code></pre>
+
+  <h3>9.3 启用站点</h3>
+  <pre><code># 创建软链接
+sudo ln -s /etc/nginx/sites-available/xiamenpeixun /etc/nginx/sites-enabled/
+
+# 测试配置语法
+sudo nginx -t
+
+# 重载 Nginx
+sudo systemctl reload nginx</code></pre>
+</section>
+
+<!-- ===== 10. SSL 证书 ===== -->
+<section id="sec10">
+  <h2><span class="num">10</span>SSL 证书配置</h2>
+
+  <h3>10.1 使用 Certbot 获取 Let's Encrypt 免费证书</h3>
+  <pre><code># 安装 Certbot
+sudo apt-get install -y certbot python3-certbot-nginx
+
+# 获取证书（自动修改 Nginx 配置）
+sudo certbot --nginx -d www.xiamenpeixun.com -d xiamenpeixun.com
+
+# 按提示选择是否将 HTTP 重定向到 HTTPS（选 Yes）</code></pre>
+
+  <h3>10.2 自动续期</h3>
+  <pre><code># 测试自动续期
+sudo certbot renew --dry-run
+
+# Certbot 安装时已自动添加 systemd timer，可查看
+sudo systemctl list-timers | grep certbot
+
+# 证书有效期 90 天，建议在到期前 30 天自动续期
+# 默认每天检查两次，无需手动干预</code></pre>
+
+  <div class="callout success">
+    <div class="callout-title">Vercel 部署无需此步</div>
+    如果使用 Vercel 部署，SSL 证书由 Vercel 自动配置和管理，绑定自定义域名后自动启用 HTTPS。
+  </div>
+</section>
+
+<!-- ===== 11. 域名与 DNS ===== -->
+<section id="sec11">
+  <h2><span class="num">11</span>域名与 DNS 配置</h2>
+
+  <h3>11.1 DNS 记录</h3>
+  <table>
+    <thead><tr><th>类型</th><th>主机</th><th>值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>@</td><td>服务器 IP（VPS）<br>或 76.76.21.21（Vercel）</td><td>主域名解析</td></tr>
+      <tr><td>A</td><td>www</td><td>同上</td><td>www 子域名解析</td></tr>
+      <tr><td>CNAME</td><td>www</td><td>cname.vercel-dns.com（Vercel）</td><td>Vercel 部署时 www 用 CNAME</td></tr>
+      <tr><td>TXT</td><td>@</td><td>百度/谷歌站点验证码</td><td>搜索引擎站长平台验证</td></tr>
+    </tbody>
+  </table>
+
+  <h3>11.2 域名相关代码配置</h3>
+  <p>以下文件中的域名需与实际域名一致：</p>
+  <table>
+    <thead><tr><th>文件</th><th>变量/位置</th><th>当前值</th></tr></thead>
+    <tbody>
+      <tr><td><code>src/lib/constants.ts</code></td><td>SITE_URL</td><td><code>https://www.xiamenpeixun.com</code></td></tr>
+      <tr><td><code>src/app/sitemap.ts</code></td><td>baseUrl</td><td><code>https://www.xiamenpeixun.com</code></td></tr>
+      <tr><td><code>src/app/robots.ts</code></td><td>sitemap</td><td><code>https://www.xiamenpeixun.com/sitemap.xml</code></td></tr>
+      <tr><td><code>.env.local</code></td><td>NEXTAUTH_URL</td><td>实际域名</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 12. 日常维护 ===== -->
+<section id="sec12">
+  <h2><span class="num">12</span>日常维护操作</h2>
+
+  <h3>12.1 发布新版本（VPS）</h3>
+  <pre><code>cd /var/www/xiamenpeixun
+
+# 1. 拉取最新代码
+git pull origin main
+
+# 2. 安装依赖（如有变更）
+npm ci
+
+# 3. 生成 Prisma 客户端（如 schema 有变更）
+npx prisma generate
+npx prisma migrate deploy
+
+# 4. 重新构建
+npm run build
+
+# 5. 重启服务
+pm2 restart xiamenpeixun
+
+# 6. 检查状态
+pm2 status
+pm2 logs xiamenpeixun --lines 20</code></pre>
+
+  <h3>12.2 发布新版本（Vercel）</h3>
+  <pre><code>git push origin main
+# Vercel 自动构建部署，无需手动操作</code></pre>
+
+  <h3>12.3 回滚到上一个版本</h3>
+  <table>
+    <thead><tr><th width="20%">平台</th><th>操作</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Vercel</td>
+        <td>Dashboard → Deployments → 选择上一个部署 → "Instant Rollback"</td>
+      </tr>
+      <tr>
+        <td>VPS (PM2)</td>
+        <td>
+          <pre><code>git log --oneline -5      # 查看提交历史
+git checkout &lt;上一个commit&gt;
+npm ci &amp;&amp; npm run build
+pm2 restart xiamenpeixun</code></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>Docker</td>
+        <td>
+          <pre><code>docker compose down
+docker build -t xiamenpeixun:&lt;旧版本tag&gt; .
+docker compose up -d</code></pre>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>12.4 查看日志</h3>
+  <pre><code># VPS (PM2)
+pm2 logs xiamenpeixun              # 实时日志
+pm2 logs xiamenpeixun --lines 100  # 最近100行
+pm2 flush xiamenpeixun             # 清空日志
+
+# Docker
+docker compose logs -f             # 实时日志
+docker compose logs --tail 100     # 最近100行
+
+# Nginx 访问日志
+sudo tail -f /var/log/nginx/access.log
+
+# Nginx 错误日志
+sudo tail -f /var/log/nginx/error.log</code></pre>
+
+  <h3>12.5 内容管理</h3>
+  <p>日常内容维护操作（通过 Prisma Studio 或直接 SQL）：</p>
+  <table>
+    <thead><tr><th width="22%">操作</th><th>方式</th></tr></thead>
+    <tbody>
+      <tr><td>新增/编辑课程</td><td>Prisma Studio → Course 表，或编写管理后台</td></tr>
+      <tr><td>新增/编辑机构</td><td>Prisma Studio → Institution 表</td></tr>
+      <tr><td>发布文章</td><td>Prisma Studio → Article 表，设置 published=true 和 publishedAt</td></tr>
+      <tr><td>审核机构入驻</td><td>Institution 表 status 字段：PENDING → APPROVED</td></tr>
+      <tr><td>查看咨询报名</td><td>Prisma Studio → Contact 表</td></tr>
+      <tr><td>管理广告位</td><td>Prisma Studio → Advertisement 表</td></tr>
+      <tr><td>管理分类</td><td>Prisma Studio → Category 表</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 13. 备份与恢复 ===== -->
+<section id="sec13">
+  <h2><span class="num">13</span>数据备份与恢复</h2>
+
+  <h3>13.1 SQLite 备份（当前方案）</h3>
+  <pre><code># 手动备份
+cp /var/www/xiamenpeixun/prisma/dev.db /backup/dev-$(date +%Y%m%d-%H%M%S).db
+
+# 自动备份脚本（添加到 crontab）
+#!/bin/bash
+BACKUP_DIR="/backup/xiamenpeixun"
+DATE=$(date +%Y%m%d)
+mkdir -p $BACKUP_DIR
+cp /var/www/xiamenpeixun/prisma/dev.db $BACKUP_DIR/dev-$DATE.db
+# 保留最近 30 天备份
+find $BACKUP_DIR -name "dev-*.db" -mtime +30 -delete
+
+# crontab 每天凌晨 3 点执行
+# 0 3 * * * /backup/backup.sh</code></pre>
+
+  <h3>13.2 PostgreSQL 备份</h3>
+  <pre><code># 手动备份
+pg_dump -U &lt;user&gt; -d &lt;dbname&gt; -F c -f /backup/xiamenpeixun-$(date +%Y%m%d).dump
+
+# 恢复
+pg_restore -U &lt;user&gt; -d &lt;dbname&gt; -c /backup/xiamenpeixun-20260701.dump</code></pre>
+
+  <h3>13.3 恢复流程</h3>
+  <ol class="steps">
+    <li>停止应用服务：<code>pm2 stop xiamenpeixun</code></li>
+    <li>备份当前损坏的数据库文件（以防万一）</li>
+    <li>用备份文件覆盖：<code>cp /backup/dev-20260701.db /var/www/xiamenpeixun/prisma/dev.db</code></li>
+    <li>执行 <code>npx prisma generate</code> 确保客户端同步</li>
+    <li>重启服务：<code>pm2 start xiamenpeixun</code></li>
+    <li>验证数据完整性</li>
+  </ol>
+
+  <div class="callout danger">
+    <div class="callout-title">备份策略建议</div>
+    <ul style="margin:6px 0 0 16px;">
+      <li>每日自动备份，保留 30 天</li>
+      <li>每周手动下载到本地或云存储（异地备份）</li>
+      <li>每月进行一次恢复演练，确保备份可用</li>
+      <li>重大版本更新前必须手动备份</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 14. 性能优化 ===== -->
+<section id="sec14">
+  <h2><span class="num">14</span>性能优化</h2>
+
+  <h3>14.1 Next.js 层面</h3>
+  <table>
+    <thead><tr><th width="30%">优化项</th><th>说明</th><th>状态</th></tr></thead>
+    <tbody>
+      <tr><td>Server Components</td><td>默认使用 RSC，减少客户端 JS 体积</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已启用</span></td></tr>
+      <tr><td>动态 metadata</td><td>课程/机构/文章详情页使用 generateMetadata</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已启用</span></td></tr>
+      <tr><td>sitemap / robots</td><td>动态站点地图和爬虫规则</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已启用</span></td></tr>
+      <tr><td>静态资源缓存</td><td>Nginx 层面缓存 _next/static</td><td>需配置 Nginx</td></tr>
+      <tr><td>图片优化</td><td>使用 next/image 组件（如引入图片）</td><td>待启用</td></tr>
+      <tr><td>standalone 输出</td><td>Docker 部署时减小镜像体积</td><td>待配置</td></tr>
+    </tbody>
+  </table>
+
+  <h3>14.2 数据库层面</h3>
+  <p>当前 schema 已建立关键索引：</p>
+  <table>
+    <thead><tr><th>模型</th><th>索引字段</th></tr></thead>
+    <tbody>
+      <tr><td>User</td><td>role</td></tr>
+      <tr><td>Institution</td><td>status, district, rating</td></tr>
+      <tr><td>Course</td><td>categoryId, status</td></tr>
+      <tr><td>Review</td><td>institutionId, courseId</td></tr>
+      <tr><td>Article</td><td>published, publishedAt</td></tr>
+      <tr><td>Advertisement</td><td>position, active</td></tr>
+    </tbody>
+  </table>
+
+  <h3>14.3 建议后续优化</h3>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>列表页添加分页，避免一次加载过多数据</li>
+    <li>首页热门课程/机构使用 ISR（Incremental Static Regeneration）定期重新生成</li>
+    <li>图片资源使用 CDN 或对象存储（腾讯云 COS / 阿里云 OSS）</li>
+    <li>搜索功能接入 Elasticsearch 或 Meilisearch 提升全文检索性能</li>
+    <li>开启 Redis 缓存热点数据（Vercel KV / Upstash）</li>
+  </ul>
+
+  <h3>14.4 standalone 模式配置</h3>
+  <p>修改 <code>next.config.mjs</code>：</p>
+  <pre><code>/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: "standalone",
+};
+
+export default nextConfig;</code></pre>
+</section>
+
+<!-- ===== 15. 安全加固 ===== -->
+<section id="sec15">
+  <h2><span class="num">15</span>安全加固</h2>
+
+  <h3>15.1 上线前必须完成</h3>
+  <table>
+    <thead><tr><th width="5%">#</th><th width="30%">安全项</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>更换 NEXTAUTH_SECRET</td><td>使用 <code>openssl rand -hex 32</code> 生成新密钥</td></tr>
+      <tr><td>2</td><td>移除/禁用 /api/seed 路由</td><td>删除 <code>src/app/api/seed/route.ts</code> 或添加环境判断</td></tr>
+      <tr><td>3</td><td>设置 NEXTAUTH_URL 为正式域名</td><td>确保回调 URL 正确</td></tr>
+      <tr><td>4</td><td>启用 HTTPS</td><td>全站强制 HTTPS，HTTP 301 重定向</td></tr>
+      <tr><td>5</td><td>配置安全响应头</td><td>HSTS、X-Frame-Options、X-Content-Type-Options</td></tr>
+      <tr><td>6</td><td>数据库文件权限</td><td><code>chmod 600 prisma/dev.db</code>，仅应用用户可读写</td></tr>
+      <tr><td>7</td><td>.env.local 不提交 Git</td><td>已配置 .gitignore，确认未被追踪</td></tr>
+    </tbody>
+  </table>
+
+  <h3>15.2 服务器安全（VPS）</h3>
+  <pre><code># 1. 禁用 root SSH 登录
+sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
+
+# 2. 使用密钥登录，禁用密码
+sudo sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart sshd
+
+# 3. 配置防火墙（仅开放 22/80/443）
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+
+# 4. 安装 fail2ban 防暴力破解
+sudo apt-get install -y fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban</code></pre>
+
+  <h3>15.3 应用层安全建议</h3>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>用户注册接口添加验证码（防机器注册）</li>
+    <li>咨询报名接口添加频率限制（防刷接口）</li>
+    <li>管理后台添加 RBAC 权限控制（当前仅 USER/ADMIN 两级）</li>
+    <li>定期检查依赖漏洞：<code>npm audit</code></li>
+    <li>用户密码最小长度强制 8 位以上</li>
+    <li>敏感操作（修改密码、删除数据）添加二次确认</li>
+  </ul>
+</section>
+
+<!-- ===== 16. SEO 维护 ===== -->
+<section id="sec16">
+  <h2><span class="num">16</span>SEO 维护</h2>
+
+  <h3>16.1 当前 SEO 配置</h3>
+  <table>
+    <thead><tr><th width="25%">功能</th><th width="15%">状态</th><th>文件位置</th></tr></thead>
+    <tbody>
+      <tr><td>全局 Metadata</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已配置</span></td><td><code>src/app/layout.tsx</code></td></tr>
+      <tr><td>动态页面标题</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已配置</span></td><td>课程/机构/文章/搜索/分类详情页</td></tr>
+      <tr><td>sitemap.xml</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已配置</span></td><td><code>src/app/sitemap.ts</code></td></tr>
+      <tr><td>robots.txt</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已配置</span></td><td><code>src/app/robots.ts</code></td></tr>
+      <tr><td>SSR/SSG 渲染</td><td><span class="badge" style="background:var(--success-bg);color:var(--success);">已启用</span></td><td>Server Components 默认 SSR</td></tr>
+      <tr><td>结构化数据</td><td><span class="badge gray">待添加</span></td><td>建议添加 JSON-LD Schema</td></tr>
+    </tbody>
+  </table>
+
+  <h3>16.2 搜索引擎提交</h3>
+  <ol class="steps">
+    <li>百度搜索资源平台：<code>https://ziyuan.baidu.com</code> → 添加站点 → 验证域名 → 提交 sitemap.xml</li>
+    <li>Google Search Console：<code>https://search.google.com/search-console</code> → 添加资源 → 验证 → 提交 sitemap</li>
+    <li> Bing Webmaster Tools：<code>https://www.bing.com/webmasters</code> → 添加站点</li>
+    <li>360 搜索、搜狗搜索也建议提交</li>
+  </ol>
+
+  <h3>16.3 SEO 持续优化建议</h3>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>为课程和机构页面添加 JSON-LD 结构化数据（Course / LocalBusiness Schema）</li>
+    <li>文章内容补充完整正文（当前文章为摘要+占位文本）</li>
+    <li>建立内链体系：课程页关联同机构其他课程、相关分类课程</li>
+    <li>添加面包屑导航（BreadcrumbList Schema）</li>
+    <li>提交百度主动推送，加速新内容收录</li>
+    <li>定期查看搜索关键词排名，优化页面标题和描述</li>
+  </ul>
+</section>
+
+<!-- ===== 17. 监控与告警 ===== -->
+<section id="sec17">
+  <h2><span class="num">17</span>监控与告警</h2>
+
+  <h3>17.1 基础监控</h3>
+  <table>
+    <thead><tr><th width="20%">监控项</th><th width="25%">工具</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>应用存活</td><td>PM2 / Uptime Robot</td><td>PM2 自动重启；Uptime Robot 免费监控 HTTP 状态</td></tr>
+      <tr><td>服务器资源</td><td>htop / netdata</td><td>CPU、内存、磁盘使用率</td></tr>
+      <tr><td>Nginx 访问</td><td>GoAccess / awk</td><td>访问量、状态码分布、热门页面</td></tr>
+      <tr><td>应用日志</td><td>PM2 logs</td><td>Next.js 运行时错误和请求日志</td></tr>
+      <tr><td>数据库</td><td>Prisma 日志 / sqlite3</td><td>慢查询、连接数</td></tr>
+    </tbody>
+  </table>
+
+  <h3>17.2 Uptime Robot 配置（免费监控）</h3>
+  <ol class="steps">
+    <li>注册 <code>https://uptimerobot.com</code></li>
+    <li>添加 HTTP(s) 监控，URL 填 <code>https://www.xiamenpeixun.com</code></li>
+    <li>监控间隔设为 5 分钟</li>
+    <li>配置告警邮箱（ downtime 时邮件通知）</li>
+    <li>可添加多个监控：首页、/courses、/api/auth 等</li>
+  </ol>
+
+  <h3>17.3 Vercel Analytics（Vercel 部署）</h3>
+  <pre><code># 安装
+npm install @vercel/analytics
+
+# 在 src/app/layout.tsx 中添加
+import { Analytics } from "@vercel/analytics/react";
+
+// 在 body 内末尾添加
+&lt;Analytics /&gt;</code></pre>
+
+  <h3>17.4 告警通知</h3>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>PM2 异常重启：<code>pm2 install pm2-logrotate</code> 防止日志膨胀</li>
+    <li>磁盘空间：设置 crontab 定期检查，低于 20% 时邮件告警</li>
+    <li>SSL 证书过期：Certbot 自动续期 + Uptime Robot 监控 HTTPS</li>
+    <li>数据库大小：定期检查，超过阈值时告警</li>
+  </ul>
+</section>
+
+<!-- ===== 18. 版本更新 ===== -->
+<section id="sec18">
+  <h2><span class="num">18</span>版本更新流程</h2>
+
+  <h3>18.1 依赖更新</h3>
+  <pre><code># 检查可更新的依赖
+npm outdated
+
+# 安全更新（不改变大版本）
+npm audit
+npm audit fix
+
+# 更新具体包
+npm install next@latest  # 更新 Next.js
+npm install prisma@latest @prisma/client@latest  # 更新 Prisma
+
+# 更新后重新构建测试
+npx prisma generate
+npm run build
+npm run dev  # 本地验证</code></pre>
+
+  <h3>18.2 Next.js 版本升级注意事项</h3>
+  <div class="callout warning">
+    <div class="callout-title">大版本升级风险</div>
+    Next.js 大版本升级（如 14 → 15）可能引入 Breaking Changes，必须在本地充分测试后再部署。建议创建新分支进行升级测试。
+  </div>
+
+  <h3>18.3 Prisma 版本升级注意事项</h3>
+  <p>Prisma 7 与 Prisma 6 差异显著，升级时需注意：</p>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>Prisma 7 需要显式指定 <code>output</code> 路径</li>
+    <li>Prisma 7 使用 <code>prisma-client</code> provider 而非 <code>prisma-client-js</code></li>
+    <li>Prisma 7 生成 ESM 客户端，旧版 CJS 脚本需适配</li>
+    <li>SQLite 适配器导入名为 <code>PrismaLibSql</code>（小写 q），不是 <code>PrismaLibSQL</code></li>
+    <li>升级后需重新执行 <code>npx prisma generate</code></li>
+  </ul>
+
+  <h3>18.4 发布检查清单</h3>
+  <table>
+    <thead><tr><th width="5%">#</th><th>检查项</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>本地 <code>npm run build</code> 无错误</td></tr>
+      <tr><td>2</td><td>本地 <code>npm run lint</code> 无 Error（Warning 可接受）</td></tr>
+      <tr><td>3</td><td>数据库已备份</td></tr>
+      <tr><td>4</td><td>如有 schema 变更，已创建迁移文件</td></tr>
+      <tr><td>5</td><td>环境变量已确认正确</td></tr>
+      <tr><td>6</td><td>关键页面功能验证（首页、登录、课程列表、详情页）</td></tr>
+      <tr><td>7</td><td>/api/seed 路由已确认移除或禁用</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 19. 故障排查 ===== -->
+<section id="sec19">
+  <h2><span class="num">19</span>故障排查指南</h2>
+
+  <h3>19.1 常见问题速查表</h3>
+  <table>
+    <thead><tr><th width="25%">现象</th><th width="25%">可能原因</th><th>解决方案</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>启动报错：Cannot find module '@/generated/prisma/client'</td>
+        <td>Prisma 客户端未生成</td>
+        <td>执行 <code>npx prisma generate</code></td>
+      </tr>
+      <tr>
+        <td>启动报错：PrismaLibSql is not a constructor</td>
+        <td>适配器导入名错误</td>
+        <td>确认导入名为 <code>PrismaLibSql</code>（小写 q），非 <code>PrismaLibSQL</code></td>
+      </tr>
+      <tr>
+        <td>登录失败，返回 null</td>
+        <td>用户不存在或密码错误</td>
+        <td>检查数据库中是否存在对应用户记录，密码 hash 是否正确</td>
+      </tr>
+      <tr>
+        <td>页面 500 错误</td>
+        <td>数据库连接失败</td>
+        <td>检查 <code>DATABASE_URL</code> 是否正确，SQLite 文件是否存在且有权限</td>
+      </tr>
+      <tr>
+        <td>NextAuth 回调 URL 错误</td>
+        <td>NEXTAUTH_URL 配置不正确</td>
+        <td>确认 <code>NEXTAUTH_URL</code> 与实际访问域名一致（含 https://）</td>
+      </tr>
+      <tr>
+        <td>useSearchParams 报错</td>
+        <td>缺少 Suspense 边界</td>
+        <td>将使用 <code>useSearchParams</code> 的组件包裹在 <code>&lt;Suspense&gt;</code> 中</td>
+      </tr>
+      <tr>
+        <td>构建失败：ESLint error</td>
+        <td>代码规范错误</td>
+        <td>运行 <code>npm run lint</code> 查看并修复</td>
+      </tr>
+      <tr>
+        <td>502 Bad Gateway</td>
+        <td>Next.js 进程未运行</td>
+        <td><code>pm2 restart xiamenpeixun</code>；检查 <code>pm2 logs</code></td>
+      </tr>
+      <tr>
+        <td>页面加载很慢</td>
+        <td>数据库查询未命中索引或数据量过大</td>
+        <td>检查查询条件是否命中索引；添加分页</td>
+      </tr>
+      <tr>
+        <td>sitemap.xml 访问 500</td>
+        <td>数据库查询失败</td>
+        <td>检查 Prisma 连接是否正常；查看服务端日志</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>19.2 日志排查流程</h3>
+  <ol class="steps">
+    <li>查看应用日志：<code>pm2 logs xiamenpeixun --lines 50</code></li>
+    <li>查看 Nginx 错误日志：<code>sudo tail -50 /var/log/nginx/error.log</code></li>
+    <li>查看 Nginx 访问日志（检查状态码）：<code>sudo tail -50 /var/log/nginx/access.log</code></li>
+    <li>检查服务状态：<code>pm2 status</code> / <code>sudo systemctl status nginx</code></li>
+    <li>检查磁盘空间：<code>df -h</code>（磁盘满会导致 SQLite 写入失败）</li>
+    <li>检查内存：<code>free -m</code>（内存不足会导致进程被 kill）</li>
+  </ol>
+
+  <h3>19.3 紧急恢复流程</h3>
+  <div class="callout danger">
+    <div class="callout-title">网站完全不可用时</div>
+    <ol style="margin:6px 0 0 16px;">
+      <li>确认服务器是否可达：<code>ping &lt;域名&gt;</code></li>
+      <li>确认 Nginx 运行：<code>sudo systemctl status nginx</code>，如停止则 <code>sudo systemctl start nginx</code></li>
+      <li>确认 Next.js 进程：<code>pm2 status</code>，如停止则 <code>pm2 restart xiamenpeixun</code></li>
+      <li>如果数据库损坏：使用最近的备份恢复（见第13节）</li>
+      <li>如果代码有问题：回滚到上一个 Git commit 并重新构建</li>
+      <li>恢复后验证：访问首页、登录、课程列表等核心功能</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===== 20. 附录 ===== -->
+<section id="sec20">
+  <h2><span class="num">20</span>附录</h2>
+
+  <h3>20.1 关键文件路径速查</h3>
+  <table>
+    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>prisma/schema.prisma</code></td><td>数据模型定义</td></tr>
+      <tr><td><code>src/lib/prisma.ts</code></td><td>Prisma 客户端初始化</td></tr>
+      <tr><td><code>src/lib/auth.ts</code></td><td>NextAuth 认证配置</td></tr>
+      <tr><td><code>src/lib/constants.ts</code></td><td>站点常量（名称、域名、区域列表）</td></tr>
+      <tr><td><code>.env</code></td><td>Prisma CLI 环境变量</td></tr>
+      <tr><td><code>.env.local</code></td><td>运行时环境变量（密钥、URL）</td></tr>
+      <tr><td><code>next.config.mjs</code></td><td>Next.js 配置</td></tr>
+      <tr><td><code>prisma.config.ts</code></td><td>Prisma 7 配置</td></tr>
+      <tr><td><code>src/app/api/seed/route.ts</code></td><td>种子数据接口（上线前移除）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>20.2 默认数据概览</h3>
+  <table>
+    <thead><tr><th width="20%">数据类型</th><th width="15%">数量</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>课程分类</td><td>7 个</td><td>中小学辅导、艺术兴趣、体育运动、职业技能、学历提升、考证培训、语言留学</td></tr>
+      <tr><td>培训机构</td><td>12 家</td><td>覆盖思明、湖里、集美、海沧、同安、翔安六区</td></tr>
+      <tr><td>课程</td><td>20 门</td><td>涵盖全部7个分类</td></tr>
+      <tr><td>文章</td><td>6 篇</td><td>教育政策、考试资讯、学习方法、机构动态、家长必读</td></tr>
+      <tr><td>测试用户</td><td>1 个</td><td>test@example.com / 123456</td></tr>
+      <tr><td>厦门区域</td><td>6 个</td><td>思明区、湖里区、集美区、海沧区、同安区、翔安区</td></tr>
+    </tbody>
+  </table>
+
+  <h3>20.3 站点地图（路由总览）</h3>
+  <table>
+    <thead><tr><th width="30%">路由</th><th width="15%">类型</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>/</code></td><td>SSR</td><td>首页</td></tr>
+      <tr><td><code>/courses</code></td><td>SSR</td><td>课程列表（支持搜索）</td></tr>
+      <tr><td><code>/courses/[id]</code></td><td>SSR</td><td>课程详情</td></tr>
+      <tr><td><code>/courses/category/[slug]</code></td><td>SSR</td><td>分类课程列表</td></tr>
+      <tr><td><code>/institutions</code></td><td>SSR</td><td>机构列表</td></tr>
+      <tr><td><code>/institutions/[id]</code></td><td>SSR</td><td>机构详情</td></tr>
+      <tr><td><code>/articles</code></td><td>SSR</td><td>文章列表</td></tr>
+      <tr><td><code>/articles/[id]</code></td><td>SSR</td><td>文章详情</td></tr>
+      <tr><td><code>/search</code></td><td>SSR</td><td>搜索结果页</td></tr>
+      <tr><td><code>/auth/login</code></td><td>Client</td><td>登录页</td></tr>
+      <tr><td><code>/auth/register</code></td><td>Client</td><td>注册页</td></tr>
+      <tr><td><code>/dashboard/*</code></td><td>Protected</td><td>用户中心（需登录）</td></tr>
+      <tr><td><code>/api/auth/*</code></td><td>API</td><td>NextAuth 端点</td></tr>
+      <tr><td><code>/api/register</code></td><td>API</td><td>用户注册</td></tr>
+      <tr><td><code>/api/institutions</code></td><td>API</td><td>机构入驻</td></tr>
+      <tr><td><code>/api/contact</code></td><td>API</td><td>咨询报名提交</td></tr>
+      <tr><td><code>/api/seed</code></td><td>API</td><td>种子数据（上线前移除）</td></tr>
+      <tr><td><code>/sitemap.xml</code></td><td>动态</td><td>站点地图</td></tr>
+      <tr><td><code>/robots.txt</code></td><td>静态</td><td>爬虫规则</td></tr>
+    </tbody>
+  </table>
+
+  <h3>20.4 第三方服务参考</h3>
+  <table>
+    <thead><tr><th>服务</th><th>用途</th><th>地址</th></tr></thead>
+    <tbody>
+      <tr><td>Vercel</td><td>托管部署</td><td>vercel.com</td></tr>
+      <tr><td>Turso</td><td>LibSQL 托管数据库</td><td>turso.tech</td></tr>
+      <tr><td>Supabase</td><td>PostgreSQL 托管</td><td>supabase.com</td></tr>
+      <tr><td>Uptime Robot</td><td>免费监控</td><td>uptimerobot.com</td></tr>
+      <tr><td>百度搜索资源平台</td><td>SEO 提交</td><td>ziyuan.baidu.com</td></tr>
+      <tr><td>Google Search Console</td><td>SEO 提交</td><td>search.google.com/search-console</td></tr>
+      <tr><td>腾讯云 COS</td><td>图片对象存储</td><td>cloud.tencent.com/product/cos</td></tr>
+      <tr><td>Let's Encrypt</td><td>免费 SSL 证书</td><td>letsencrypt.org</td></tr>
+    </tbody>
+  </table>
+
+  <h3>20.5 联系与技术支持</h3>
+  <p>本手册随项目源码一同维护，如有问题请查阅：</p>
+  <ul style="padding-left:20px; margin:8px 0 12px;">
+    <li>Next.js 文档：<code>https://nextjs.org/docs</code></li>
+    <li>Prisma 文档：<code>https://www.prisma.io/docs</code></li>
+    <li>NextAuth.js 文档：<code>https://authjs.dev</code></li>
+    <li>Tailwind CSS 文档：<code>https://tailwindcss.com/docs</code></li>
+  </ul>
+</section>
+
+</div>
+
+<div class="footer">
+  <p>厦门培训网 — 部署及维护手册 v1.0 &nbsp;|&nbsp; 技术栈：Next.js 14 + Prisma 7 + NextAuth v5 + Tailwind CSS</p>
+  <p>本文档由项目开发团队维护，最后更新于 2026 年 7 月</p>
+</div>
+
+</body>
+</html>
