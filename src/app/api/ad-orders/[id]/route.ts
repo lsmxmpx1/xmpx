@@ -68,10 +68,15 @@ export async function PUT(
         ? "HOME_FEATURED"
         : "LISTING_BOOST";
 
+    const adImage = user.ownedInstitution.logo || user.ownedInstitution.cover || null;
+    const adLink = `/institutions/${user.ownedInstitution.id}`;
+
     await prisma.advertisement.upsert({
       where: { id: `ad-inst-${user.ownedInstitution.id}` },
       update: {
         title: `${user.ownedInstitution.name} - ${order.plan.name}`,
+        image: adImage,
+        link: adLink,
         position,
         institutionId: user.ownedInstitution.id,
         startDate: now,
@@ -81,6 +86,8 @@ export async function PUT(
       create: {
         id: `ad-inst-${user.ownedInstitution.id}`,
         title: `${user.ownedInstitution.name} - ${order.plan.name}`,
+        image: adImage,
+        link: adLink,
         position,
         institutionId: user.ownedInstitution.id,
         startDate: now,

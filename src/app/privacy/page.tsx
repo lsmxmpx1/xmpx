@@ -26,7 +26,7 @@ export default function PrivacyPage() {
         <h2>四、信息披露</h2>
         <p>除法律法规要求或经您明确同意外，我们不会向第三方披露您的个人信息。</p>
         <h2>五、联系我们</h2>
-        <p>如对本隐私政策有任何疑问，请联系 contact@xiamenpeixun.com。</p>
+        <p>如对本隐私政策有任何疑问，请联系 contact@xmpx.cn。</p>
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
+// 构建时 SQLite 并发读会超时，改为动态渲染
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://www.xiamenpeixun.com";
+  const baseUrl = "https://www.xmpx.cn";
 
   const courses = await prisma.course.findMany({ select: { id: true, updatedAt: true } });
   const institutions = await prisma.institution.findMany({ select: { id: true, updatedAt: true } });

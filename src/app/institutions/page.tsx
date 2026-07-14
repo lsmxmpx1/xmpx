@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { DISTRICTS } from "@/lib/utils";
+import AdSlot from "@/components/ad/AdSlot";
 
 export const dynamic = "force-dynamic";
 
@@ -115,6 +117,9 @@ export default async function InstitutionsPage({
             <button type="submit" className="btn-primary px-8">搜索</button>
           </form>
 
+          {/* INSTITUTION_LIST 广告位 */}
+          <AdSlot position={["INSTITUTION_LIST", "LISTING_BOOST"]} variant="banner" className="mb-6" />
+
           <h1 className="text-2xl font-bold mb-6">
             {searchParams.q ? `搜索"${searchParams.q}"` : "培训机构"}
             <span className="text-gray-400 text-lg ml-2">({total})</span>
@@ -130,23 +135,25 @@ export default async function InstitutionsPage({
               {institutions.map((inst) => (
                 <Link key={inst.id} href={`/institutions/${inst.id}`} className="card overflow-hidden group">
                   {inst.cover && (
-                    <div className="h-28 overflow-hidden">
-                      <img
+                    <div className="h-28 overflow-hidden relative">
+                      <Image
                         src={inst.cover}
                         alt={inst.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                       />
                     </div>
                   )}
                   <div className="p-5">
                     <div className="flex items-start gap-4">
                       {inst.logo ? (
-                        <img
+                        <Image
                           src={inst.logo}
                           alt={inst.name}
+                          width={64}
+                          height={64}
                           className="w-16 h-16 rounded-2xl object-cover border shrink-0"
-                          
                         />
                       ) : (
                         <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center text-2xl font-bold text-primary-600 shrink-0">

@@ -216,3 +216,22 @@ model Contact {
   @@index([institutionId])
   @@index([courseId])
 }
+
+model SmsConfig {
+  id              String   @id @default(cuid())
+  provider        String   @default("dev") // dev | aliyun | tencent
+  enabled         Boolean  @default(false)
+  // 阿里云短信
+  accessKeyId     String?
+  accessKeySecret String?
+  signName        String?
+  templateCode    String?
+  // 腾讯云短信
+  secretId        String?
+  secretKey       String?
+  sdkAppId        String?
+  templateId      String?
+  region          String?  @default("ap-guangzhou")
+  endpoint        String?  @default("dysmsapi.aliyuncs.com")
+  updatedAt       DateTime @updatedAt
+}

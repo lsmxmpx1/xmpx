@@ -126,7 +126,7 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               <ContactButton
                 institutionId={institution.id}
                 institutionName={institution.name}
-                phone={institution.phone}
+                phone={institution.phone ?? undefined}
                 label="立即咨询"
               />
               <FavoriteButton

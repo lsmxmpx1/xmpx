@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/dashboard/"],
     },
-    sitemap: "https://www.xiamenpeixun.com/sitemap.xml",
+    sitemap: "https://www.xmpx.cn/sitemap.xml",
   };
 }

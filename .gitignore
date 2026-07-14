@@ -45,3 +45,9 @@ next-env.d.ts
 # temp files
 tmp-query.mjs
 mobile-login.html
+
+# dev build output (kept separate from prod .next)
+/.next-dev/
+
+# debug / test artifacts
+cookies.txt

@@ -22,19 +22,19 @@ export default function ContactPage() {
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="text-3xl mb-3">📧</div>
             <h3 className="font-bold mb-2">电子邮件</h3>
-            <p className="text-gray-600">contact@xiamenpeixun.com</p>
+            <p className="text-gray-600">contact@xmpx.cn</p>
             <p className="text-sm text-gray-400 mt-1">我们会在24小时内回复</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="text-3xl mb-3">📞</div>
             <h3 className="font-bold mb-2">客服电话</h3>
-            <p className="text-gray-600">0592-XXXXXXXX</p>
+            <p className="text-gray-600">0592-5880123</p>
             <p className="text-sm text-gray-400 mt-1">工作日 9:00 - 18:00</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="text-3xl mb-3">📍</div>
             <h3 className="font-bold mb-2">公司地址</h3>
-            <p className="text-gray-600">福建省厦门市思明区</p>
+            <p className="text-gray-600">福建省厦门市思明区软件园二期</p>
             <p className="text-sm text-gray-400 mt-1">欢迎来访</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-6">

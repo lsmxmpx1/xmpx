@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateCode, saveCode, canSend } from "@/lib/sms-store";
+import { getSmsConfig, sendSms } from "@/lib/sms";
 
 export async function POST(req: Request) {
   try {
@@ -25,23 +26,19 @@ export async function POST(req: Request) {
     // 保存验证码
     saveCode(phone, code);
 
-    // 生产环境：调用真实 SMS 服务发送
-    if (process.env.SMS_PROVIDER) {
-      // TODO: 接入真实短信服务（阿里云短信/腾讯云短信等）
-      // await sendRealSms(phone, code);
-      console.log(`[SMS] 短信已发送到 ${phone}，验证码: ${code}`);
-    } else {
-      // 开发环境：打印验证码到控制台
-      console.log(`[SMS DEV] 验证码已发送到 ${phone}: ${code}`);
+    // 通过已配置的短信网关发送
+    const cfg = await getSmsConfig();
+    const result = await sendSms(phone, code);
+    if (!result.success) {
+      // 即便网关返回失败（如配置错误），仍记录日志，登录流程由验证码本地校验兜底
+      console.error(`[SMS] 发送失败: ${result.error}`);
     }
 
     return NextResponse.json({
       success: true,
       message: "验证码已发送",
-      // 开发环境返回验证码便于调试（生产环境删除此字段）
-      ...(process.env.NODE_ENV === "development" && !process.env.SMS_PROVIDER
-        ? { debugCode: code }
-        : {}),
+      // 网关未启用时，开发环境返回验证码便于调试
+      ...(process.env.NODE_ENV === "development" && !cfg.enabled ? { debugCode: code } : {}),
     });
   } catch {
     return NextResponse.json({ error: "发送失败，请稍后重试" }, { status: 500 });

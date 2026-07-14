@@ -233,9 +233,7 @@ export default function CourseForm({ mode, initialData, categories }: CourseForm
           <ImageUpload
             value={cover}
             onChange={setCover}
-            uploadEndpoint="/api/upload"
             label="上传封面图"
-            maxSizeMB={3}
           />
         </div>
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function BindPhonePage() {
+function BindPhoneForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const uid = searchParams.get("uid") || "";
@@ -203,5 +203,17 @@ export default function BindPhonePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BindPhonePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <BindPhoneForm />
+    </Suspense>
   );
 }

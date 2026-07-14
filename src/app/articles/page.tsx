@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import AdSlot from "@/components/ad/AdSlot";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,9 @@ export default async function ArticlesPage() {
       </div>
 
       <h1 className="text-2xl font-bold mb-8">教育资讯</h1>
+
+      {/* ARTICLE_LIST 广告位 */}
+      <AdSlot position="ARTICLE_LIST" variant="banner" className="mb-8" />
 
       {articles.length === 0 ? (
         <div className="text-center py-20 text-gray-400">

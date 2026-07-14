@@ -42,7 +42,6 @@ export default function Header() {
               <div ref={userMenuRef} className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  onMouseEnter={() => setUserMenuOpen(true)}
                   className="flex items-center gap-1.5 hover:underline cursor-pointer px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
                 >
                   <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
@@ -54,7 +53,6 @@ export default function Header() {
                   </svg>
                 </button>
                 <div
-                  onMouseLeave={() => setUserMenuOpen(false)}
                   className={`absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 w-44 z-50 overflow-hidden transition-all duration-200 origin-top-right ${
                     userMenuOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none"
                   }`}

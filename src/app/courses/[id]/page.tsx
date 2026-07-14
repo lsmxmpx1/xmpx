@@ -145,7 +145,7 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
                 courseId={course.id}
                 institutionId={course.institutionId}
                 institutionName={course.institution?.name}
-                phone={course.institution?.phone}
+                phone={course.institution?.phone ?? undefined}
               />
               <FavoriteButton
                 courseId={course.id}

@@ -5,6 +5,8 @@ import { prisma } from "./prisma";
 import { verifyCode } from "./sms-store";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // 生产/托管环境信任实际请求的 host（适配 CDN、反向代理及本地验证，避免 UntrustedHost 导致 500）
+  trustHost: true,
   providers: [
     // 短信验证码登录（自动注册）
     CredentialsProvider({
@@ -47,6 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           phone: user.phone,
           image: user.image,
+          role: user.role,
         };
       },
     }),
@@ -84,6 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           phone: user.phone,
           image: user.image,
+          role: user.role,
         };
       },
     }),
@@ -98,9 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id || "";
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        token.role = user.role || "USER";
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        token.role = (user.role as string) || "USER";
         token.phone = user.phone || null;
       }
       // 支持客户端更新 session（如绑定手机号后）
@@ -112,11 +114,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        session.user.role = token.role;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        session.user.phone = token.phone || null;
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.phone = (token.phone as string | null) || null;
       }
       return session;
     },

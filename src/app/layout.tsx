@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Providers from "@/components/Providers";
-import { SITE_NAME, SITE_DESC } from "@/lib/constants";
+import { SITE_NAME, SITE_DESC, SITE_URL } from "@/lib/constants";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,6 +13,7 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: `${SITE_NAME} - ${SITE_DESC}`,
     template: `%s | ${SITE_NAME}`,

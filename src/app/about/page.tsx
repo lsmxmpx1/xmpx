@@ -56,9 +56,9 @@ export default function AboutPage() {
           <h2 className="text-xl font-bold mt-8 mb-4">联系我们</h2>
           <p>如果您有任何问题或建议，欢迎通过以下方式联系我们：</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>邮箱：contact@xiamenpeixun.com</li>
-            <li>电话：0592-XXXXXXXX</li>
-            <li>地址：福建省厦门市思明区</li>
+            <li>邮箱：contact@xmpx.cn</li>
+            <li>电话：0592-5880123</li>
+            <li>地址：福建省厦门市思明区软件园二期</li>
           </ul>
         </div>
       </div>
