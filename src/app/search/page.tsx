@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30; // 搜索页 ISR 30s（搜索参数变化多）
 
 type CourseWithRelations = Prisma.CourseGetPayload<{
   include: { institution: true; category: true };

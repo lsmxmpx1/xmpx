@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "厦门本地优质培训机构精选推荐，品质有保障，一站式对比选择。",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120; // 推荐页 ISR 120s（数据更新不频繁）
 
 export default async function RecommendPage() {
   const [session, featuredInstitutions, hotCourses, stats] = await Promise.all([

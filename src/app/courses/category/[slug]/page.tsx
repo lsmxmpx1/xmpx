@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const category = await prisma.category.findUnique({

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const article = await prisma.article.findUnique({

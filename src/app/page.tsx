@@ -4,7 +4,9 @@ import { formatPrice, DISTRICTS } from "@/lib/utils";
 import { SITE_NAME, SITE_DESC } from "@/lib/constants";
 import AdSlot from "@/components/ad/AdSlot";
 
-export const dynamic = "force-dynamic";
+// 首页使用 ISR 缓存：构建时预渲染，之后每 60s 重新验证。
+// 避免 force-dynamic 导致每次请求都连远程 Turso 触发 Vercel 函数 10s 超时。
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [institutions, courses, articles, categories] = await Promise.all([

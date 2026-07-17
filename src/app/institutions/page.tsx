@@ -5,7 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { DISTRICTS } from "@/lib/utils";
 import AdSlot from "@/components/ad/AdSlot";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
 const SORT_OPTIONS = [
   { key: "", label: "综合评分" },
