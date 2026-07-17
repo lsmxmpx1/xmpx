@@ -18,6 +18,7 @@ const FOOTER_LINKS = {
   ],
   "帮助中心": [
     { label: "搜索课程", href: "/search" },
+    { label: "网站留言板", href: "/feedback" },
     { label: "注册账号", href: "/auth/register" },
     { label: "登录", href: "/auth/login" },
   ],
@@ -60,8 +61,13 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-6 text-center text-xs text-gray-500">
-          <p>免责声明：本站仅为信息展示平台，请用户自行核实机构资质。如发现违规内容请及时联系我们。</p>
-          <p className="mt-1">闽ICP备XXXXXXXX号-X</p>
+          <p>
+            免责声明：本站仅为信息展示平台，请用户自行核实机构资质。如发现违规内容请及时在
+            <Link href="/feedback" className="text-gray-400 hover:text-white underline mx-1">
+              网站留言板
+            </Link>
+            联系我们做下架处理。
+          </p>
         </div>
       </div>
     </footer>

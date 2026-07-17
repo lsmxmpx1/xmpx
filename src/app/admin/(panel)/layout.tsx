@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/articles", label: "文章管理", icon: "📝" },
   { href: "/admin/ads", label: "广告管理", icon: "📣" },
   { href: "/admin/contacts", label: "联系留言", icon: "💬" },
+  { href: "/admin/feedback", label: "留言板", icon: "📋" },
   { href: "/admin/settings", label: "系统设置", icon: "⚙️" },
 ];
 

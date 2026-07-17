@@ -23,6 +23,7 @@ model User {
   updatedAt       DateTime      @updatedAt
   reviews         Review[]
   favorites       Favorite[]
+  feedbacks       Feedback[]
   institutionId   String?
   ownedInstitution Institution? @relation("InstitutionOwner")
 
@@ -234,4 +235,24 @@ model SmsConfig {
   region          String?  @default("ap-guangzhou")
   endpoint        String?  @default("dysmsapi.aliyuncs.com")
   updatedAt       DateTime @updatedAt
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  userId      String?
+  authorName  String? // 展示用昵称（取自用户 name/手机号脱敏），公开可见
+  type        String   @default("OTHER") // INSTITUTION | COURSE | OTHER
+  targetId    String? // 关联机构/课程 id
+  targetName  String? // 关联对象名称（冗余存储，便于前台展示）
+  content     String
+  status      String   @default("PENDING") // PENDING | RESOLVED | TAKEDOWN | REJECTED
+  adminReply  String? // 管理员处理结果/回复（公开可见）
+  isPublic    Boolean  @default(true) // 是否在前台公开展示
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 /* ----------------------- 课程 ----------------------- */
@@ -356,4 +357,30 @@ export async function toggleAdPlanActive(id: string) {
   if (!p) return;
   await prisma.adPlan.update({ where: { id }, data: { active: !p.active } });
   revalidatePath("/admin/ads");
+}
+
+/* ----------------------- 留言板 ----------------------- */
+
+export async function updateFeedback(id: string, formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return;
+  }
+  const status = String(formData.get("status") || "PENDING");
+  const adminReply = String(formData.get("adminReply") || "").trim() || null;
+  const isPublic = formData.get("isPublic") === "on";
+  await prisma.feedback.update({
+    where: { id },
+    data: { status, adminReply, isPublic },
+  });
+  revalidatePath("/admin/feedback");
+  revalidatePath("/feedback");
+}
+
+export async function deleteFeedback(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.feedback.delete({ where: { id } });
+  revalidatePath("/admin/feedback");
+  revalidatePath("/feedback");
 }
