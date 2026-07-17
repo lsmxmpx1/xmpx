@@ -9,6 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Prisma CLI 仅支持本地 SQLite 连接（file:）。远程 Turso(libsql://) 的建表
+    // 走 `prisma migrate diff` 生成 SQL 后由 libsql 客户端执行，见 VERCEL_DEPLOY_CHECKLIST.md。
+    // 运行时由 src/lib/prisma.ts 的 adapter 直接用 process.env.DATABASE_URL 连接 Turso，与此处无关。
+    url: process.env["LOCAL_DATABASE_URL"] || "file:./dev.db",
   },
 });
