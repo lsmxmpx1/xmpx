@@ -31,6 +31,50 @@ function AvatarDisplay({ src, name, size = 80 }: { src?: string | null; name?: s
   );
 }
 
+/** 把头像图片压到最大边 256px 的 JPEG base64，避免体积过大触发 Server Action 请求体限制 */
+function compressAvatar(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read error"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode error"));
+      img.onload = () => {
+        const MAX = 256;
+        let { width, height } = img;
+        if (width > height && width > MAX) {
+          height = Math.round((height * MAX) / width);
+          width = MAX;
+        } else if (height > MAX) {
+          width = Math.round((width * MAX) / height);
+          height = MAX;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("no ctx"));
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error("toBlob failed"));
+            const r2 = new FileReader();
+            r2.onerror = () => reject(new Error("read2 error"));
+            r2.onload = () => resolve(r2.result as string);
+            r2.readAsDataURL(blob);
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ProfileForm({ user }: { user: UserData }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -55,7 +99,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
   const [pwdErr, setPwdErr] = useState("");
 
   /* ---------- 头像上传（转 base64）---------- */
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -69,12 +113,13 @@ export default function ProfileForm({ user }: { user: UserData }) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setAvatarPreview(result);
-    };
-    reader.readAsDataURL(file);
+    // 压缩后再存为预览（避免原始大图 base64 超出 Server Action 默认 1MB 限制）
+    try {
+      const dataUrl = await compressAvatar(file);
+      setAvatarPreview(dataUrl);
+    } catch {
+      alert("图片处理失败，请换一张试试");
+    }
   }
 
   function handleSaveProfile(e: React.FormEvent) {

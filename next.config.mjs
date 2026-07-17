@@ -8,6 +8,12 @@ const nextConfig = {
     // ESLint 已在本地验证通过，构建时跳过以避免 Vercel 环境差异导致的构建失败
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // 头像以 base64 经 Server Action 上传，提高请求体上限作兜底（前端已压缩到 256px JPEG）
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "picsum.photos" },
