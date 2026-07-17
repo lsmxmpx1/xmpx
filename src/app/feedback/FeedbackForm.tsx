@@ -1,23 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { submitFeedback, submitFeedbackReply } from "./actions";
+import EmojiPicker from "./EmojiPicker";
 
 export default function FeedbackForm() {
   const { data: session, status } = useSession();
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [content, setContent] = useState("");
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
+
+  /** 在光标处插入表情 */
+  function insertEmoji(emoji: string) {
+    const ta = contentRef.current;
+    if (!ta) {
+      setContent((c) => c + emoji);
+      return;
+    }
+    const start = ta.selectionStart ?? content.length;
+    const end = ta.selectionEnd ?? content.length;
+    const next = content.slice(0, start) + emoji + content.slice(end);
+    setContent(next);
+    requestAnimationFrame(() => {
+      ta.focus();
+      const pos = start + emoji.length;
+      ta.setSelectionRange(pos, pos);
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setSubmitting(true);
     const fd = new FormData(e.currentTarget);
+    fd.set("content", content);
     const res = await submitFeedback(fd);
     setSubmitting(false);
     if (res?.error) {
@@ -25,6 +47,7 @@ export default function FeedbackForm() {
       return;
     }
     setDone(true);
+    setContent("");
     e.currentTarget.reset();
     router.refresh();
   }
@@ -97,9 +120,15 @@ export default function FeedbackForm() {
         </div>
       </div>
       <div>
-        <label className="block text-sm text-gray-600 mb-1">反馈内容</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm text-gray-600">反馈内容</label>
+          <EmojiPicker onSelect={insertEmoji} />
+        </div>
         <textarea
+          ref={contentRef}
           name="content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
           required
           rows={4}
           maxLength={2000}
@@ -127,7 +156,23 @@ export function ReplyForm({ feedbackId }: { feedbackId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
+
+  /** 在光标处插入表情 */
+  function insertEmoji(emoji: string) {
+    const ta = contentRef.current;
+    const start = ta?.selectionStart ?? content.length;
+    const end = ta?.selectionEnd ?? content.length;
+    const next = content.slice(0, start) + emoji + content.slice(end);
+    setContent(next);
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      ta.focus();
+      const pos = start + emoji.length;
+      ta.setSelectionRange(pos, pos);
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -162,7 +207,12 @@ export function ReplyForm({ feedbackId }: { feedbackId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">回复</span>
+        <EmojiPicker onSelect={insertEmoji} />
+      </div>
       <textarea
+        ref={contentRef}
         value={content}
         onChange={(e) => setContent(e.target.value)}
         required
