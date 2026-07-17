@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { submitFeedback } from "./actions";
+import { useSession } from "next-auth/react";
+import { submitFeedback, submitFeedbackReply } from "./actions";
 
 export default function FeedbackForm() {
+  const { data: session, status } = useSession();
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -27,6 +29,31 @@ export default function FeedbackForm() {
     router.refresh();
   }
 
+  // 加载中
+  if (status === "loading") {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center text-sm text-gray-400">
+        加载中…
+      </div>
+    );
+  }
+
+  // 未登录 → 显示提示
+  if (!session) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
+        <p className="text-sm text-gray-500 mb-3">仅注册用户可提交反馈</p>
+        <Link
+          href="/auth/login"
+          className="inline-block px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+        >
+          去登录
+        </Link>
+      </div>
+    );
+  }
+
+  // 提交成功
   if (done) {
     return (
       <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">
@@ -41,6 +68,7 @@ export default function FeedbackForm() {
     );
   }
 
+  // 已登录 → 直接显示表单
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -80,21 +108,77 @@ export default function FeedbackForm() {
         />
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-60"
-        >
-          {submitting ? "提交中…" : "提交反馈"}
-        </button>
-        <span className="text-xs text-gray-400">
-          仅注册用户可提交；
-          <Link href="/auth/login" className="text-blue-600 hover:underline ml-1">
-            去登录
-          </Link>
-        </span>
-      </div>
+      <button
+        type="submit"
+        disabled={submitting}
+        className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-60"
+      >
+        {submitting ? "提交中…" : "提交反馈"}
+      </button>
+    </form>
+  );
+}
+
+/* ----------------------- 回复组件（嵌入留言列表） ----------------------- */
+
+export function ReplyForm({ feedbackId }: { feedbackId: string }) {
+  const { data: session, status } = useSession();
+  const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+  const router = useRouter();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!content.trim()) return;
+    setSubmitting(true);
+    setErr("");
+    const fd = new FormData();
+    fd.set("feedbackId", feedbackId);
+    fd.set("content", content.trim());
+    const res = await submitFeedbackReply(fd);
+    setSubmitting(false);
+    if (res?.error) {
+      setErr(res.error);
+      return;
+    }
+    setContent("");
+    setDone(true);
+    router.refresh();
+    setTimeout(() => setDone(false), 3000);
+  }
+
+  if (status === "loading") return null;
+
+  // 未登录 → 不显示回复框
+  if (!session) return null;
+
+  if (done) {
+    return (
+      <div className="mt-2 text-sm text-green-600">回复成功！</div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-3 space-y-2">
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        required
+        rows={2}
+        maxLength={1000}
+        placeholder="写下你的回复…"
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
+      />
+      {err && <p className="text-xs text-red-500">{err}</p>}
+      <button
+        type="submit"
+        disabled={submitting || !content.trim()}
+        className="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-lg hover:bg-blue-100 disabled:opacity-50"
+      >
+        {submitting ? "发送中…" : "回复"}
+      </button>
     </form>
   );
 }

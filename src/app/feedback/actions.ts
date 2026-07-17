@@ -50,3 +50,42 @@ export async function submitFeedback(formData: FormData): Promise<{ error?: stri
   revalidatePath("/feedback");
   return { ok: true };
 }
+
+/* ----------------------- 留言回复 ----------------------- */
+
+export async function submitFeedbackReply(formData: FormData): Promise<{ error?: string; ok?: boolean }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "请先登录后再回复" };
+  }
+
+  const feedbackId = String(formData.get("feedbackId") || "").trim();
+  const content = String(formData.get("content") || "").trim();
+
+  if (!feedbackId) return { error: "参数错误" };
+  if (!content) return { error: "请填写回复内容" };
+  if (content.length > 1000) return { error: "回复内容过长（最多 1000 字）" };
+
+  // 校验目标留言存在且公开
+  const feedback = await prisma.feedback.findUnique({
+    where: { id: feedbackId },
+    select: { isPublic: true },
+  });
+  if (!feedback) return { error: "目标留言不存在" };
+  if (!feedback.isPublic) return { error: "无法回复已隐藏的留言" };
+
+  await prisma.feedbackReply.create({
+    data: {
+      feedbackId,
+      userId: session.user.id,
+      content,
+    },
+    include: {
+      user: { select: { id: true, name: true, image: true } },
+    },
+  });
+
+  revalidatePath("/feedback");
+  revalidatePath("/admin/feedback");
+  return { ok: true };
+}

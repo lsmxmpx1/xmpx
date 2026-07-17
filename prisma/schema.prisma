@@ -24,6 +24,7 @@ model User {
   reviews         Review[]
   favorites       Favorite[]
   feedbacks       Feedback[]
+  feedbackReplies FeedbackReply[]
   institutionId   String?
   ownedInstitution Institution? @relation("InstitutionOwner")
 
@@ -251,8 +252,22 @@ model Feedback {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User?    @relation(fields: [userId], references: [id])
+  replies     FeedbackReply[]
 
   @@index([status])
   @@index([type])
+  @@index([createdAt])
+}
+
+model FeedbackReply {
+  id         String   @id @default(cuid())
+  feedbackId String
+  userId     String?              // null = 匿名回复（暂不支持匿名回复，预留）
+  content    String
+  createdAt  DateTime @default(now())
+  feedback   Feedback  @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  user       User?     @relation(fields: [userId], references: [id])
+
+  @@index([feedbackId])
   @@index([createdAt])
 }
