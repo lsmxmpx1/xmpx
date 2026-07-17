@@ -1,6 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+
+// ⚠️ 重要：本接口会 upsert/写入生产数据库（机构、课程、分类等）。
+// 部署流水线（postinstall=prisma generate + next build）本身绝不会触碰数据库，
+// 但若此公开接口被触发，会覆盖生产数据。因此生产环境默认禁止，必须显式配置
+// SEED_SECRET 并在请求中携带正确密钥才允许执行（用于初始化/本地一次性灌库）。
 
 // Parent categories with subcategories
 const CATEGORY_TREE = [
@@ -95,7 +100,25 @@ function picsum(seed: string, w = 800, h = 600) {
   return `https://picsum.photos/seed/${seed}/${w}/${h}`;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // 生产环境保护：未配置 SEED_SECRET 时直接拒绝，避免部署/匿名访问覆盖生产库
+  const SEED_SECRET = process.env.SEED_SECRET;
+  if (process.env.NODE_ENV === "production" && !SEED_SECRET) {
+    return NextResponse.json(
+      { error: "生产环境未开启种子数据写入，已拒绝以防止覆盖生产数据库" },
+      { status: 403 },
+    );
+  }
+  // 若配置了密钥，则要求请求携带正确密钥（header x-seed-secret 或 query ?secret=）
+  if (SEED_SECRET) {
+    const provided =
+      req.headers.get("x-seed-secret") ||
+      new URL(req.url).searchParams.get("secret");
+    if (provided !== SEED_SECRET) {
+      return NextResponse.json({ error: "种子数据写入密钥错误" }, { status: 403 });
+    }
+  }
+
   try {
     // === 1. Create parent categories and subcategories ===
     const catMap: Record<string, string> = {};
