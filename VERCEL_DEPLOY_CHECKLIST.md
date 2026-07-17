@@ -46,9 +46,14 @@ turso db tokens create xmpx-prod   # 形如 eyJh...
 
 | 变量名 | 值 | 说明 |
 |---|---|---|
-| `DATABASE_URL` | `libsql://<id>.turso.io?authToken=<token>` | 生产库地址。运行时的 Prisma adapter（`src/lib/prisma.ts`）用它连 Turso。**首部署前必须设置**，否则运行时会连库失败。 |
+| `DATABASE_URL` | `libsql://xmpx-lsmxmpx1.aws-ap-northeast-1.turso.io` | 生产库地址（**不含 token**，token 走下面的 `TURSO_AUTH_TOKEN`）。运行时的 Prisma adapter（`src/lib/prisma.ts`）用它连 Turso。**首部署前必须设置**，否则运行时会连库失败。 |
+| `TURSO_AUTH_TOKEN` | `eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...`（完整 token） | Turso 数据库的 JWT 令牌。`prisma.ts` 会自动把它拼成 `?authToken=...`。**漏填或填错会触发 401**（Turso 拒绝连接）。 |
 | `AUTH_SECRET` | 一串随机串 | Auth.js(v5) 生产环境**必需**，缺失会运行时 500。生成：`openssl rand -base64 32` 或 `npx auth secret`。 |
 
+> **`DATABASE_URL` 与 `TURSO_AUTH_TOKEN` 二选一的兼容写法**：若你更习惯把 token 直接拼进 URL，
+> 也可把 `DATABASE_URL` 设成 `libsql://xmpx-lsmxmpx1.aws-ap-northeast-1.turso.io?authToken=<完整token>`，
+> 此时 `TURSO_AUTH_TOKEN` 留空即可（代码检测到 URL 里已有 authToken 就不会重复拼）。
+>
 > 本地 `.env` 被 gitignore，Vercel 读不到它，这些变量必须手动在面板填。
 
 ---
