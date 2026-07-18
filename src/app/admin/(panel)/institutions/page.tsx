@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   PENDING: { label: "待审核", cls: "bg-amber-100 text-amber-700" },
-  ACTIVE: { label: "已通过", cls: "bg-green-100 text-green-700" },
+  APPROVED: { label: "已通过", cls: "bg-green-100 text-green-700" },
   REJECTED: { label: "已拒绝", cls: "bg-red-100 text-red-700" },
 };
 
@@ -78,7 +78,7 @@ export default async function AdminInstitutions({
                   </td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2 flex-wrap">
-                      {inst.status !== "ACTIVE" && (
+                      {inst.status !== "APPROVED" && (
                         <form action={approveInstitution.bind(null, inst.id)}>
                           <button className="px-3 py-1 text-xs border border-green-200 text-green-700 rounded-lg hover:bg-green-50">通过</button>
                         </form>

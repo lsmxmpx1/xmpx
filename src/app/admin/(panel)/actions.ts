@@ -50,13 +50,22 @@ export async function toggleInstitutionFeatured(id: string) {
 }
 
 export async function approveInstitution(id: string) {
-  await prisma.institution.update({ where: { id }, data: { status: "ACTIVE" } });
+  await prisma.institution.update({ where: { id }, data: { status: "APPROVED" } });
   revalidatePath("/admin/institutions");
+  // 刷新前台展示（机构列表/首页/推荐/搜索 使用 ISR，主动失效以立即生效）
+  revalidatePath("/institutions");
+  revalidatePath("/");
+  revalidatePath("/recommend");
+  revalidatePath("/search");
 }
 
 export async function rejectInstitution(id: string) {
   await prisma.institution.update({ where: { id }, data: { status: "REJECTED" } });
   revalidatePath("/admin/institutions");
+  revalidatePath("/institutions");
+  revalidatePath("/");
+  revalidatePath("/recommend");
+  revalidatePath("/search");
 }
 
 /* ----------------------- 分类 ----------------------- */
