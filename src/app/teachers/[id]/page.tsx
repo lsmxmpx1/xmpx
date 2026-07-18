@@ -13,9 +13,9 @@ function fmtDate(d: Date | null) {
   return new Date(d).toLocaleDateString("zh-CN", { year: "numeric", month: "short" });
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const teacher = await prisma.teacher.findUnique({
-    where: { slug: params.slug },
+    where: { id: params.id },
     select: { name: true, title: true, bio: true, expertise: true, district: true },
   });
   if (!teacher) return { title: "老师未找到" };
@@ -28,9 +28,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function TeacherDetailPage({ params }: { params: { slug: string } }) {
+export default async function TeacherDetailPage({ params }: { params: { id: string } }) {
   const teacher = await prisma.teacher.findUnique({
-    where: { slug: params.slug },
+    where: { id: params.id },
     include: {
       currentInstitution: { select: { id: true, name: true } },
       employments: {

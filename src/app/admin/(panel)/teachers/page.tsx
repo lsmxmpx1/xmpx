@@ -76,7 +76,7 @@ export default async function AdminTeachers({
                   <td className="p-3">
                     <div className="flex justify-end gap-2 flex-wrap">
                       <Link
-                        href={`/teachers/${t.slug}`}
+                        href={`/teachers/${t.id}`}
                         target="_blank"
                         className="px-3 py-1 text-xs border rounded-lg hover:bg-gray-100"
                       >

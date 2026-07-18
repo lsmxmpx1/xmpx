@@ -194,7 +194,7 @@ export default async function TeachersPage({
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {teachers.map((t) => (
-                <Link key={t.id} href={`/teachers/${t.slug}`} className="card p-5 group">
+                <Link key={t.id} href={`/teachers/${t.id}`} className="card p-5 group">
                   <div className="flex items-start gap-4">
                     {t.avatar ? (
                       <Image

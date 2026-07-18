@@ -26,7 +26,7 @@ export default async function AdminTeacherReviews({
   const reviews = await prisma.teacherReview.findMany({
     where: Object.keys(where).length ? where : undefined,
     include: {
-      teacher: { select: { name: true, slug: true } },
+      teacher: { select: { id: true, name: true } },
       user: { select: { name: true, image: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -84,7 +84,7 @@ export default async function AdminTeacherReviews({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap text-sm">
                   <Link
-                    href={`/teachers/${r.teacher.slug}`}
+                    href={`/teachers/${r.teacher.id}`}
                     target="_blank"
                     className="font-medium text-gray-800 hover:underline"
                   >
