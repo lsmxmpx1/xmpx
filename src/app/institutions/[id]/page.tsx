@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import ContactButton from "@/components/ContactButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import ReviewList from "@/components/ReviewList";
+import MessageButton from "@/components/MessageButton";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -132,6 +133,13 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               <FavoriteButton
                 institutionId={institution.id}
                 initialFavorited={isFavorited}
+              />
+              <MessageButton
+                peerType="INSTITUTION"
+                peerId={institution.id}
+                currentUserId={currentUserId}
+                isOwner={!!(currentUserId && institution.ownerId === currentUserId)}
+                className="btn-primary px-6"
               />
             </div>
           </div>

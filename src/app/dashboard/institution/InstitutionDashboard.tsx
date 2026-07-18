@@ -242,6 +242,14 @@ export default function InstitutionDashboard({
               <div className="font-semibold text-gray-800 group-hover:text-purple-600">机构设置</div>
               <div className="text-sm text-gray-400 mt-1">修改机构基本信息</div>
             </button>
+            <Link
+              href="/dashboard/messages"
+              className="bg-white rounded-xl shadow-sm p-5 text-left hover:shadow-md transition-shadow group"
+            >
+              <div className="text-2xl mb-2">✉️</div>
+              <div className="font-semibold text-gray-800 group-hover:text-purple-600">学员私信</div>
+              <div className="text-sm text-gray-400 mt-1">回复学员的咨询消息</div>
+            </Link>
           </div>
         </div>
       )}

@@ -212,7 +212,7 @@ export default function StudentDashboard({
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button
               onClick={() => setTab("favorites")}
               className="bg-white rounded-xl shadow-sm p-5 text-left hover:shadow-md transition-shadow group"
@@ -243,6 +243,14 @@ export default function StudentDashboard({
                 {contacts.length > 0 ? `${contacts.length} 条咨询` : "暂无咨询"}
               </div>
             </button>
+            <Link
+              href="/dashboard/messages"
+              className="bg-white rounded-xl shadow-sm p-5 text-left hover:shadow-md transition-shadow group"
+            >
+              <div className="text-2xl mb-2">✉️</div>
+              <div className="font-semibold text-gray-800 group-hover:text-primary-600">我的私信</div>
+              <div className="text-sm text-gray-400 mt-1">查看老师与机构的回复</div>
+            </Link>
           </div>
         </div>
       )}

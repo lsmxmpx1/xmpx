@@ -28,6 +28,9 @@ model User {
   feedbackReplies FeedbackReply[]
   teacher         Teacher?      @relation("UserTeacher")
   teacherReviews  TeacherReview[]
+  conversationsAsStudent Conversation[] @relation("ConvStudent")
+  conversationsAsPeer   Conversation[] @relation("ConvPeer")
+  sentMessages         Message[]      @relation("MsgSender")
   institutionId   String?
   ownedInstitution Institution? @relation("InstitutionOwner")
 
@@ -335,4 +338,42 @@ model TeacherReview {
   @@index([teacherId])
   @@index([userId])
   @@index([status])
+}
+
+model Conversation {
+  id           String   @id @default(cuid())
+  studentId    String // 学员 userId（固定一端）
+  student      User     @relation("ConvStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  peerType     String // TEACHER | INSTITUTION（对方身份类型）
+  peerUserId   String // 对方 userId（老师=teacher.userId；机构=institution.ownerId）
+  peer         User     @relation("ConvPeer", fields: [peerUserId], references: [id], onDelete: Cascade)
+  peerEntityId String? // 对方实体 id：teacher.id 或 institution.id（用于跳转/展示）
+  subject      String? // 会话主题（可选）
+  lastMessage  String? // 最后一条消息预览（冗余，优化列表）
+  lastAt       DateTime @default(now()) // 最后活跃时间（冗余，排序用）
+  status       String   @default("OPEN") // OPEN | CLOSED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  messages     Message[]
+
+  @@index([studentId])
+  @@index([peerUserId])
+  @@index([peerType])
+  @@index([lastAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String // 发送者 userId
+  sender         User     @relation("MsgSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole     String // STUDENT | TEACHER | INSTITUTION（冗余，便于展示样式）
+  content        String
+  readAt         DateTime? // 已读时间（接收方打开会话时标记）
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
 }

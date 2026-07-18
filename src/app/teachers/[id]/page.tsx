@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
 import TeacherReviewList from "@/components/TeacherReviewList";
+import MessageButton from "@/components/MessageButton";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -106,6 +107,17 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
                     >
                       {teacher.currentInstitution.name}
                     </Link>
+                  </div>
+                )}
+                {!isOwner && currentUserId && (
+                  <div className="mt-4">
+                    <MessageButton
+                      peerType="TEACHER"
+                      peerId={teacher.id}
+                      currentUserId={currentUserId}
+                      isOwner={isOwner}
+                      className="btn-primary px-6"
+                    />
                   </div>
                 )}
               </div>

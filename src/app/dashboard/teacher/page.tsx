@@ -5,6 +5,7 @@ import RoleSwitcher from "../RoleSwitcher";
 import TeacherProfileForm from "./TeacherProfileForm";
 import TeacherEmploymentManager from "./TeacherEmploymentManager";
 import MyTeacherReviews from "./MyTeacherReviews";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -60,14 +61,22 @@ export default async function TeacherDashboardPage() {
                 维护档案、任职履历，查看学员对你的评价
               </p>
             </div>
-            <a
-              href={`/teachers/${teacher.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 shadow-sm whitespace-nowrap shrink-0"
-            >
-              👁 查看公开主页
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href={`/teachers/${teacher.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 shadow-sm whitespace-nowrap shrink-0"
+              >
+                👁 查看公开主页
+              </a>
+              <Link
+                href="/dashboard/messages"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 shadow-sm whitespace-nowrap shrink-0"
+              >
+                💬 学员私信
+              </Link>
+            </div>
           </div>
 
           {/* 档案概览卡片 */}
