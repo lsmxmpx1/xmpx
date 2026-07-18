@@ -7,6 +7,8 @@ const NAV = [
   { href: "/admin", label: "概览", icon: "📊" },
   { href: "/admin/courses", label: "课程管理", icon: "📚" },
   { href: "/admin/institutions", label: "机构管理", icon: "🏫" },
+  { href: "/admin/teachers", label: "老师管理", icon: "👨‍🏫" },
+  { href: "/admin/teacher-reviews", label: "老师评价", icon: "⭐" },
   { href: "/admin/categories", label: "分类管理", icon: "🗂️" },
   { href: "/admin/users", label: "用户管理", icon: "👤" },
   { href: "/admin/articles", label: "文章管理", icon: "📝" },

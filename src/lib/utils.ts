@@ -27,6 +27,40 @@ export function truncate(text: string, length: number): string {
   return text.slice(0, length) + "...";
 }
 
+// —— 多身份角色工具 ——
+// 归一化：始终包含 USER、去空格、去重，保持稳定顺序（USER, TEACHER, INSTITUTION, ADMIN）
+export function normalizeRoles(input: string | string[] | null | undefined): string[] {
+  const order = ["USER", "TEACHER", "INSTITUTION", "ADMIN"];
+  const raw = Array.isArray(input)
+    ? input
+    : (input || "").split(",");
+  const set = new Set<string>();
+  set.add("USER");
+  for (const r of raw) {
+    const v = (r || "").trim().toUpperCase();
+    if (v) set.add(v);
+  }
+  return Array.from(set).sort(
+    (a, b) => {
+      const ia = order.indexOf(a);
+      const ib = order.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    }
+  );
+}
+
+// 逗号串形式（写库用）
+export function rolesToString(input: string | string[] | null | undefined): string {
+  return normalizeRoles(input).join(",");
+}
+
+export const ROLE_LABELS: Record<string, string> = {
+  USER: "学员",
+  TEACHER: "老师",
+  INSTITUTION: "机构",
+  ADMIN: "管理员",
+};
+
 export const DISTRICTS = [
   "思明区",
   "湖里区",

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import InstitutionForm from "./InstitutionForm";
 import InstitutionDashboard from "./InstitutionDashboard";
+import RoleSwitcher from "../RoleSwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,12 @@ export default async function InstitutionDashboardPage() {
 
   // No institution yet → show create form
   if (!user?.ownedInstitution) {
-    return <InstitutionForm mode="create" />;
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <RoleSwitcher current="INSTITUTION" />
+        <InstitutionForm mode="create" />
+      </div>
+    );
   }
 
   const inst = user.ownedInstitution;
@@ -63,10 +69,13 @@ export default async function InstitutionDashboardPage() {
   };
 
   return (
-    <InstitutionDashboard
-      institution={institutionData}
-      categories={categoriesForForm}
-      contactsCount={contactsCount}
-    />
+    <div className="max-w-6xl mx-auto px-4 pt-8">
+      <RoleSwitcher current="INSTITUTION" />
+      <InstitutionDashboard
+        institution={institutionData}
+        categories={categoriesForForm}
+        contactsCount={contactsCount}
+      />
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { verifyCode } from "./sms-store";
+import { normalizeRoles } from "./utils";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // 生产/托管环境信任实际请求的 host（适配 CDN、反向代理及本地验证，避免 UntrustedHost 导致 500）
@@ -50,6 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           phone: user.phone,
           image: user.image,
           role: user.role,
+          roles: normalizeRoles(user.roles ?? "USER"),
         };
       },
     }),
@@ -88,6 +90,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           phone: user.phone,
           image: user.image,
           role: user.role,
+          roles: normalizeRoles(user.roles ?? "USER"),
         };
       },
     }),
@@ -101,14 +104,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
+        const roles = normalizeRoles((user as { roles?: string[] }).roles ?? "USER");
         token.id = user.id || "";
         token.role = (user.role as string) || "USER";
         token.phone = user.phone || null;
+        token.roles = roles;
+        token.activeRole = roles[0]; // 登录默认首个身份 = USER
       }
-      // 支持客户端更新 session（如绑定手机号后）
+      // 支持客户端更新 session（如绑定手机号、切换当前身份视图）
       if (trigger === "update" && session) {
-        token.phone = session.phone ?? token.phone;
-        token.role = session.role ?? token.role;
+        const s = session as {
+          phone?: string | null;
+          role?: string;
+          roles?: string[] | string;
+          activeRole?: string;
+        };
+        if (s.phone !== undefined) token.phone = s.phone ?? token.phone;
+        if (s.role !== undefined) token.role = s.role ?? token.role;
+        if (s.roles !== undefined) token.roles = normalizeRoles(s.roles);
+        if (s.activeRole !== undefined) token.activeRole = s.activeRole;
       }
       return token;
     },
@@ -117,6 +131,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.phone = (token.phone as string | null) || null;
+        session.user.roles = (token.roles as string[]) ?? ["USER"];
+        session.user.activeRole = (token.activeRole as string) ?? "USER";
       }
       return session;
     },

@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/", label: "首页" },
   { href: "/courses", label: "找课程" },
   { href: "/institutions", label: "找机构" },
+  { href: "/teachers", label: "找老师" },
   { href: "/recommend", label: "精选推荐" },
   { href: "/articles", label: "资讯" },
 ];

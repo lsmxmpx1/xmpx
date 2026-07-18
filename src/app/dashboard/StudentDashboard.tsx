@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import RoleSwitcher from "./RoleSwitcher";
+import { ROLE_LABELS, normalizeRoles } from "@/lib/utils";
 
 interface Review {
   id: string;
@@ -38,6 +40,7 @@ interface StudentDashboardProps {
     email: string | null;
     phone: string | null;
     role: string;
+    roles: string;
   };
   reviews: Review[];
   favorites: Favorite[];
@@ -65,6 +68,9 @@ export default function StudentDashboard({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* 角色切换器 */}
+      <RoleSwitcher current="USER" />
+
       {/* Header */}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
@@ -161,9 +167,16 @@ export default function StudentDashboard({
                 <span className="text-gray-800">{user.phone || "未设置"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-400 w-16 shrink-0">角色：</span>
-                <span className="text-gray-800">
-                  {user.role === "ADMIN" ? "管理员" : user.role === "INSTITUTION" ? "机构管理员" : "学员"}
+                <span className="text-gray-400 w-16 shrink-0">身份：</span>
+                <span className="text-gray-800 flex flex-wrap gap-1.5">
+                  {normalizeRoles(user.roles).map((r) => (
+                    <span
+                      key={r}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary-50 text-primary-600 text-xs font-medium"
+                    >
+                      {ROLE_LABELS[r] || r}
+                    </span>
+                  ))}
                 </span>
               </div>
             </div>

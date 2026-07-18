@@ -15,6 +15,7 @@ model User {
   password        String?
   image           String?
   role            String        @default("USER")
+  roles           String        @default("USER") // 逗号分隔多身份：USER,TEACHER,INSTITUTION
   wechatOpenId    String?       @unique
   wechatUnionId   String?
   wechatNickname  String?
@@ -25,6 +26,8 @@ model User {
   favorites       Favorite[]
   feedbacks       Feedback[]
   feedbackReplies FeedbackReply[]
+  teacher         Teacher?      @relation("UserTeacher")
+  teacherReviews  TeacherReview[]
   institutionId   String?
   ownedInstitution Institution? @relation("InstitutionOwner")
 
@@ -70,6 +73,8 @@ model Institution {
   contacts    Contact[]
   ads         Advertisement[]
   adOrders    AdOrder[]
+  currentTeachers   Teacher[]           @relation("TeacherCurrentInstitution")
+  teacherEmployments TeacherEmployment[] @relation("TeacherEmploymentInstitution")
   ownerId     String?      @unique
   owner       User?        @relation("InstitutionOwner", fields: [ownerId], references: [id])
 
@@ -270,4 +275,64 @@ model FeedbackReply {
 
   @@index([feedbackId])
   @@index([createdAt])
+}
+
+model Teacher {
+  id                   String       @id @default(cuid())
+  userId               String       @unique
+  user                 User         @relation("UserTeacher", fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  title                String?      // 头衔，如 "资深雅思讲师"
+  bio                  String?      // 简介
+  expertise            String?      // 擅长科目/课程，逗号分隔，如 "雅思,托福,考研英语"
+  avatar               String?
+  district             String?      // 区域，复用 DISTRICTS
+  currentInstitutionId String?      // 当前所属机构
+  currentInstitution   Institution? @relation("TeacherCurrentInstitution", fields: [currentInstitutionId], references: [id])
+  slug                 String       @unique
+  rating               Float        @default(0)  // 冗余，写 TeacherReview 时重算
+  reviewCount          Int          @default(0)  // 冗余
+  status               String       @default("ACTIVE") // ACTIVE | INACTIVE
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  employments          TeacherEmployment[]
+  reviews              TeacherReview[]
+
+  @@index([district])
+  @@index([status])
+  @@index([rating])
+}
+
+model TeacherEmployment {
+  id            String      @id @default(cuid())
+  teacherId     String
+  teacher       Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  institutionId String
+  institution   Institution @relation("TeacherEmploymentInstitution", fields: [institutionId], references: [id], onDelete: Cascade)
+  title         String?     // 任职头衔，如 "教学主管"
+  startDate     DateTime    @default(now())
+  endDate       DateTime?   // 空 = 至今
+  createdAt     DateTime    @default(now())
+
+  @@index([teacherId])
+  @@index([institutionId])
+}
+
+model TeacherReview {
+  id         String   @id @default(cuid())
+  rating     Int                      // 1~5
+  content    String?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teacherId  String
+  teacher    Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  status     String   @default("RESOLVED") // PENDING|RESOLVED|TAKEDOWN|REJECTED
+  isPublic   Boolean  @default(true)       // 默认公开；管理员下架置 false
+  adminReply String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([teacherId])
+  @@index([userId])
+  @@index([status])
 }

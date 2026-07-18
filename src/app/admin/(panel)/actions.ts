@@ -73,6 +73,14 @@ export async function deleteCategory(id: string) {
 export async function deleteUser(id: string) {
   await prisma.favorite.deleteMany({ where: { userId: id } });
   await prisma.review.deleteMany({ where: { userId: id } });
+  await prisma.teacherReview.deleteMany({ where: { userId: id } });
+  // 若该用户拥有老师档案，一并清理档案及其履历/评价
+  const teacher = await prisma.teacher.findUnique({ where: { userId: id }, select: { id: true } });
+  if (teacher) {
+    await prisma.teacherReview.deleteMany({ where: { teacherId: teacher.id } });
+    await prisma.teacherEmployment.deleteMany({ where: { teacherId: teacher.id } });
+    await prisma.teacher.delete({ where: { id: teacher.id } });
+  }
   await prisma.user.delete({ where: { id } });
   revalidatePath("/admin/users");
 }
@@ -383,4 +391,82 @@ export async function deleteFeedback(id: string) {
   await prisma.feedback.delete({ where: { id } });
   revalidatePath("/admin/feedback");
   revalidatePath("/feedback");
+}
+
+/* ----------------------- 老师 ----------------------- */
+
+// 上架/下架老师档案（status: ACTIVE <-> INACTIVE）
+export async function toggleTeacherStatus(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const t = await prisma.teacher.findUnique({ where: { id }, select: { status: true } });
+  if (!t) return;
+  const next = t.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+  await prisma.teacher.update({ where: { id }, data: { status: next } });
+  revalidatePath("/admin/teachers");
+  revalidatePath("/teachers");
+}
+
+export async function deleteTeacher(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.teacherReview.deleteMany({ where: { teacherId: id } });
+  await prisma.teacherEmployment.deleteMany({ where: { teacherId: id } });
+  await prisma.teacher.delete({ where: { id } });
+  revalidatePath("/admin/teachers");
+  revalidatePath("/teachers");
+}
+
+/* ----------------------- 老师评价 ----------------------- */
+
+// 重算老师聚合评分（仅统计公开评价）
+async function _recalcTeacherRating(teacherId: string) {
+  const agg = await prisma.teacherReview.aggregate({
+    where: { teacherId, isPublic: true },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+  await prisma.teacher.update({
+    where: { id: teacherId },
+    data: { rating: agg._avg.rating || 0, reviewCount: agg._count.rating },
+  });
+}
+
+// 上架/下架评价（isPublic），并重算老师聚合评分
+export async function toggleTeacherReviewPublic(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const r = await prisma.teacherReview.findUnique({
+    where: { id },
+    select: { isPublic: true, teacherId: true },
+  });
+  if (!r) return;
+  await prisma.teacherReview.update({ where: { id }, data: { isPublic: !r.isPublic } });
+  await _recalcTeacherRating(r.teacherId);
+  revalidatePath("/admin/teacher-reviews");
+  revalidatePath("/teachers");
+}
+
+// 管理员回复评价
+export async function replyTeacherReview(id: string, formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const adminReply = String(formData.get("adminReply") || "").trim() || null;
+  await prisma.teacherReview.update({ where: { id }, data: { adminReply } });
+  revalidatePath("/admin/teacher-reviews");
+  revalidatePath("/teachers");
+}
+
+export async function deleteTeacherReview(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const r = await prisma.teacherReview.findUnique({
+    where: { id },
+    select: { teacherId: true },
+  });
+  if (!r) return;
+  await prisma.teacherReview.delete({ where: { id } });
+  await _recalcTeacherRating(r.teacherId);
+  revalidatePath("/admin/teacher-reviews");
+  revalidatePath("/teachers");
 }
