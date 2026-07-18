@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import ImageUpload from "@/components/ImageUpload";
 
 interface InstitutionData {
@@ -33,6 +34,7 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export default function InstitutionForm({ mode, initialData }: InstitutionFormProps) {
   const router = useRouter();
+  const { update } = useSession();
   const [name, setName] = useState(initialData?.name || "");
   const [district, setDistrict] = useState(initialData?.district || "思明区");
   const [address, setAddress] = useState(initialData?.address || "");
@@ -71,6 +73,15 @@ export default function InstitutionForm({ mode, initialData }: InstitutionFormPr
 
       if (res.ok) {
         if (mode === "create") {
+          // 同步 session：激活机构视图 + 更新 roles，使「我是机构」立即转为已开通
+          try {
+            const data = await res.json();
+            if (Array.isArray(data.roles)) {
+              await update({ activeRole: "INSTITUTION", roles: data.roles } as never);
+            }
+          } catch {
+            /* ignore：即便刷新失败，下次登录也会生效 */
+          }
           setSuccess(true);
         } else {
           router.refresh();

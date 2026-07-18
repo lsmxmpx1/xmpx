@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { slugify } from "@/lib/utils";
+import { slugify, rolesToString } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -53,13 +53,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Update user role
+    // 写入多身份 roles（与老师流程一致）：把 INSTITUTION 追加进逗号分隔的 roles 字符串，
+    // 否则用户中心「我是机构」会一直显示「未开通」
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { roles: true } });
+    const newRolesStr = rolesToString([...(user?.roles?.split(",") || []), "INSTITUTION"]);
     await prisma.user.update({
       where: { id: userId },
-      data: { role: "INSTITUTION" },
+      data: { roles: newRolesStr, role: "INSTITUTION" },
     });
 
-    return NextResponse.json({ success: true, id: inst.id });
+    return NextResponse.json({ success: true, id: inst.id, roles: newRolesStr.split(",") });
   } catch (error) {
     console.error("Create institution error:", error);
     return NextResponse.json({ error: "创建失败，请稍后再试" }, { status: 500 });
