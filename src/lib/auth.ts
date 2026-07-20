@@ -94,6 +94,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+
+    // 微信扫码登录回调（通过 userId 直接建立 session）
+    // 前端轮询检测到微信登录成功后调用 signIn("wechat-callback", { userId })
+    CredentialsProvider({
+      id: "wechat-callback",
+      name: "微信扫码",
+      credentials: {
+        userId: { label: "用户ID", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.userId) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { id: credentials.userId as string },
+        });
+
+        if (!user) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          image: user.wechatAvatar || user.image,
+          role: user.role,
+          roles: normalizeRoles(user.roles ?? "USER"),
+        };
+      },
+    }),
   ],
   callbacks: {
     async signIn({ user }) {
