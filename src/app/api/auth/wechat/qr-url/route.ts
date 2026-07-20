@@ -1,25 +1,26 @@
 /**
- * 返回微信扫码登录的授权 URL（供前端 iframe 嵌入）
+ * 生成公众号「带参数二维码」用于 PC 扫码登录
  *
  * GET /api/auth/wechat/qr-url
- * → { url: "https://open.weixin.qq.com/connect/qrconnect?..." } 或 { url: null }
- *
- * 未配置 WECHAT_OPEN_APPID 时返回 { url: null }，前端降级到开发模拟模式
+ * → { configured: true, qrUrl, scene }  二维码图片地址 + 本次会话 scene
+ * → { configured: false, qrUrl: null, scene: null }  未配置凭据，前端降级开发模拟
  */
 import { NextResponse } from "next/server";
-import { buildWechatQrUrl, isWechatConfigured } from "@/lib/wechat";
+import { isMpConfigured, createScanQr, cacheSet } from "@/lib/wechat";
 
 export async function GET() {
-  if (!isWechatConfigured()) {
-    return NextResponse.json({ url: null, reason: "未配置微信开放平台凭据" });
+  if (!isMpConfigured()) {
+    return NextResponse.json({ configured: false, qrUrl: null, scene: null });
   }
 
   try {
-    const state = crypto.randomUUID();
-    const url = buildWechatQrUrl(state);
-    return NextResponse.json({ url, state });
+    const scene = `wxscan_${crypto.randomUUID().replace(/-/g, "")}`;
+    const { qrUrl, expireSeconds } = await createScanQr(scene);
+    // 记录 pending 态，便于 poll 判断是否存在/过期
+    await cacheSet(`wxscan:${scene}`, JSON.stringify({ status: "pending", ts: Date.now() }), expireSeconds);
+    return NextResponse.json({ configured: true, qrUrl, scene });
   } catch (err) {
     console.error("[WeChat QR-URL] 生成失败:", err);
-    return NextResponse.json({ url: null, error: "生成失败" }, { status: 500 });
+    return NextResponse.json({ configured: false, qrUrl: null, scene: null, error: "生成失败" });
   }
 }

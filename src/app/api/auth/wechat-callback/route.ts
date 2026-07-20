@@ -12,9 +12,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import {
-  exchangeCodeForToken,
-  fetchWechatUserInfo,
-  isWechatConfigured,
+  exchangeMpOauthToken,
+  getMpOauthUserInfo,
+  isMpConfigured,
 } from "@/lib/wechat";
 
 // ──────────────────── GET：微信 OAuth 标准回调 ────────────────────
@@ -41,17 +41,17 @@ export async function GET(req: Request) {
     let nickname = "";
     let avatar = "";
 
-    if (isWechatConfigured()) {
-      // ═══ 生产环境：用 code 换取 access_token + openid ═══
-      const tokenData = await exchangeCodeForToken(code);
+    if (isMpConfigured()) {
+      // ═══ 生产环境：公众号网页授权，用 code 换取 access_token + openid ═══
+      const tokenData = await exchangeMpOauthToken(code);
       if (!tokenData || !tokenData.openid) {
         console.error("[WeChat] token 交换失败:", tokenData);
         return NextResponse.redirect(new URL("/auth/login?wechat_error=token", req.url));
       }
       openId = tokenData.openid as string;
 
-      // 尝试获取用户信息（可能因 scope 权限不足而失败，不阻断流程）
-      const userInfo = await fetchWechatUserInfo(
+      // 尝试获取用户信息（snsapi_userinfo；订阅号无权限时失败，不阻断流程）
+      const userInfo = await getMpOauthUserInfo(
         tokenData.access_token as string,
         openId,
       );
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     } else {
       // ═══ 未配置凭据时 fallback 到开发模拟模式 ═══
       openId = url.searchParams.get("openid") || `wx_dev_${Date.now()}`;
-      console.warn("[WeChat] ⚠️ 未配置 WECHAT_OPEN_APPID/SECRET，使用开发模拟模式");
+      console.warn("[WeChat] ⚠️ 未配置 WECHAT_MP_APPID/SECRET，使用开发模拟模式");
     }
 
     // ═══ 3. 查找或创建用户 ═══

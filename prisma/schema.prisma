@@ -377,3 +377,13 @@ model Message {
   @@index([senderId])
   @@index([createdAt])
 }
+
+// 通用键值缓存（公众号 access_token、扫码登录态等），避免重复获取触发限频
+model SystemCache {
+  key        String   @id
+  value      String
+  expiresAt  DateTime?
+  updatedAt  DateTime @updatedAt
+
+  @@index([expiresAt])
+}
