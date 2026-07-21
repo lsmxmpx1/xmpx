@@ -7,21 +7,20 @@ const globalForPrisma = globalThis as unknown as {
 
 const createPrismaClient = () => {
   const baseUrl = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
-
-  // libsql 要求把 authToken 作为 URL 的 query 参数（?authToken=...）。
-  // 这里兼容「token 单独放在 TURSO_AUTH_TOKEN 环境变量」的写法，
-  // 避免把一长串 token 拼进 DATABASE_URL 时出错（Vercel 报 401 的常见原因）。
   const authToken = (process.env.TURSO_AUTH_TOKEN ?? "").trim();
-  // 若 DATABASE_URL 自身已带 authToken 参数，则原样使用（不剥离、不覆盖），
-  // 否则用 TURSO_AUTH_TOKEN 拼接。避免剥离有效 token 后连到无 token 的空库
-  //（表现为 no such table: main.Question）。
-  const hasUrlToken = /[?&]authToken=/.test(baseUrl);
-  let url = baseUrl;
-  if (!hasUrlToken && authToken) {
-    url += (baseUrl.includes("?") ? "&" : "?") + "authToken=" + encodeURIComponent(authToken);
+
+  // PrismaLibSql 会把 config 原样透传给 @libsql/client 的 createClient，
+  // 而 createClient 接受「url + 独立 authToken 字段」。诊断 API 已验证该写法
+  // 能正确连到生产库并读到 Question/Answer 表，因此这里与之一致：
+  // URL 保持干净（不带 token），token 作为独立字段传入。
+  // 之前把 token 拼进 URL 的 ?authToken= 写法在 Vercel 上会连到无 token 的
+  // 空库，表现为 no such table: main.Question。
+  const config: { url: string; authToken?: string } = { url: baseUrl };
+  if (authToken) {
+    config.authToken = authToken;
   }
 
-  const adapter = new PrismaLibSql({ url });
+  const adapter = new PrismaLibSql(config);
   return new PrismaClient({ adapter });
 };
 
