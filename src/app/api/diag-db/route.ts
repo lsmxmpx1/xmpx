@@ -37,6 +37,8 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     databaseUrl: maskUrl(url),
+    urlHasAuthToken: url.includes("authToken"),
+    tokenEnvSet: authToken.length > 0,
     tableCount: tables.length,
     hasQuestion: tables.includes("Question"),
     hasAnswer: tables.includes("Answer"),

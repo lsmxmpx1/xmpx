@@ -11,24 +11,14 @@ const createPrismaClient = () => {
   // libsql 要求把 authToken 作为 URL 的 query 参数（?authToken=...）。
   // 这里兼容「token 单独放在 TURSO_AUTH_TOKEN 环境变量」的写法，
   // 避免把一长串 token 拼进 DATABASE_URL 时出错（Vercel 报 401 的常见原因）。
-  let url = baseUrl;
-  // 仅当 token 真实存在（非空、非纯空白）才拼接，杜绝产生 authToken= 的空 query 参数
   const authToken = (process.env.TURSO_AUTH_TOKEN ?? "").trim();
-  // 若 DATABASE_URL 自带了 authToken 参数（无论是否为空），先剥离，后面统一用 TURSO_AUTH_TOKEN 决定
-  const hashIdx = url.indexOf("#");
-  const base = hashIdx >= 0 ? url.slice(0, hashIdx) : url;
-  const hash = hashIdx >= 0 ? url.slice(hashIdx) : "";
-  const qIdx = base.indexOf("?");
-  if (qIdx >= 0) {
-    const path = base.slice(0, qIdx);
-    const params = base
-      .slice(qIdx + 1)
-      .split("&")
-      .filter((p) => p && !p.startsWith("authToken="));
-    url = (params.length ? path + "?" + params.join("&") : path) + hash;
-  }
-  if (authToken) {
-    url += (url.includes("?") ? "&" : "?") + "authToken=" + encodeURIComponent(authToken);
+  // 若 DATABASE_URL 自身已带 authToken 参数，则原样使用（不剥离、不覆盖），
+  // 否则用 TURSO_AUTH_TOKEN 拼接。避免剥离有效 token 后连到无 token 的空库
+  //（表现为 no such table: main.Question）。
+  const hasUrlToken = /[?&]authToken=/.test(baseUrl);
+  let url = baseUrl;
+  if (!hasUrlToken && authToken) {
+    url += (baseUrl.includes("?") ? "&" : "?") + "authToken=" + encodeURIComponent(authToken);
   }
 
   const adapter = new PrismaLibSql({ url });
