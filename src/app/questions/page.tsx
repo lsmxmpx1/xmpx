@@ -45,7 +45,7 @@ export default async function QuestionsPage({
   // QA_CATEGORIES[0] 是"全部"，对应 counts[0] = 0（已用 Promise.resolve 占位）
   const countMap: Record<string, number> = {};
   for (let i = 1; i < QA_CATEGORIES.length; i++) {
-    countMap[QA_CATEGORIES[i].key] = counts[i] as number;
+    countMap[QA_CATEGORIES[i].key] = Number(counts[i]) || 0;
   }
 
   return (
