@@ -9,7 +9,7 @@ import AdSlot from "@/components/ad/AdSlot";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [institutions, courses, articles, categories] = await Promise.all([
+  const [institutions, courses, articles, categoriesRaw] = await Promise.all([
     prisma.institution.findMany({
       where: { status: "APPROVED" },
       orderBy: { rating: "desc" },
@@ -33,10 +33,18 @@ export default async function HomePage() {
     }),
   ]);
 
+  // 首页热门分类展示顺序：第一行 4 个（中小学辅导 / 体育运动 / 学历提升 / 考证培训），其余放第二行
+  const HOME_CAT_ORDER = ["k12", "sports", "degree", "certification", "art", "vocational", "language"];
+  const categories = [...categoriesRaw].sort((a, b) => {
+    const ia = HOME_CAT_ORDER.indexOf(a.slug);
+    const ib = HOME_CAT_ORDER.indexOf(b.slug);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-16 md:py-24">
+      <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 text-white py-8 md:py-12">
         <div className="container-main text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">{SITE_DESC}</h1>
           <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
@@ -47,7 +55,7 @@ export default async function HomePage() {
             <input
               type="text"
               name="q"
-              placeholder="搜索课程、机构名称..."
+              placeholder="搜索课程、机构、老师..."
               className="flex-1 px-5 py-4 rounded-xl text-gray-900 text-lg focus:outline-none focus:ring-2 focus:ring-accent-500"
             />
             <button type="submit" className="btn-accent px-8 py-4 rounded-xl text-lg font-bold">
@@ -89,16 +97,16 @@ export default async function HomePage() {
       <AdSlot position={["HOME_TOP", "HOME_BANNER"]} variant="banner" className="container-main mt-8" />
 
       {/* 主内容 + 侧栏 */}
-      <div className="container-main py-12">
+      <div className="container-main py-8">
         <div className="flex gap-8">
-          <div className="flex-1 min-w-0 space-y-16">
+          <div className="flex-1 min-w-0 space-y-12">
             {/* Category Navigation */}
             <section>
               <div className="text-center mb-10">
                 <h2 className="text-2xl md:text-3xl font-bold">热门培训分类</h2>
                 <p className="text-gray-500 mt-2">选择你感兴趣的培训方向，发现优质课程</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.map((cat) => (
                   <div key={cat.id} className="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition-shadow">
                     <Link href={`/courses?category=${cat.slug}`} className="flex items-center gap-3 mb-3 group">

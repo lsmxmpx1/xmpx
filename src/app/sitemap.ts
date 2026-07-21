@@ -10,12 +10,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const courses = await prisma.course.findMany({ select: { id: true, updatedAt: true } });
   const institutions = await prisma.institution.findMany({ select: { id: true, updatedAt: true } });
   const articles = await prisma.article.findMany({ where: { published: true }, select: { id: true, updatedAt: true } });
+  const questions = await prisma.question.findMany({ where: { isPublic: true }, select: { id: true, updatedAt: true } });
 
   const staticPages = [
     { url: baseUrl, lastModified: new Date(), priority: 1 },
     { url: `${baseUrl}/courses`, lastModified: new Date(), priority: 0.9 },
     { url: `${baseUrl}/institutions`, lastModified: new Date(), priority: 0.9 },
     { url: `${baseUrl}/articles`, lastModified: new Date(), priority: 0.8 },
+    { url: `${baseUrl}/questions`, lastModified: new Date(), priority: 0.8 },
   ];
 
   const coursePages = courses.map((c) => ({
@@ -36,5 +38,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...coursePages, ...institutionPages, ...articlePages];
+  const questionPages = questions.map((q) => ({
+    url: `${baseUrl}/questions/${q.id}`,
+    lastModified: q.updatedAt,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...coursePages, ...institutionPages, ...articlePages, ...questionPages];
 }

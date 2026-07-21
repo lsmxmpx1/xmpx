@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/teachers", label: "找老师" },
   { href: "/recommend", label: "精选推荐" },
   { href: "/articles", label: "资讯" },
+  { href: "/questions", label: "问答社区" },
 ];
 
 export default function Header() {

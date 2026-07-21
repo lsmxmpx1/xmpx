@@ -16,10 +16,6 @@ model User {
   image           String?
   role            String        @default("USER")
   roles           String        @default("USER") // 逗号分隔多身份：USER,TEACHER,INSTITUTION
-  wechatOpenId    String?       @unique
-  wechatUnionId   String?
-  wechatNickname  String?
-  wechatAvatar    String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   reviews         Review[]
@@ -31,6 +27,8 @@ model User {
   conversationsAsStudent Conversation[] @relation("ConvStudent")
   conversationsAsPeer   Conversation[] @relation("ConvPeer")
   sentMessages         Message[]      @relation("MsgSender")
+  questions       Question[]
+  answers         Answer[]
   institutionId   String?
   ownedInstitution Institution? @relation("InstitutionOwner")
 
@@ -378,12 +376,46 @@ model Message {
   @@index([createdAt])
 }
 
-// 通用键值缓存（公众号 access_token、扫码登录态等），避免重复获取触发限频
-model SystemCache {
-  key        String   @id
-  value      String
-  expiresAt  DateTime?
+// ──────────────────── 问答社区（人工审核防广告） ────────────────────
+
+model Question {
+  id         String   @id @default(cuid())
+  title      String
+  content    String
+  category   String   // welfare | review | policy | subsidy | other
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  status     String   @default("PENDING") // PENDING | APPROVED | REJECTED | TAKEDOWN
+  isPublic   Boolean  @default(false)      // 审核通过并上架才公开展示
+  adminReply String? // 管理员回复/处理结果（公开可见）
+  views      Int      @default(0)
+  slug       String?  @unique            // SEO 友好 slug（由标题生成）
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  answers    Answer[]
+
+  @@index([category])
+  @@index([status])
+  @@index([isPublic])
+  @@index([createdAt])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  authorId   String?  // 匿名回复时为空
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String?  // 展示昵称（取自用户 name 或脱敏手机号）
+  content    String
+  status     String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  isPublic   Boolean  @default(false)      // 审核通过才公开展示
+  isBest     Boolean  @default(false)
+  adminReply String?
+  createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@index([expiresAt])
+  @@index([questionId])
+  @@index([status])
+  @@index([isPublic])
 }

@@ -211,24 +211,6 @@ function LoginForm() {
           立即注册
         </Link>
       </div>
-
-      {/* 分割线 */}
-      <div className="flex items-center gap-4 mt-6">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">其他登录方式</span>
-        <div className="flex-1 h-px bg-gray-200" />
-      </div>
-
-      {/* 微信扫码登录 */}
-      <Link
-        href="/auth/wechat"
-        className="mt-4 flex items-center justify-center gap-2 w-full py-3 border border-green-200 text-green-600 rounded-xl hover:bg-green-50 transition-colors font-medium"
-      >
-        <svg className="w-5 h-5" viewBox="0 0 48 48" fill="currentColor">
-          <path d="M18.8 17.6c-.8-2.4-3-4-5.6-4-3.3 0-6 2.7-6 6s2.7 6 6 6c2.6 0 4.8-1.6 5.6-4h5.4l1.4 3 1.4-3h3.6v-4h-11.8zm-5.6 3.8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM33.6 24c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6zm0-3.2c1.5 0 2.8-1.3 2.8-2.8s-1.3-2.8-2.8-2.8-2.8 1.3-2.8 2.8 1.3 2.8 2.8 2.8zM20.8 26.4h-5.6l-1.4-3-1.4 3H7.2v4h13.6v-4z"/>
-        </svg>
-        微信扫码登录
-      </Link>
     </div>
   );
 }

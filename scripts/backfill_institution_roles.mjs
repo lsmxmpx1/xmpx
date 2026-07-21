@@ -30,11 +30,13 @@ const users = await db.execute(
 let fixed = 0;
 for (const u of users.rows) {
   const current = u.roles || "USER";
-  if (current.split(",").map((s) => s.trim()).includes("INSTITUTION")) {
+  const currentRoles = current.split(",").map((s) => s.trim());
+  if (currentRoles.includes("INSTITUTION")) {
     console.log(`skip   ${u.id} (roles 已含 INSTITUTION: ${current})`);
     continue;
   }
-  const next = rolesToString(current);
+  // ★ 关键：把 INSTITUTION 追加进去（上一版漏了这一步）
+  const next = rolesToString([...currentRoles, "INSTITUTION"]);
   await db.execute({
     sql: `UPDATE User SET roles = ? WHERE id = ?`,
     args: [next, u.id],

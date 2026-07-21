@@ -18,10 +18,14 @@ type InstitutionResult = {
   courseCount: number;
 };
 
+type TeacherResult = Prisma.TeacherGetPayload<{
+  include: { currentInstitution: true };
+}>;
+
 export function generateMetadata({ searchParams }: { searchParams: { q?: string } }): Metadata {
   return {
-    title: searchParams.q ? `搜索: ${searchParams.q}` : "搜索课程和机构",
-    description: `在厦门培训网搜索${searchParams.q ? `"${searchParams.q}"` : ""}相关课程和培训机构`,
+    title: searchParams.q ? `搜索: ${searchParams.q}` : "搜索课程、机构和老师",
+    description: `在厦门培训网搜索${searchParams.q ? `"${searchParams.q}"` : ""}相关课程、培训机构与老师`,
   };
 }
 
@@ -34,9 +38,10 @@ export default async function SearchPage({
 
   let courses: CourseWithRelations[] = [];
   let institutions: InstitutionResult[] = [];
+  let teachers: TeacherResult[] = [];
 
   if (query) {
-    [courses, institutions] = await Promise.all([
+    [courses, institutions, teachers] = await Promise.all([
       prisma.course.findMany({
         where: {
           status: "ACTIVE",
@@ -58,6 +63,19 @@ export default async function SearchPage({
         },
         take: 12,
       }),
+      prisma.teacher.findMany({
+        where: {
+          status: "ACTIVE",
+          OR: [
+            { name: { contains: query } },
+            { title: { contains: query } },
+            { bio: { contains: query } },
+            { expertise: { contains: query } },
+          ],
+        },
+        include: { currentInstitution: true },
+        take: 12,
+      }),
     ]);
   }
 
@@ -75,7 +93,7 @@ export default async function SearchPage({
           <input
             name="q"
             defaultValue={query}
-            placeholder="搜索课程、机构..."
+            placeholder="搜索课程、机构、老师..."
             className="input-field flex-1"
           />
           <button type="submit" className="btn-primary py-3 px-8">搜索</button>
@@ -85,7 +103,7 @@ export default async function SearchPage({
       {!query ? (
         <div className="text-center py-20 text-gray-400">
           <div className="text-5xl mb-4">🔍</div>
-          <p>输入关键词搜索课程和机构</p>
+          <p>输入关键词搜索课程、机构和老师</p>
         </div>
       ) : (
         <div className="space-y-10">
@@ -137,6 +155,44 @@ export default async function SearchPage({
                         </div>
                       </div>
                     </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Teachers */}
+          <section>
+            <h2 className="text-xl font-bold mb-4">
+              相关老师
+              <span className="text-gray-400 text-base ml-2">({teachers.length})</span>
+            </h2>
+            {teachers.length === 0 ? (
+              <p className="text-gray-400">未找到相关老师</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {teachers.map((t) => (
+                  <Link key={t.id} href={`/teachers/${t.id}`} className="card p-5 group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center text-xl font-bold text-primary-600 shrink-0 overflow-hidden">
+                        {t.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" />
+                        ) : (
+                          t.name.slice(0, 1)
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold group-hover:text-primary-600 truncate">{t.name}</h3>
+                        <div className="text-sm text-gray-400 truncate">{t.title}</div>
+                        <div className="text-xs text-gray-500 mt-1 truncate">
+                          {t.currentInstitution?.name || t.district || "独立老师"}
+                        </div>
+                      </div>
+                    </div>
+                    {t.expertise && (
+                      <div className="text-xs text-gray-500 mt-3 line-clamp-2">擅长：{t.expertise}</div>
+                    )}
                   </Link>
                 ))}
               </div>

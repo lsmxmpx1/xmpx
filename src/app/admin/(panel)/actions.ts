@@ -479,3 +479,86 @@ export async function deleteTeacherReview(id: string) {
   revalidatePath("/admin/teacher-reviews");
   revalidatePath("/teachers");
 }
+
+/* ----------------------- 问答社区 ----------------------- */
+
+export async function approveQuestion(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.question.update({ where: { id }, data: { status: "APPROVED", isPublic: true } });
+  revalidatePath("/admin/questions");
+  revalidatePath("/questions");
+  revalidatePath(`/questions/${id}`);
+}
+
+export async function rejectQuestion(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.question.update({ where: { id }, data: { status: "REJECTED", isPublic: false } });
+  revalidatePath("/admin/questions");
+  revalidatePath("/questions");
+  revalidatePath(`/questions/${id}`);
+}
+
+export async function toggleQuestionPublic(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const q = await prisma.question.findUnique({ where: { id }, select: { isPublic: true, status: true } });
+  if (!q) return;
+  const nextPublic = !q.isPublic;
+  await prisma.question.update({
+    where: { id },
+    data: { isPublic: nextPublic, status: nextPublic ? "APPROVED" : q.status },
+  });
+  revalidatePath("/admin/questions");
+  revalidatePath("/questions");
+  revalidatePath(`/questions/${id}`);
+}
+
+export async function replyQuestion(id: string, formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const adminReply = String(formData.get("adminReply") || "").trim() || null;
+  await prisma.question.update({ where: { id }, data: { adminReply } });
+  revalidatePath("/admin/questions");
+  revalidatePath(`/questions/${id}`);
+}
+
+export async function deleteQuestion(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.answer.deleteMany({ where: { questionId: id } });
+  await prisma.question.delete({ where: { id } });
+  revalidatePath("/admin/questions");
+  revalidatePath("/questions");
+}
+
+export async function approveAnswer(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.answer.update({ where: { id }, data: { status: "APPROVED", isPublic: true } });
+  revalidatePath("/admin/questions");
+}
+
+export async function rejectAnswer(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.answer.update({ where: { id }, data: { status: "REJECTED", isPublic: false } });
+  revalidatePath("/admin/questions");
+}
+
+export async function toggleAnswerBest(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  const a = await prisma.answer.findUnique({ where: { id }, select: { isBest: true } });
+  if (!a) return;
+  await prisma.answer.update({ where: { id }, data: { isBest: !a.isBest } });
+  revalidatePath("/admin/questions");
+}
+
+export async function deleteAnswer(id: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") return;
+  await prisma.answer.delete({ where: { id } });
+  revalidatePath("/admin/questions");
+}
