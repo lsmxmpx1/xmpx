@@ -116,7 +116,7 @@ export default async function QuestionsPage({
           <p className="text-gray-500 mt-1">找培训、问政策、避坑指南——真实学员经验分享，人工审核防广告</p>
         </div>
         <Link href="/questions/ask" className="btn-primary px-6 py-3 text-base shrink-0">
-          + 我要提问
+          + 我要发帖
         </Link>
       </div>
 
@@ -155,7 +155,7 @@ export default async function QuestionsPage({
             <div className="text-4xl mb-3">💬</div>
             <p>该板块还没有公开话题，快来提出第一个问题吧！</p>
             <Link href="/questions/ask" className="btn-primary inline-block mt-4 px-6 py-2.5 text-sm">
-              我要提问
+              我要发帖
             </Link>
           </div>
         ) : (

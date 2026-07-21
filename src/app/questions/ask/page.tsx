@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `我要提问 - 问答社区 - ${SITE_NAME}`,
+    title: `我要发帖 - 问答社区 - ${SITE_NAME}`,
     robots: { index: false, follow: true },
   };
 }
@@ -31,11 +31,11 @@ export default async function AskPage() {
           问答社区
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">我要提问</span>
+        <span className="text-gray-900">我要发帖</span>
       </div>
 
-      <h1 className="text-2xl font-bold mb-1">我要提问</h1>
-      <p className="text-gray-500 mb-6">选择对应板块，详细描述你的问题。提问将进入人工审核，通过后为全网可见。</p>
+      <h1 className="text-2xl font-bold mb-1">我要发帖</h1>
+      <p className="text-gray-500 mb-6">选择对应板块，详细描述你的问题。发帖将进入人工审核，通过后为全网可见。</p>
 
       <AskQuestionForm />
     </div>
