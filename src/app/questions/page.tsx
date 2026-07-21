@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@libsql/client";
 import { QA_CATEGORIES, getQaCategory } from "@/lib/qa";
 import { SITE_NAME } from "@/lib/constants";
 import type { Metadata } from "next";
@@ -23,6 +24,31 @@ export default async function QuestionsPage({
   const cat = searchParams.cat || "";
   const sent = searchParams.sent === "1";
   const activeCat = cat ? getQaCategory(cat) : undefined;
+
+  // 临时探针：用裸 @libsql/client 直接查表，看 /questions 自己连的库里有什么。
+  // 若此处也报 no such table，而 /api/diag-db 没事，则两者连的是不同库/不同部署。
+  try {
+    const probe = createClient({
+      url: process.env.DATABASE_URL ?? "",
+      authToken: (process.env.TURSO_AUTH_TOKEN ?? "").trim() || undefined,
+    });
+    const r = await probe.execute(
+      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    );
+    const names = r.rows.map((x: Record<string, unknown>) => String(x.name));
+    console.log(
+      "[QUESTIONS-PROBE] db=" +
+        (process.env.DATABASE_URL ?? "").split("?")[0] +
+        " tables=" +
+        names.length +
+        " hasQuestion=" +
+        names.includes("Question")
+    );
+  } catch (e) {
+    console.log(
+      "[QUESTIONS-PROBE] ERROR: " + (e instanceof Error ? e.message : String(e))
+    );
+  }
 
   const questions = await prisma.question.findMany({
     where: { isPublic: true, ...(cat ? { category: cat } : {}) },
