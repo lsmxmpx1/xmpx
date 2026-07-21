@@ -24,29 +24,25 @@ export default async function QuestionsPage({
   const sent = searchParams.sent === "1";
   const activeCat = cat ? getQaCategory(cat) : undefined;
 
-  const [questions, counts] = await Promise.all([
-    prisma.question.findMany({
-      where: { isPublic: true, ...(cat ? { category: cat } : {}) },
-      include: {
-        author: { select: { name: true } },
-        _count: { select: { answers: { where: { isPublic: true } } } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 30,
-    }),
-    // 手动统计各分类公开提问数（SQLite/libsql 不支持 groupBy）
-    ...QA_CATEGORIES.map((c) =>
-      c.key
-        ? prisma.question.count({ where: { isPublic: true, category: c.key } })
-        : Promise.resolve(0)
-    ),
-  ]);
+  const questions = await prisma.question.findMany({
+    where: { isPublic: true, ...(cat ? { category: cat } : {}) },
+    include: {
+      author: { select: { name: true } },
+      _count: { select: { answers: { where: { isPublic: true } } } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+  });
 
-  // QA_CATEGORIES[0] 是"全部"，对应 counts[0] = 0（已用 Promise.resolve 占位）
+  // 手动统计各分类公开提问数（SQLite/libsql 不支持 groupBy）
+  const catKeys = QA_CATEGORIES.filter((c) => c.key).map((c) => c.key as string);
+  const catCounts: number[] = await Promise.all(
+    catKeys.map((k) => prisma.question.count({ where: { isPublic: true, category: k } }))
+  );
   const countMap: Record<string, number> = {};
-  for (let i = 1; i < QA_CATEGORIES.length; i++) {
-    countMap[QA_CATEGORIES[i].key] = Number(counts[i]) || 0;
-  }
+  catKeys.forEach((k, i) => {
+    countMap[k] = catCounts[i];
+  });
 
   return (
     <div className="container-main py-8">
