@@ -34,15 +34,19 @@ export default async function QuestionsPage({
       orderBy: { createdAt: "desc" },
       take: 30,
     }),
-    prisma.question.groupBy({
-      by: ["category"],
-      where: { isPublic: true },
-      _count: true,
-    }),
+    // 手动统计各分类公开提问数（SQLite/libsql 不支持 groupBy）
+    ...QA_CATEGORIES.map((c) =>
+      c.key
+        ? prisma.question.count({ where: { isPublic: true, category: c.key } })
+        : Promise.resolve(0)
+    ),
   ]);
 
+  // QA_CATEGORIES[0] 是"全部"，对应 counts[0] = 0（已用 Promise.resolve 占位）
   const countMap: Record<string, number> = {};
-  for (const c of counts) countMap[c.category] = c._count;
+  for (let i = 1; i < QA_CATEGORIES.length; i++) {
+    countMap[QA_CATEGORIES[i].key] = counts[i] as number;
+  }
 
   return (
     <div className="container-main py-8">
