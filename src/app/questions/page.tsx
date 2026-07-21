@@ -1,11 +1,32 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { createClient } from "@libsql/client";
 import { QA_CATEGORIES, getQaCategory } from "@/lib/qa";
 import { SITE_NAME } from "@/lib/constants";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+// 裸 libsql client（经探针与诊断路由双重验证可用）。
+// 注意：本页刻意不用 @/lib/prisma 的 Prisma 客户端——@prisma/adapter-libsql
+// 在 Vercel 上对 libsql:// 的连接处理与裸 client 不一致，会连到无表上下文，
+// 导致 no such table: main.Question（即便同库同 token 裸 client 能查到 22 张表）。
+function getClient() {
+  return createClient({
+    url: process.env.DATABASE_URL ?? "",
+    authToken: (process.env.TURSO_AUTH_TOKEN ?? "").trim() || undefined,
+  });
+}
+
+type QRow = {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  views: number;
+  createdAt: string;
+  authorName: string | null;
+  answers: number;
+};
 
 export function generateMetadata(): Metadata {
   return {
@@ -25,50 +46,53 @@ export default async function QuestionsPage({
   const sent = searchParams.sent === "1";
   const activeCat = cat ? getQaCategory(cat) : undefined;
 
-  // 临时探针：用裸 @libsql/client 直接查表，看 /questions 自己连的库里有什么。
-  // 若此处也报 no such table，而 /api/diag-db 没事，则两者连的是不同库/不同部署。
-  try {
-    const probe = createClient({
-      url: process.env.DATABASE_URL ?? "",
-      authToken: (process.env.TURSO_AUTH_TOKEN ?? "").trim() || undefined,
-    });
-    const r = await probe.execute(
-      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-    );
-    const names = r.rows.map((x: Record<string, unknown>) => String(x.name));
-    console.log(
-      "[QUESTIONS-PROBE] db=" +
-        (process.env.DATABASE_URL ?? "").split("?")[0] +
-        " tables=" +
-        names.length +
-        " hasQuestion=" +
-        names.includes("Question")
-    );
-  } catch (e) {
-    console.log(
-      "[QUESTIONS-PROBE] ERROR: " + (e instanceof Error ? e.message : String(e))
-    );
-  }
+  const db = getClient();
 
-  const questions = await prisma.question.findMany({
-    where: { isPublic: true, ...(cat ? { category: cat } : {}) },
-    include: {
-      author: { select: { name: true } },
-      _count: { select: { answers: { where: { isPublic: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 30,
+  // 话题列表（含作者名、已审核回答数）
+  const listSql = cat
+    ? `SELECT q.id, q.title, q.content, q.category, q.views, q.createdAt,
+              u.name AS authorName,
+              (SELECT COUNT(*) FROM Answer a WHERE a.questionId = q.id AND a.isPublic = 1) AS answers
+       FROM Question q LEFT JOIN User u ON u.id = q.authorId
+       WHERE q.isPublic = 1 AND q.category = ?
+       ORDER BY q.createdAt DESC LIMIT 30`
+    : `SELECT q.id, q.title, q.content, q.category, q.views, q.createdAt,
+              u.name AS authorName,
+              (SELECT COUNT(*) FROM Answer a WHERE a.questionId = q.id AND a.isPublic = 1) AS answers
+       FROM Question q LEFT JOIN User u ON u.id = q.authorId
+       WHERE q.isPublic = 1
+       ORDER BY q.createdAt DESC LIMIT 30`;
+  const listRes = await db.execute({
+    sql: listSql,
+    args: cat ? [cat] : [],
+  });
+  const questions = listRes.rows.map((r) => {
+    const row = r as unknown as Record<string, unknown>;
+    return {
+      id: String(row.id),
+      title: String(row.title),
+      content: String(row.content),
+      category: String(row.category),
+      views: Number(row.views ?? 0),
+      createdAt: String(row.createdAt),
+      authorName: row.authorName == null ? null : String(row.authorName),
+      answers: Number(row.answers ?? 0),
+    } as QRow;
   });
 
-  // 手动统计各分类公开提问数（SQLite/libsql 不支持 groupBy）
+  // 各分类公开提问数
   const catKeys = QA_CATEGORIES.filter((c) => c.key).map((c) => c.key as string);
-  const catCounts: number[] = await Promise.all(
-    catKeys.map((k) => prisma.question.count({ where: { isPublic: true, category: k } }))
-  );
   const countMap: Record<string, number> = {};
-  catKeys.forEach((k, i) => {
-    countMap[k] = catCounts[i];
-  });
+  await Promise.all(
+    catKeys.map(async (k) => {
+      const res = await db.execute({
+        sql: "SELECT COUNT(*) AS c FROM Question WHERE isPublic = 1 AND category = ?",
+        args: [k],
+      });
+      const row = res.rows[0] as unknown as Record<string, unknown>;
+      countMap[k] = Number(row.c ?? 0);
+    })
+  );
 
   return (
     <div className="container-main py-8">
@@ -151,7 +175,7 @@ export default async function QuestionsPage({
                       </span>
                     )}
                     <span className="text-xs text-gray-400">
-                      {q._count.answers} 条回复 · {q.views} 浏览
+                      {q.answers} 条回复 · {q.views} 浏览
                     </span>
                   </div>
                   <h3 className="font-semibold text-gray-900 text-lg hover:text-primary-600 line-clamp-1">
@@ -159,7 +183,7 @@ export default async function QuestionsPage({
                   </h3>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{q.content}</p>
                   <div className="text-xs text-gray-400 mt-2">
-                    提问者：{q.author?.name || "匿名"} ·{" "}
+                    提问者：{q.authorName || "匿名"} ·{" "}
                     {new Date(q.createdAt).toLocaleDateString("zh-CN")}
                   </div>
                 </Link>
