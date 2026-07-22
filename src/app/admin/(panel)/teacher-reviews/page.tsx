@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { toggleTeacherReviewPublic, replyTeacherReview, deleteTeacherReview } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function AdminTeacherReviews({
       teacher: { select: { id: true, name: true } },
       user: { select: { name: true, image: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 200,
   });
 
@@ -96,7 +97,7 @@ export default async function AdminTeacherReviews({
                     <span className="px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600">已下架</span>
                   )}
                   <span className="text-xs text-gray-300 ml-auto">
-                    {new Date(r.createdAt).toLocaleDateString("zh-CN")}
+                    创建 {new Date(r.createdAt).toLocaleDateString("zh-CN")} · 修改 {fmtDateTime(r.updatedAt)}
                   </span>
                 </div>
                 {r.content && <p className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">{r.content}</p>}

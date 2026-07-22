@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { deleteCourse, toggleCourseStatus } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function AdminCourses({
       institution: { select: { name: true } },
       category: { select: { name: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 100,
   });
 
@@ -51,6 +52,8 @@ export default async function AdminCourses({
               <th className="text-left p-3 font-medium">分类</th>
               <th className="text-left p-3 font-medium">价格</th>
               <th className="text-left p-3 font-medium">状态</th>
+              <th className="text-left p-3 font-medium">创建时间</th>
+              <th className="text-left p-3 font-medium">最后修改</th>
               <th className="text-right p-3 font-medium">操作</th>
             </tr>
           </thead>
@@ -69,6 +72,8 @@ export default async function AdminCourses({
                     {c.status === "ACTIVE" ? "已上架" : "已下架"}
                   </span>
                 </td>
+                <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(c.createdAt)}</td>
+                <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(c.updatedAt)}</td>
                 <td className="p-3">
                   <div className="flex justify-end gap-2">
                     <form action={toggleCourseStatus.bind(null, c.id)}>
@@ -87,7 +92,7 @@ export default async function AdminCourses({
             ))}
             {courses.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-400">暂无课程</td>
+                <td colSpan={8} className="p-8 text-center text-gray-400">暂无课程</td>
               </tr>
             )}
           </tbody>

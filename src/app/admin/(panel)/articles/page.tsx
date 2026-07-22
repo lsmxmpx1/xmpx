@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { deleteArticle, toggleArticlePublished } from "../actions";
 import ArticleForm from "./ArticleForm";
 
@@ -13,7 +14,7 @@ export default async function AdminArticles({
   const q = searchParams.q?.trim();
   const articles = await prisma.article.findMany({
     where: q ? { title: { contains: q } } : undefined,
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 100,
   });
 
@@ -44,6 +45,8 @@ export default async function AdminArticles({
               <th className="text-left p-3 font-medium">标题</th>
               <th className="text-left p-3 font-medium">分类</th>
               <th className="text-left p-3 font-medium">状态</th>
+              <th className="text-left p-3 font-medium">创建时间</th>
+              <th className="text-left p-3 font-medium">最后修改</th>
               <th className="text-right p-3 font-medium">操作</th>
             </tr>
           </thead>
@@ -60,6 +63,8 @@ export default async function AdminArticles({
                     {a.published ? "已发布" : "草稿"}
                   </span>
                 </td>
+                <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(a.createdAt)}</td>
+                <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(a.updatedAt)}</td>
                 <td className="p-3">
                   <div className="flex justify-end gap-2">
                     <ArticleForm
@@ -89,7 +94,7 @@ export default async function AdminArticles({
             ))}
             {articles.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-400">暂无文章</td>
+                <td colSpan={6} className="p-8 text-center text-gray-400">暂无文章</td>
               </tr>
             )}
           </tbody>

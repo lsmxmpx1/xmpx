@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import {
   deleteInstitution,
   toggleInstitutionFeatured,
@@ -24,7 +25,7 @@ export default async function AdminInstitutions({
   const institutions = await prisma.institution.findMany({
     where: q ? { name: { contains: q } } : undefined,
     include: { _count: { select: { courses: true } } },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 100,
   });
 
@@ -54,6 +55,8 @@ export default async function AdminInstitutions({
               <th className="text-left p-3 font-medium">课程数</th>
               <th className="text-left p-3 font-medium">推荐</th>
               <th className="text-left p-3 font-medium">状态</th>
+              <th className="text-left p-3 font-medium">创建时间</th>
+              <th className="text-left p-3 font-medium">最后修改</th>
               <th className="text-right p-3 font-medium">操作</th>
             </tr>
           </thead>
@@ -76,6 +79,8 @@ export default async function AdminInstitutions({
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs ${st.cls}`}>{st.label}</span>
                   </td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(inst.createdAt)}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(inst.updatedAt)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2 flex-wrap">
                       {inst.status !== "APPROVED" && (
@@ -103,7 +108,7 @@ export default async function AdminInstitutions({
             })}
             {institutions.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-400">暂无机构</td>
+                <td colSpan={8} className="p-8 text-center text-gray-400">暂无机构</td>
               </tr>
             )}
           </tbody>

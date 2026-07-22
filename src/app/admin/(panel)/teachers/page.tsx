@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { toggleTeacherStatus, deleteTeacher } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function AdminTeachers({
       currentInstitution: { select: { name: true } },
       _count: { select: { reviews: true, employments: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 100,
   });
 
@@ -53,6 +54,8 @@ export default async function AdminTeachers({
               <th className="text-left p-3 font-medium">评分</th>
               <th className="text-left p-3 font-medium">评价/履历</th>
               <th className="text-left p-3 font-medium">状态</th>
+              <th className="text-left p-3 font-medium">创建时间</th>
+              <th className="text-left p-3 font-medium">最后修改</th>
               <th className="text-right p-3 font-medium">操作</th>
             </tr>
           </thead>
@@ -73,6 +76,8 @@ export default async function AdminTeachers({
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs ${st.cls}`}>{st.label}</span>
                   </td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(t.createdAt)}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(t.updatedAt)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2 flex-wrap">
                       <Link
@@ -97,7 +102,7 @@ export default async function AdminTeachers({
             })}
             {teachers.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-400">暂无老师</td>
+                <td colSpan={8} className="p-8 text-center text-gray-400">暂无老师</td>
               </tr>
             )}
           </tbody>

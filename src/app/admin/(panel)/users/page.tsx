@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { deleteUser, setUserRole } from "../actions";
 import UserForm from "./UserForm";
 
@@ -21,7 +22,7 @@ export default async function AdminUsers({
           ],
         }
       : undefined,
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 100,
   });
 
@@ -53,6 +54,8 @@ export default async function AdminUsers({
               <th className="text-left p-3 font-medium">邮箱</th>
               <th className="text-left p-3 font-medium">手机</th>
               <th className="text-left p-3 font-medium">角色</th>
+              <th className="text-left p-3 font-medium">创建时间</th>
+              <th className="text-left p-3 font-medium">最后修改</th>
               <th className="text-right p-3 font-medium">操作</th>
             </tr>
           </thead>
@@ -62,13 +65,15 @@ export default async function AdminUsers({
                 <td className="p-3 font-medium text-gray-800">{u.name || "-"}</td>
                 <td className="p-3 text-gray-600">{u.email || "-"}</td>
                 <td className="p-3 text-gray-600">{u.phone || "-"}</td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded-full text-xs ${u.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>
-                    {u.role}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <div className="flex justify-end gap-2">
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${u.role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(u.createdAt)}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(u.updatedAt)}</td>
+                  <td className="p-3">
+                    <div className="flex justify-end gap-2">
                     <UserForm
                       existing={{
                         id: u.id,
@@ -96,7 +101,7 @@ export default async function AdminUsers({
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400">暂无用户</td>
+                <td colSpan={7} className="p-8 text-center text-gray-400">暂无用户</td>
               </tr>
             )}
           </tbody>

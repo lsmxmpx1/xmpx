@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { deleteContact } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminContacts() {
   const contacts = await prisma.contact.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 100,
   });
 
@@ -24,7 +25,7 @@ export default async function AdminContacts() {
                 <span className="font-medium text-gray-800">{c.name || "匿名"}</span>
                 <span className="text-sm text-gray-500">{c.phone}</span>
                 <span className="text-xs text-gray-400">
-                  {new Date(c.createdAt).toLocaleString("zh-CN")}
+                  创建：{fmtDateTime(c.createdAt)} · 修改：{fmtDateTime(c.updatedAt)}
                 </span>
               </div>
               <p className="text-sm text-gray-600">{c.message || "（无留言内容）"}</p>

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminFeedback() {
   const list = await prisma.feedback.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 200,
     include: {
       user: { select: { id: true, name: true, image: true } },

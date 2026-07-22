@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { deleteCategory } from "../actions";
 import CategoryForm from "./CategoryForm";
 
@@ -10,7 +11,7 @@ export default async function AdminCategories() {
       parent: { select: { name: true } },
       _count: { select: { courses: true } },
     },
-    orderBy: { name: "asc" },
+    orderBy: { updatedAt: "desc" },
   });
 
   const catOptions = categories.map((c) => ({ id: c.id, name: c.name }));
@@ -30,6 +31,8 @@ export default async function AdminCategories() {
               <th className="text-left p-3 font-medium">Slug</th>
               <th className="text-left p-3 font-medium">父级</th>
               <th className="text-left p-3 font-medium">课程数</th>
+              <th className="text-left p-3 font-medium">创建时间</th>
+              <th className="text-left p-3 font-medium">最后修改</th>
               <th className="text-right p-3 font-medium">操作</th>
             </tr>
           </thead>
@@ -42,6 +45,8 @@ export default async function AdminCategories() {
                   <td className="p-3 text-gray-500">{cat.slug}</td>
                   <td className="p-3 text-gray-600">{cat.parent?.name || "-"}</td>
                   <td className="p-3 text-gray-600">{cat._count.courses}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(cat.createdAt)}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(cat.updatedAt)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
                       <CategoryForm
@@ -70,7 +75,7 @@ export default async function AdminCategories() {
             })}
             {categories.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400">暂无分类</td>
+                <td colSpan={7} className="p-8 text-center text-gray-400">暂无分类</td>
               </tr>
             )}
           </tbody>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { QA_CATEGORIES, getQaCategory, QUESTION_STATUS_LABEL } from "@/lib/qa";
 import {
   approveQuestion,
@@ -52,7 +53,7 @@ export default async function AdminQuestionsPage({
         orderBy: { createdAt: "desc" },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     take: 200,
   });
 
@@ -115,7 +116,7 @@ export default async function AdminQuestionsPage({
                       {q.title}
                     </Link>
                     <div className="text-xs text-gray-400 mt-1">
-                      {q.author?.name || "匿名"} · {new Date(q.createdAt).toLocaleString("zh-CN")} ·{" "}
+                      {q.author?.name || "匿名"} · 创建 {fmtDateTime(q.createdAt)} · 修改 {fmtDateTime(q.updatedAt)} ·{" "}
                       {q.views} 浏览 · {q.answers.length} 回复
                     </div>
                   </div>

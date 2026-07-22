@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fmtDateTime } from "@/lib/format";
 import { deleteAd, toggleAdActive, toggleAdPlanActive } from "../actions";
 import AdForm from "./AdForm";
 import AdPlanForm from "./AdPlanForm";
@@ -16,9 +17,9 @@ function fmtDate(d: Date | null | undefined): string {
 export default async function AdminAds() {
   const ads = await prisma.advertisement.findMany({
     include: { institution: { select: { name: true } } },
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
   });
-  const plans = await prisma.adPlan.findMany({ orderBy: { sortOrder: "asc" } });
+  const plans = await prisma.adPlan.findMany({ orderBy: { updatedAt: "desc" } });
   const institutions = await prisma.institution.findMany({
     select: { id: true, name: true },
     orderBy: { name: "asc" },
@@ -40,6 +41,8 @@ export default async function AdminAds() {
                 <th className="text-left p-3 font-medium">位置</th>
                 <th className="text-left p-3 font-medium">所属机构</th>
                 <th className="text-left p-3 font-medium">状态</th>
+                <th className="text-left p-3 font-medium">创建时间</th>
+                <th className="text-left p-3 font-medium">最后修改</th>
                 <th className="text-right p-3 font-medium">操作</th>
               </tr>
             </thead>
@@ -54,6 +57,8 @@ export default async function AdminAds() {
                       {ad.active ? "展示中" : "已暂停"}
                     </span>
                   </td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(ad.createdAt)}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(ad.updatedAt)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
                       <AdForm
@@ -84,7 +89,7 @@ export default async function AdminAds() {
               ))}
               {ads.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-400">暂无广告</td>
+                  <td colSpan={7} className="p-8 text-center text-gray-400">暂无广告</td>
                 </tr>
               )}
             </tbody>
@@ -108,6 +113,8 @@ export default async function AdminAds() {
                 <th className="text-left p-3 font-medium">功能特性</th>
                 <th className="text-left p-3 font-medium">排序</th>
                 <th className="text-left p-3 font-medium">状态</th>
+                <th className="text-left p-3 font-medium">创建时间</th>
+                <th className="text-left p-3 font-medium">最后修改</th>
                 <th className="text-right p-3 font-medium">操作</th>
               </tr>
             </thead>
@@ -125,6 +132,8 @@ export default async function AdminAds() {
                       {p.active ? "启用" : "停用"}
                     </span>
                   </td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(p.createdAt)}</td>
+                  <td className="p-3 text-gray-500 whitespace-nowrap">{fmtDateTime(p.updatedAt)}</td>
                   <td className="p-3">
                     <div className="flex justify-end gap-2">
                       <AdPlanForm
@@ -152,7 +161,7 @@ export default async function AdminAds() {
               ))}
               {plans.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-400">暂无套餐</td>
+                  <td colSpan={10} className="p-8 text-center text-gray-400">暂无套餐</td>
                 </tr>
               )}
             </tbody>

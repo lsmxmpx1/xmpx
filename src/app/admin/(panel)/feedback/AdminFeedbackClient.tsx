@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { fmtDateTime } from "@/lib/format";
 
 // 后台留言板：每条留言支持"查看模式（只读）↔ 编辑模式"切换
 // 默认：新留言（PENDING）自动进入编辑模式；已处理的进入查看模式
@@ -113,7 +114,7 @@ function FeedbackCard({ item }: { item: FeedbackItem }) {
             {item.targetName && <span className="text-xs text-gray-500">关联：{item.targetName}</span>}
             {!item.isPublic && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">前台隐藏</span>}
             <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_META[item.status]?.cls}`}>{STATUS_META[item.status]?.label}</span>
-            <span className="text-xs text-gray-400 ml-auto">{new Date(item.createdAt).toLocaleString("zh-CN")}</span>
+            <span className="text-xs text-gray-400 ml-auto">创建：{fmtDateTime(item.createdAt)} · 修改：{fmtDateTime(item.updatedAt)}</span>
           </div>
         </div>
       </div>
