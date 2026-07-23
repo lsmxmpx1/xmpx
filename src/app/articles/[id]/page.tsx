@@ -71,6 +71,16 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
               {article.category}
             </span>
           )}
+          {article.cover && (
+            <div className="mb-6 overflow-hidden rounded-xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={article.cover}
+                alt={article.title}
+                className="w-full object-cover max-h-96"
+              />
+            </div>
+          )}
           <h1 className="text-2xl md:text-3xl font-bold mb-4">{article.title}</h1>
           {article.publishedAt && (
             <div className="text-sm text-gray-400 mb-8">

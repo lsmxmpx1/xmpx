@@ -43,23 +43,35 @@ export default async function ArticlesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {articles.map((article) => (
-            <Link key={article.id} href={`/articles/${article.id}`} className="card p-6 group">
-              {article.category && (
-                <span className="text-xs bg-accent-50 text-accent-600 px-2 py-0.5 rounded-full inline-block mb-3">
-                  {article.category}
-                </span>
-              )}
-              <h2 className="font-bold text-lg group-hover:text-primary-600 transition-colors line-clamp-2 mb-2">
-                {article.title}
-              </h2>
-              {article.summary && (
-                <p className="text-sm text-gray-500 line-clamp-2">{article.summary}</p>
-              )}
-              {article.publishedAt && (
-                <div className="text-xs text-gray-400 mt-4">
-                  {new Date(article.publishedAt).toLocaleDateString("zh-CN")}
+            <Link key={article.id} href={`/articles/${article.id}`} className="card group overflow-hidden">
+              {article.cover ? (
+                <div className="h-40 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={article.cover}
+                    alt={article.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
-              )}
+              ) : null}
+              <div className="p-5">
+                {article.category && (
+                  <span className="text-xs bg-accent-50 text-accent-600 px-2 py-0.5 rounded-full inline-block mb-3">
+                    {article.category}
+                  </span>
+                )}
+                <h2 className="font-bold text-lg group-hover:text-primary-600 transition-colors line-clamp-2 mb-2">
+                  {article.title}
+                </h2>
+                {article.summary && (
+                  <p className="text-sm text-gray-500 line-clamp-2">{article.summary}</p>
+                )}
+                {article.publishedAt && (
+                  <div className="text-xs text-gray-400 mt-4">
+                    {new Date(article.publishedAt).toLocaleDateString("zh-CN")}
+                  </div>
+                )}
+              </div>
             </Link>
           ))}
         </div>
