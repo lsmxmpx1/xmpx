@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumbLd } from "@/lib/seo";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -27,8 +30,30 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
     take: 4,
   });
 
+  // 结构化数据：BlogPosting + 面包屑
+  const articleUrl = `${SITE_URL}/articles/${article.id}`;
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: article.title,
+    url: articleUrl,
+    ...(article.summary ? { description: article.summary } : {}),
+    ...(article.cover ? { image: article.cover } : {}),
+    ...(article.publishedAt ? { datePublished: new Date(article.publishedAt).toISOString() } : {}),
+    ...(article.updatedAt ? { dateModified: new Date(article.updatedAt).toISOString() } : {}),
+    author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    mainEntityOfPage: { "@type": "WebPage", "@id": articleUrl },
+  };
+  const articleBreadcrumb = breadcrumbLd([
+    { name: "首页", path: "/" },
+    { name: "资讯", path: "/articles" },
+    { name: article.title, path: `/articles/${article.id}` },
+  ]);
+
   return (
     <div className="container-main py-8">
+      <JsonLd data={[articleLd, articleBreadcrumb]} />
       <div className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-primary-600">首页</Link>
         <span className="mx-2">/</span>

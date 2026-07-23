@@ -7,6 +7,9 @@ import { SITE_NAME } from "@/lib/constants";
 import type { Metadata } from "next";
 import AnswerForm from "@/components/qa/AnswerForm";
 import QuestionViewTracker from "@/components/qa/QuestionViewTracker";
+import { SITE_URL } from "@/lib/constants";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumbLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +149,39 @@ export default async function QuestionDetailPage({
   const isAdmin = session?.user?.role === "ADMIN";
   const canView = q.isPublic || isAdmin;
 
+  // 结构化数据：QAPage + 面包屑（仅在公开可见时注入）
+  const qaUrl = `${SITE_URL}/questions/${q.id}`;
+  const qaLd = {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    mainEntity: {
+      "@type": "Question",
+      name: q.title,
+      text: q.content,
+      ...(q.authorName ? { author: { "@type": "Person", name: q.authorName } } : {}),
+      dateCreated: new Date(q.createdAt).toISOString(),
+      answerCount: answers.length,
+      ...(answers.length
+        ? {
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: answers[0].content,
+              ...(answers[0].authorName || answers[0].authorUserName
+                ? { author: { "@type": "Person", name: String(answers[0].authorName || answers[0].authorUserName) } }
+                : {}),
+              dateCreated: new Date(answers[0].createdAt).toISOString(),
+            },
+          }
+        : {}),
+    },
+  };
+  const qaBreadcrumb = breadcrumbLd([
+    { name: "首页", path: "/" },
+    { name: "问答社区", path: "/questions" },
+    ...(cat ? [{ name: cat.name, path: `/questions?cat=${cat.key}` }] : []),
+    { name: q.title, path: `/questions/${q.id}` },
+  ]);
+
   if (!canView) {
     return (
       <div className="container-main py-16 text-center">
@@ -161,6 +197,7 @@ export default async function QuestionDetailPage({
 
   return (
     <div className="container-main py-8 max-w-3xl">
+      <JsonLd data={[qaLd, qaBreadcrumb]} />
       <QuestionViewTracker id={q.id} />
 
       <div className="text-sm text-gray-500 mb-4">

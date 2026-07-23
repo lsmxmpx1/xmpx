@@ -6,6 +6,9 @@ import { auth } from "@/lib/auth";
 import type { Metadata } from "next";
 import TeacherReviewList from "@/components/TeacherReviewList";
 import MessageButton from "@/components/MessageButton";
+import { SITE_URL } from "@/lib/constants";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumbLd } from "@/lib/seo";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -52,8 +55,46 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
     ? teacher.expertise.split(/[,，]/).map((e) => e.trim()).filter(Boolean)
     : [];
 
+  // 结构化数据：Person + 面包屑
+  const teacherUrl = `${SITE_URL}/teachers/${teacher.id}`;
+  const teacherLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: teacher.name,
+    url: teacherUrl,
+    ...(teacher.title ? { jobTitle: teacher.title } : {}),
+    ...(teacher.avatar ? { image: teacher.avatar } : {}),
+    ...(teacher.bio ? { description: teacher.bio } : {}),
+    ...(teacher.district
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: teacher.district,
+            addressRegion: "福建省",
+            addressCountry: "CN",
+          },
+        }
+      : {}),
+    ...(teacher.currentInstitution
+      ? {
+          affiliation: {
+            "@type": "Organization",
+            name: teacher.currentInstitution.name,
+            url: `${SITE_URL}/institutions/${teacher.currentInstitution.id}`,
+          },
+        }
+      : {}),
+    ...(expertiseTags.length ? { knowsAbout: expertiseTags } : {}),
+  };
+  const teacherBreadcrumb = breadcrumbLd([
+    { name: "首页", path: "/" },
+    { name: "找老师", path: "/teachers" },
+    { name: teacher.name, path: `/teachers/${teacher.id}` },
+  ]);
+
   return (
     <div className="container-main py-8">
+      <JsonLd data={[teacherLd, teacherBreadcrumb]} />
       <div className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-primary-600">首页</Link>
         <span className="mx-2">/</span>

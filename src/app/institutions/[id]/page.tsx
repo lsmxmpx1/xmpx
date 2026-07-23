@@ -9,6 +9,9 @@ import ContactButton from "@/components/ContactButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import ReviewList from "@/components/ReviewList";
 import MessageButton from "@/components/MessageButton";
+import { SITE_URL } from "@/lib/constants";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumbLd } from "@/lib/seo";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -51,8 +54,51 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
     ? institution.images.split(",").filter(Boolean)
     : [];
 
+  // 结构化数据：EducationalOrganization + 面包屑
+  const instUrl = `${SITE_URL}/institutions/${institution.id}`;
+  const instLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: institution.name,
+    url: instUrl,
+    ...(institution.description ? { description: institution.description } : {}),
+    ...(institution.logo ? { logo: institution.logo } : {}),
+    ...(institution.cover ? { image: institution.cover } : {}),
+    ...(institution.phone ? { telephone: institution.phone } : {}),
+    ...(institution.website ? { sameAs: institution.website } : {}),
+    ...(institution.address
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: institution.address,
+            addressLocality: institution.district || "厦门",
+            addressRegion: "福建省",
+            addressCountry: "CN",
+          },
+        }
+      : {}),
+    ...(institution.district ? { areaServed: institution.district } : {}),
+    ...(institution.rating && institution.reviewCount
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(institution.rating.toFixed(1)),
+            reviewCount: institution.reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+  };
+  const instBreadcrumb = breadcrumbLd([
+    { name: "首页", path: "/" },
+    { name: "机构", path: "/institutions" },
+    { name: institution.name, path: `/institutions/${institution.id}` },
+  ]);
+
   return (
     <div className="container-main py-8">
+      <JsonLd data={[instLd, instBreadcrumb]} />
       <div className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-primary-600">首页</Link>
         <span className="mx-2">/</span>

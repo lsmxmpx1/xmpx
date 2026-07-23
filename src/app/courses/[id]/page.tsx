@@ -8,6 +8,9 @@ import type { Metadata } from "next";
 import ContactButton from "@/components/ContactButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import ReviewList from "@/components/ReviewList";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumbLd } from "@/lib/seo";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -62,8 +65,49 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
     take: 4,
   });
 
+  // 结构化数据：Course + 面包屑
+  const courseUrl = `${SITE_URL}/courses/${course.id}`;
+  const courseLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: course.title,
+    ...(course.description ? { description: course.description } : {}),
+    url: courseUrl,
+    ...(course.cover ? { image: course.cover } : {}),
+    ...(course.category?.name ? { keywords: course.category.name } : {}),
+    provider: {
+      "@type": "Organization",
+      name: course.institution?.name || SITE_NAME,
+      ...(course.institution?.phone ? { telephone: course.institution.phone } : {}),
+    },
+    offers: {
+      "@type": "Offer",
+      price: course.price ? Number(course.price) : 0,
+      priceCurrency: "CNY",
+      availability: "https://schema.org/InStock",
+      url: courseUrl,
+    },
+    ...(reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(avgRating.toFixed(1)),
+            reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+  };
+  const courseBreadcrumb = breadcrumbLd([
+    { name: "首页", path: "/" },
+    { name: "课程", path: "/courses" },
+    { name: course.title, path: `/courses/${course.id}` },
+  ]);
+
   return (
     <div className="container-main py-8">
+      <JsonLd data={[courseLd, courseBreadcrumb]} />
       <div className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-primary-600">首页</Link>
         <span className="mx-2">/</span>
