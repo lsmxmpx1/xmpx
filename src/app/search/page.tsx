@@ -26,6 +26,8 @@ export function generateMetadata({ searchParams }: { searchParams: { q?: string 
   return {
     title: searchParams.q ? `搜索: ${searchParams.q}` : "搜索课程、机构和老师",
     description: `在厦门培训网搜索${searchParams.q ? `"${searchParams.q}"` : ""}相关课程、培训机构与老师`,
+    // 动态搜索结果页不收录，避免重复/低质页进入索引
+    robots: { index: false, follow: true },
   };
 }
 

@@ -109,7 +109,7 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.map((cat) => (
                   <div key={cat.id} className="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition-shadow">
-                    <Link href={`/courses?category=${cat.slug}`} className="flex items-center gap-3 mb-3 group">
+                    <Link href={`/courses/category/${cat.slug}`} className="flex items-center gap-3 mb-3 group">
                       <span className="text-3xl">{cat.icon}</span>
                       <span className="text-lg font-bold text-gray-800 group-hover:text-primary-600 transition-colors">{cat.name}</span>
                     </Link>
@@ -117,7 +117,7 @@ export default async function HomePage() {
                       {cat.children.map((sub) => (
                         <Link
                           key={sub.id}
-                          href={`/courses?category=${sub.slug}`}
+                          href={`/courses/category/${sub.slug}`}
                           className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors"
                         >
                           {sub.icon} {sub.name}

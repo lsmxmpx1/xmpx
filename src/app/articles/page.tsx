@@ -1,8 +1,19 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import AdSlot from "@/components/ad/AdSlot";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "教育资讯 - 厦门培训网",
+    description:
+      "厦门教育培训政策解读、考试资讯、机构测评与学习攻略，帮你选对课程、避开套路。",
+    alternates: { canonical: `${SITE_URL}/articles` },
+  };
+}
 
 export default async function ArticlesPage() {
   const articles = await prisma.article.findMany({

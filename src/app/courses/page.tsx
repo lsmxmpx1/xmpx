@@ -4,8 +4,19 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import AdSlot from "@/components/ad/AdSlot";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "培训课程大全 - 厦门培训网",
+    description:
+      "厦门各类培训课程大全，覆盖K12辅导、艺术体育、职业技能、考证培训、学历提升等，按分类与区域筛选优质课程。",
+    alternates: { canonical: `${SITE_URL}/courses` },
+  };
+}
 
 export default async function CoursesPage({
   searchParams,
@@ -94,7 +105,7 @@ export default async function CoursesPage({
               {parentCategories.map((cat) => (
                 <li key={cat.id}>
                   <Link
-                    href={`/courses?category=${cat.slug}`}
+                    href={`/courses/category/${cat.slug}`}
                     className={`block px-3 py-2 rounded-lg text-sm font-medium ${searchParams.category === cat.slug ? "bg-primary-50 text-primary-600" : "text-gray-700 hover:bg-gray-50"}`}
                   >
                     {cat.icon} {cat.name}
@@ -104,7 +115,7 @@ export default async function CoursesPage({
                       {cat.children.map((sub) => (
                         <li key={sub.id}>
                           <Link
-                            href={`/courses?category=${sub.slug}`}
+                            href={`/courses/category/${sub.slug}`}
                             className={`block px-3 py-1.5 rounded-lg text-sm ${searchParams.category === sub.slug ? "bg-primary-50 text-primary-600 font-medium" : "text-gray-500 hover:bg-gray-50"}`}
                           >
                             {sub.icon} {sub.name}

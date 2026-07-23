@@ -4,8 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { DISTRICTS } from "@/lib/utils";
 import AdSlot from "@/components/ad/AdSlot";
+import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "培训机构大全 - 厦门培训网",
+    description:
+      "厦门各区域优质培训机构大全，按区域与评分筛选，查机构课程、地址、电话与学员真实评价。",
+    alternates: { canonical: `${SITE_URL}/institutions` },
+  };
+}
 
 const SORT_OPTIONS = [
   { key: "", label: "综合评分" },

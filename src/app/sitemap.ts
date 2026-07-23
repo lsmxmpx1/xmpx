@@ -11,13 +11,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const institutions = await prisma.institution.findMany({ select: { id: true, updatedAt: true } });
   const articles = await prisma.article.findMany({ where: { published: true }, select: { id: true, updatedAt: true } });
   const questions = await prisma.question.findMany({ where: { isPublic: true }, select: { id: true, updatedAt: true } });
+  const teachers = await prisma.teacher.findMany({ select: { id: true, updatedAt: true } });
+  const categories = await prisma.category.findMany({ select: { slug: true, updatedAt: true } });
 
   const staticPages = [
     { url: baseUrl, lastModified: new Date(), priority: 1 },
     { url: `${baseUrl}/courses`, lastModified: new Date(), priority: 0.9 },
     { url: `${baseUrl}/institutions`, lastModified: new Date(), priority: 0.9 },
+    { url: `${baseUrl}/teachers`, lastModified: new Date(), priority: 0.8 },
     { url: `${baseUrl}/articles`, lastModified: new Date(), priority: 0.8 },
     { url: `${baseUrl}/questions`, lastModified: new Date(), priority: 0.8 },
+    { url: `${baseUrl}/about`, lastModified: new Date(), priority: 0.4 },
+    { url: `${baseUrl}/contact`, lastModified: new Date(), priority: 0.4 },
+    { url: `${baseUrl}/feedback`, lastModified: new Date(), priority: 0.4 },
+    { url: `${baseUrl}/recommend`, lastModified: new Date(), priority: 0.4 },
+    { url: `${baseUrl}/privacy`, lastModified: new Date(), priority: 0.2 },
+    { url: `${baseUrl}/terms`, lastModified: new Date(), priority: 0.2 },
   ];
 
   const coursePages = courses.map((c) => ({
@@ -32,6 +41,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  const teacherPages = teachers.map((t) => ({
+    url: `${baseUrl}/teachers/${t.id}`,
+    lastModified: t.updatedAt,
+    priority: 0.6,
+  }));
+
   const articlePages = articles.map((a) => ({
     url: `${baseUrl}/articles/${a.id}`,
     lastModified: a.updatedAt,
@@ -44,5 +59,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...coursePages, ...institutionPages, ...articlePages, ...questionPages];
+  const categoryPages = categories.map((cat) => ({
+    url: `${baseUrl}/courses/category/${cat.slug}`,
+    lastModified: cat.updatedAt,
+    priority: 0.6,
+  }));
+
+  return [
+    ...staticPages,
+    ...coursePages,
+    ...institutionPages,
+    ...teacherPages,
+    ...articlePages,
+    ...questionPages,
+    ...categoryPages,
+  ];
 }
