@@ -11,6 +11,8 @@ import ReviewList from "@/components/ReviewList";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
+import Faq from "@/components/seo/Faq";
+import { getCourseFaqs } from "@/lib/faq";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -183,6 +185,23 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
               </div>
             )}
 
+            {/* 选课建议（基于真实数据的长尾引导段，提升正文相关词密度） */}
+            <div className="mt-4 bg-primary-50/60 rounded-xl p-4 text-sm text-gray-600 leading-relaxed">
+              在厦门{course.institution?.district || "本地"}学习{course.category?.name || "培训"}课程，
+              {course.institution?.name}提供「{course.title}」课程，参考价格 {formatPrice(course.price)}。
+              建议先预约试听，结合师资与学员评价对比后再报名。
+            </div>
+
+            {/* 课程信息结构化卡 */}
+            <div className="mt-4 bg-gray-50 rounded-xl p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+              <div><div className="text-gray-400 mb-1">参考价格</div><div className="font-semibold text-accent-600">{formatPrice(course.price)}</div></div>
+              <div><div className="text-gray-400 mb-1">所属机构</div><div className="font-semibold">{course.institution?.name || "-"}</div></div>
+              <div><div className="text-gray-400 mb-1">所在区域</div><div className="font-semibold">{course.institution?.district || "-"}</div></div>
+              <div><div className="text-gray-400 mb-1">课程分类</div><div className="font-semibold">{course.category?.name || "-"}</div></div>
+              <div><div className="text-gray-400 mb-1">学员评分</div><div className="font-semibold">{reviewCount > 0 ? `${avgRating.toFixed(1)}（${reviewCount} 条）` : "暂无"}</div></div>
+              <div><div className="text-gray-400 mb-1">更新时间</div><div className="font-semibold">{new Date(course.updatedAt).toLocaleDateString("zh-CN")}</div></div>
+            </div>
+
             {/* Contact + favorite buttons */}
             <div className="mt-8 pt-6 border-t flex flex-wrap gap-3 items-center">
               <ContactButton
@@ -206,6 +225,8 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
               currentUserId={currentUserId}
             />
           </div>
+
+          <Faq items={getCourseFaqs(course, course.institution)} />
         </div>
 
         {/* Sidebar */}

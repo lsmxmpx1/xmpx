@@ -12,6 +12,8 @@ import MessageButton from "@/components/MessageButton";
 import { SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
+import Faq from "@/components/seo/Faq";
+import { getInstitutionFaqs } from "@/lib/faq";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -169,6 +171,22 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               </div>
             )}
 
+            {/* 机构导览（基于真实数据的长尾引导段） */}
+            <div className="mt-4 bg-primary-50/60 rounded-xl p-4 text-sm text-gray-600 leading-relaxed">
+              {institution.name}位于{institution.district || "厦门"}，已开设约 {institution.courseCount} 门课程，综合评分 {institution.rating.toFixed(1)}。
+              如需了解具体上课安排与优惠，建议直接咨询或预约试听。
+            </div>
+
+            {/* 机构概况结构化卡 */}
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+              <div><div className="text-gray-400 mb-1">所在区域</div><div className="font-semibold">{institution.district || "-"}</div></div>
+              <div><div className="text-gray-400 mb-1">开设课程</div><div className="font-semibold">{institution.courseCount} 门</div></div>
+              <div><div className="text-gray-400 mb-1">学员评分</div><div className="font-semibold">{institution.rating.toFixed(1)}（{institution.reviewCount}）</div></div>
+              <div><div className="text-gray-400 mb-1">地址</div><div className="font-semibold">{institution.address || "-"}</div></div>
+              <div><div className="text-gray-400 mb-1">联系电话</div><div className="font-semibold">{institution.phone || "-"}</div></div>
+              <div><div className="text-gray-400 mb-1">更新时间</div><div className="font-semibold">{new Date(institution.updatedAt).toLocaleDateString("zh-CN")}</div></div>
+            </div>
+
             <div className="mt-6 flex gap-3 flex-wrap">
               <ContactButton
                 institutionId={institution.id}
@@ -245,6 +263,8 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               currentUserId={currentUserId}
             />
           </div>
+
+          <Faq items={getInstitutionFaqs(institution)} />
         </div>
 
         {/* Sidebar */}

@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
+import Faq from "@/components/seo/Faq";
+import { getArticleFaqs } from "@/lib/faq";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -86,6 +88,8 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
             {article.content || "暂无详细内容"}
           </div>
         </div>
+
+        <Faq items={getArticleFaqs()} />
 
         {related.length > 0 && (
           <div className="mt-12">

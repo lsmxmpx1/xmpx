@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { DISTRICTS } from "@/lib/utils";
 
 // 构建时 SQLite 并发读会超时，改为动态渲染
 export const dynamic = "force-dynamic";
@@ -65,6 +66,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  const districtPages = DISTRICTS.map((d) => ({
+    url: `${baseUrl}/courses/district/${encodeURIComponent(d)}`,
+    lastModified: new Date(),
+    priority: 0.5,
+  }));
+
   return [
     ...staticPages,
     ...coursePages,
@@ -73,5 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...articlePages,
     ...questionPages,
     ...categoryPages,
+    ...districtPages,
   ];
 }

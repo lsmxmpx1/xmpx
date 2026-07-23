@@ -9,6 +9,8 @@ import MessageButton from "@/components/MessageButton";
 import { SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
+import Faq from "@/components/seo/Faq";
+import { getTeacherFaqs } from "@/lib/faq";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -229,6 +231,8 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
               canReview={canReview}
             />
           </div>
+
+          <Faq items={getTeacherFaqs(teacher)} />
         </div>
 
         {/* Sidebar */}

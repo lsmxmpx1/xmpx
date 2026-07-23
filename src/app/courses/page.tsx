@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, DISTRICTS } from "@/lib/utils";
 import AdSlot from "@/components/ad/AdSlot";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
@@ -124,6 +124,20 @@ export default async function CoursesPage({
                       ))}
                     </ul>
                   )}
+                </li>
+              ))}
+            </ul>
+
+            <h3 className="font-bold mb-3 mt-6">按区域</h3>
+            <ul className="space-y-1">
+              {DISTRICTS.map((d) => (
+                <li key={d}>
+                  <Link
+                    href={`/courses/district/${encodeURIComponent(d)}`}
+                    className="block px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    {d}
+                  </Link>
                 </li>
               ))}
             </ul>
