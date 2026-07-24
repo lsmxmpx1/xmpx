@@ -20,7 +20,26 @@ export default function Header() {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // 轮询未读消息数（登录时每 30 秒一次）
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    let mounted = true;
+    async function fetchUnread() {
+      try {
+        const res = await fetch("/api/notifications?unread=1");
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted) setUnreadCount(data.unread ?? 0);
+        }
+      } catch {}
+    }
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30_000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, [session?.user?.id]);
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -41,7 +60,24 @@ export default function Header() {
           <span>厦门本地2000+优质培训机构入驻中，找培训就上{SITE_NAME}</span>
           <div className="hidden sm:flex gap-4 items-center">
             {session?.user ? (
-              <div ref={userMenuRef} className="relative">
+              <>
+                {/* 消息中心铃铛 */}
+                <Link
+                  href="/dashboard/notifications"
+                  className="relative flex items-center hover:opacity-80 transition-opacity"
+                  title="消息中心"
+                >
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 leading-none">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
+                <div ref={userMenuRef} className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-1.5 hover:underline cursor-pointer px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
@@ -74,6 +110,21 @@ export default function Header() {
                     用户中心
                   </Link>
                   <Link
+                    href="/dashboard/notifications"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    消息中心
+                    {unreadCount > 0 && (
+                      <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 leading-none">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
                     href="/dashboard/security"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
@@ -94,6 +145,7 @@ export default function Header() {
                   </button>
                 </div>
               </div>
+              </>
             ) : (
               <>
                 <Link href="/auth/login" className="hover:underline">登录</Link>

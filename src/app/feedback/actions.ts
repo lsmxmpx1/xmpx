@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification, NotificationType } from "@/lib/notify";
 
 const VALID_TYPES = ["INSTITUTION", "COURSE", "OTHER"] as const;
 type FeedbackType = (typeof VALID_TYPES)[number];
@@ -84,6 +85,24 @@ export async function submitFeedbackReply(formData: FormData): Promise<{ error?:
       user: { select: { id: true, name: true, image: true } },
     },
   });
+
+  // 通知原留言作者
+  try {
+    const original = await prisma.feedback.findUnique({
+      where: { id: feedbackId },
+      select: { userId: true },
+    });
+    if (original?.userId && original.userId !== session.user.id) {
+      createNotification({
+        recipientId: original.userId,
+        type: NotificationType.FEEDBACK_REPLY,
+        title: `有人回复了您的留言`,
+        body: content.length > 80 ? content.slice(0, 80) + "..." : content,
+        relatedType: "Feedback",
+        relatedId: feedbackId,
+      }).catch(() => {});
+    }
+  } catch {}
 
   revalidatePath("/feedback");
   revalidatePath("/admin/feedback");

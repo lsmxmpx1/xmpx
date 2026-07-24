@@ -31,6 +31,7 @@ model User {
   answers         Answer[]
   institutionId   String?
   ownedInstitution Institution? @relation("InstitutionOwner")
+  notifications   Notification[]
 
   @@index([role])
 }
@@ -274,6 +275,32 @@ model VerificationCode {
 
   @@unique([type, target])
   @@index([target])
+}
+
+// ──────────────────── 统一消息通知（消息中心） ────────────────────
+// type 枚举：
+//   MESSAGE          — 收到私信
+//   CONTACT          — 收到咨询/报名
+//   FEEDBACK_REPLY   — 留言被回复
+//   REVIEW           — 收到评价
+//   QUESTION_APPROVED — 提问审核通过
+//   ANSWER_APPROVED  — 回复被审核通过（通知提问者）
+//   ADMIN_REPLY_QUESTION — 管理员回复了提问
+model Notification {
+  id          String    @id @default(cuid())
+  recipientId String    // 接收者 userId
+  recipient   User      @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  type        String    // 见上方枚举
+  title       String    // 通知标题（简短）
+  body        String?   // 通知正文（可选，详情页展示）
+  relatedType String?   // 关联实体类型：Message|Contact|Feedback|Review|Question|Answer|Conversation
+  relatedId   String?   // 关联实体 ID（用于跳转）
+  readAt      DateTime? // 已读时间，null = 未读
+  createdAt   DateTime  @default(now())
+
+  @@index([recipientId])
+  @@index([recipientId, readAt])
+  @@index([createdAt])
 }
 
 model Feedback {

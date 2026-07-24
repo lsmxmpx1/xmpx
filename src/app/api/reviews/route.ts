@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification, NotificationType } from "@/lib/notify";
 
 // GET /api/reviews?courseId=xxx or ?institutionId=xxx
 export async function GET(request: NextRequest) {
@@ -84,6 +85,27 @@ export async function POST(request: NextRequest) {
 
   // Update aggregate rating
   await updateAggregateRating(courseId, institutionId);
+
+  // 通知机构 owner（仅机构评价时）
+  if (institutionId) {
+    try {
+      const inst = await prisma.institution.findUnique({
+        where: { id: institutionId },
+        select: { ownerId: true, name: true },
+      });
+      if (inst?.ownerId && inst.ownerId !== userId) {
+        const reviewerName = session.user.name || "用户";
+        createNotification({
+          recipientId: inst.ownerId,
+          type: NotificationType.REVIEW,
+          title: `${reviewerName} 对${inst.name || "您的机构"}发表了评价`,
+          body: content || `评分：${rating} 星`,
+          relatedType: "Review",
+          relatedId: review.id,
+        }).catch(() => {});
+      }
+    } catch {}
+  }
 
   return NextResponse.json({ success: true, review });
 }

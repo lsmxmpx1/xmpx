@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createNotification, NotificationType } from "@/lib/notify";
 
 const MAX_LEN = 2000;
 
@@ -102,6 +103,20 @@ export async function sendMessage(conversationId: string, content: string) {
       data: { lastMessage: text, lastAt: new Date() },
     }),
   ]);
+
+  // 通知对方
+  const recipientId = conv.studentId === me ? conv.peerUserId : conv.studentId;
+  if (recipientId) {
+    const senderName = session.user.name || "用户";
+    createNotification({
+      recipientId,
+      type: NotificationType.MESSAGE,
+      title: `您收到一条来自 ${senderName} 的私信`,
+      body: text.length > 80 ? text.slice(0, 80) + "..." : text,
+      relatedType: "Conversation",
+      relatedId: conversationId,
+    }).catch(() => {});
+  }
 
   revalidatePath("/dashboard/messages");
   return { ok: true };

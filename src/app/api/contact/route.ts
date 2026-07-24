@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createNotification, NotificationType } from "@/lib/notify";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,6 +21,26 @@ export async function POST(request: NextRequest) {
         institutionId: institutionId || null,
       },
     });
+
+    // 通知机构 owner
+    if (institutionId) {
+      try {
+        const inst = await prisma.institution.findUnique({
+          where: { id: institutionId },
+          select: { ownerId: true, name: true },
+        });
+        if (inst?.ownerId) {
+          createNotification({
+            recipientId: inst.ownerId,
+            type: NotificationType.CONTACT,
+            title: `收到新的咨询报名${inst.name ? `（${inst.name}）` : ""}`,
+            body: message || `手机号：${phone}`,
+            relatedType: "Contact",
+            relatedId: contact.id,
+          }).catch(() => {});
+        }
+      } catch {}
+    }
 
     return NextResponse.json({ success: true, id: contact.id });
   } catch (error) {

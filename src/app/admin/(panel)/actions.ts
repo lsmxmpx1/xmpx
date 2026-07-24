@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { createNotification, NotificationType } from "@/lib/notify";
 
 /* ----------------------- 课程 ----------------------- */
 
@@ -510,7 +511,19 @@ export async function deleteTeacherReview(id: string) {
 export async function approveQuestion(id: string) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return;
+  const q = await prisma.question.findUnique({ where: { id }, select: { authorId: true, title: true } });
   await prisma.question.update({ where: { id }, data: { status: "APPROVED", isPublic: true } });
+  // 通知提问者
+  if (q?.authorId) {
+    createNotification({
+      recipientId: q.authorId,
+      type: NotificationType.QUESTION_APPROVED,
+      title: "您的提问已审核通过",
+      body: q.title.length > 80 ? q.title.slice(0, 80) + "..." : q.title,
+      relatedType: "Question",
+      relatedId: id,
+    }).catch(() => {});
+  }
   revalidatePath("/admin/questions");
   revalidatePath("/questions");
   revalidatePath(`/questions/${id}`);
@@ -544,7 +557,19 @@ export async function replyQuestion(id: string, formData: FormData): Promise<voi
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return;
   const adminReply = String(formData.get("adminReply") || "").trim() || null;
+  const q = await prisma.question.findUnique({ where: { id }, select: { authorId: true } });
   await prisma.question.update({ where: { id }, data: { adminReply } });
+  // 通知提问者
+  if (q?.authorId && adminReply) {
+    createNotification({
+      recipientId: q.authorId,
+      type: NotificationType.ADMIN_REPLY_QUESTION,
+      title: "管理员回复了您的提问",
+      body: adminReply.length > 80 ? adminReply.slice(0, 80) + "..." : adminReply,
+      relatedType: "Question",
+      relatedId: id,
+    }).catch(() => {});
+  }
   revalidatePath("/admin/questions");
   revalidatePath(`/questions/${id}`);
 }
@@ -561,7 +586,24 @@ export async function deleteQuestion(id: string) {
 export async function approveAnswer(id: string) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") return;
+  const a = await prisma.answer.findUnique({ where: { id }, select: { questionId: true, content: true } });
   await prisma.answer.update({ where: { id }, data: { status: "APPROVED", isPublic: true } });
+  // 通知提问者
+  if (a?.questionId) {
+    try {
+      const q = await prisma.question.findUnique({ where: { id: a.questionId }, select: { authorId: true } });
+      if (q?.authorId) {
+        createNotification({
+          recipientId: q.authorId,
+          type: NotificationType.ANSWER_APPROVED,
+          title: "您的提问有了新回复",
+          body: a.content?.length ? (a.content.length > 80 ? a.content.slice(0, 80) + "..." : a.content) : undefined,
+          relatedType: "Question",
+          relatedId: a.questionId,
+        }).catch(() => {});
+      }
+    } catch {}
+  }
   revalidatePath("/admin/questions");
 }
 
