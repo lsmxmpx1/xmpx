@@ -243,13 +243,22 @@ export default function ProfileForm({ user }: { user: UserData }) {
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">邮箱</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              className="w-full sm:max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-              placeholder="your@email.com"
-            />
+            <div className="flex items-center gap-3">
+              <input
+                value={email}
+                readOnly
+                type="email"
+                className="w-full sm:max-w-md border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-500 focus:outline-none"
+                placeholder="your@email.com"
+              />
+              <Link
+                href="/dashboard/security"
+                className="text-sm text-primary-600 hover:underline whitespace-nowrap shrink-0"
+              >
+                更换邮箱
+              </Link>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">更换邮箱需验证，请前往「账号安全」</p>
           </div>
           <div className="flex items-center gap-3 pt-2">
             <button
