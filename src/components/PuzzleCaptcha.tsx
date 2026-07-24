@@ -21,11 +21,13 @@ const PIECE_H = 44;
 export default function PuzzleCaptcha({ onVerified, onError, className = "" }: PuzzleCaptchaProps) {
   const [data, setData] = useState<PuzzleData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dragX, setDragX] = useState(0); // 拖拽偏移量（px）
+  const [dragX, setDragX] = useState(0); // 拖拽偏移量（原始坐标 px，与后端 W 同尺度）
   const [dragging, setDragging] = useState(false);
   const [verified, setVerified] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [scale, setScale] = useState(1); // 背景图实际显示宽度 / 数据宽度
 
+  const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
@@ -38,7 +40,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     setVerified(false);
     setFailed(false);
     try {
-      const res = await fetch(`/api/captcha?t=${Date.now()}`);
+      const res = await fetch(`/api/captcha?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("加载失败");
       const json = await res.json();
       if (json.error) throw new Error(json.error);
@@ -54,6 +56,40 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     loadPuzzle();
   }, [loadPuzzle]);
 
+  // 监听背景图加载完成，计算缩放比例
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+
+    const onLoad = () => {
+      // naturalWidth 是图片原始宽度（= data.w = 280）
+      // offsetWidth 是实际显示宽度
+      if (img.naturalWidth > 0 && img.offsetWidth > 0) {
+        setScale(img.offsetWidth / img.naturalWidth);
+      }
+    };
+
+    // 图片可能已加载完
+    if (img.complete) {
+      onLoad();
+    } else {
+      img.addEventListener("load", onLoad);
+      return () => img.removeEventListener("load", onLoad);
+    }
+  }, [data]);
+
+  // 窗口 resize 时重新计算缩放
+  useEffect(() => {
+    const onResize = () => {
+      const img = imgRef.current;
+      if (img?.complete && img.naturalWidth > 0 && img.offsetWidth > 0) {
+        setScale(img.offsetWidth / img.naturalWidth);
+      }
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   // ─── 拖拽逻辑（mouse + touch 统一） ───
   const handleDragStart = useCallback((clientX: number) => {
     if (verified || loading || !data) return;
@@ -66,8 +102,8 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   const handleDragMove = useCallback((clientX: number) => {
     if (!dragging || !data || !containerRef.current) return;
     const delta = clientX - startXRef.current;
-    const sliderW = containerRef.current.clientWidth - PIECE_W; // 最大可拖拽距离 ≈ 背景宽度 - 拼图块宽
-    const maxDrag = data.w - PIECE_W - 10; // 留一点边距
+    const sliderW = containerRef.current.clientWidth - 40; // 滑块可用宽度（减去滑块手柄宽）
+    const maxDrag = data.w - PIECE_W - 10; // 留一点边距（原始坐标空间）
     const newX = Math.max(0, Math.min(startDragXRef.current + delta * (maxDrag / sliderW), maxDrag));
     setDragX(newX);
   }, [dragging, data]);
@@ -112,10 +148,9 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     };
   }, [dragging, handleDragMove, handleDragEnd]);
 
-  // 外部调用：标记验证结果
+  // 失败后自动重置位置
   useEffect(() => {
     if (failed) {
-      // 失败后自动重置位置，允许重试
       const timer = setTimeout(() => setDragX(0), 600);
       return () => clearTimeout(timer);
     }
@@ -130,10 +165,6 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     }
   }, []);
 
-  // 暴露方法给父组件用 ref
-  // （简化方案：直接导出 reload 函数供外部使用）
-  // 通过一个简单的 key-based refresh 机制
-
   if (loading) {
     return (
       <div className={`w-full rounded-lg border border-gray-200 bg-gray-50 ${className}`}>
@@ -146,8 +177,11 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
 
   if (!data) return null;
 
-  // 计算拼图块在背景上的显示位置（按比例缩放）
-  const displayScale = 1; // 背景图 CSS 宽度 / 数据宽度
+  // 拼图块在屏幕上的显示尺寸和位置（按 scale 缩放）
+  const displayPieceW = PIECE_W * scale;
+  const displayPieceH = PIECE_H * scale;
+  const displayPieceY = data.pieceY * scale;
+  const displayDragX = dragX * scale;
 
   return (
     <div className={`w-full select-none ${className}`}>
@@ -156,22 +190,28 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
         请完成下方拼图验证后继续
       </p>
 
-      {/* 图片区域 */}
-      <div className="relative overflow-hidden rounded-t-lg border border-b-0 border-gray-200">
+      {/* 图片区域 — 固定宽高比容器，确保缩放一致 */}
+      <div
+        className="relative overflow-hidden rounded-t-lg border border-b-0 border-gray-200 bg-gray-100"
+        style={{ paddingBottom: `${(H / data.w) * 100}%` }} // 160/280 ≈ 57.14%
+      >
+        {/* 背景图 — 绝对填充容器 */}
         <img
+          ref={imgRef}
           src={data.bg}
           alt="验证码背景"
-          className="block h-auto w-full"
+          className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
-        {/* 拼图块 */}
+
+        {/* 拼图块 — 按 scale 缩放后的绝对定位 */}
         <div
           className="absolute cursor-grab active:cursor-grabbing"
           style={{
-            left: dragX * displayScale,
-            top: data.pieceY,
-            width: PIECE_W,
-            height: PIECE_H,
+            left: displayDragX,
+            top: displayPieceY,
+            width: displayPieceW,
+            height: displayPieceH,
           }}
         >
           <img
@@ -182,14 +222,16 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
             style={{ filter: failed ? "grayscale(100%)" : undefined }}
           />
         </div>
-        {/* 刷新按钮 */}
+
+        {/* 刷新按钮 — 右上角小图标，不占布局 */}
         <button
           type="button"
-          onClick={loadPuzzle}
-          className="absolute right-2 top-2 rounded bg-black/30 p-1.5 text-white transition hover:bg-black/50"
+          onClick={(e) => { e.stopPropagation(); loadPuzzle(); }}
+          className="absolute right-1.5 top-1.5 z-10 rounded-full bg-black/20 p-1 text-white/80 backdrop-blur-[2px] transition-colors hover:bg-black/40 hover:text-white"
           title="刷新验证码"
+          aria-label="刷新验证码"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12a9 9 0 11-6.22-8.56" />
             <polyline points="21 3 21 9 15 9" />
           </svg>
@@ -206,10 +248,11 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
         onTouchStart={onTouchStart}
       >
         {/* 滑块轨道左侧图标 */}
-        <div className={`absolute left-0 flex h-full w-10 items-center justify-center rounded-l-md transition-colors ${
-          dragging ? "bg-primary-600 text-white" : verified ? "bg-green-500 text-white" : failed ? "bg-red-500 text-white" : "bg-white text-gray-400"
-        }`}
-        style={dragging || verified || failed ? { left: `${(dragX / (data.w - PIECE_W)) * 100}%` } : {}}
+        <div
+          className={`absolute left-0 flex h-full w-10 items-center justify-center rounded-l-md transition-colors ${
+            dragging ? "bg-primary-600 text-white" : verified ? "bg-green-500 text-white" : failed ? "bg-red-500 text-white" : "bg-white text-gray-400 shadow-sm border-r border-gray-200"
+          }`}
+          style={dragging || verified || failed ? { left: `${(dragX / (data.w - PIECE_W)) * (100 - (40 / (containerRef.current?.clientWidth ?? 280) * 100))}%` } : {}}
         >
           {verified ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -237,7 +280,10 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   );
 }
 
-/** 给父组件用的刷新方法（通过 key 重挂载实现更简单，这里保留接口） */
+/** 给父组件用的刷新方法 */
 export type PuzzleCaptchaHandle = {
   reload: () => void;
 };
+
+// 后端背景图的固定高度（用于计算宽高比）
+const H = 160;

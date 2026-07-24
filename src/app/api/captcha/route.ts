@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 
+// 每次请求动态生成，不缓存
+export const dynamic = "force-dynamic";
+
 // ─── 拼图滑块验证码配置 ──────────────────────────────────────
 const W = 280;        // 背景图宽度
 const H = 160;        // 背景图高度
@@ -729,7 +732,7 @@ async function generatePuzzle(): Promise<{
 }
 
 // ─── GET 接口：生成拼图滑块验证码 ──────────────────────────────
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const { bg, piece, correctX, pieceY } = await generatePuzzle();
 
@@ -738,6 +741,12 @@ export async function GET(req: Request) {
       piece: `data:image/png;base64,${piece.toString("base64")}`,
       pieceY,
       w: W,
+    }, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
     });
 
     res.cookies.set("puzzle_x", String(correctX), {
