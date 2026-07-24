@@ -15,7 +15,8 @@ if (!url) {
 
 const db = createClient({ url, authToken: token });
 
-const sql = `CREATE TABLE IF NOT EXISTS "VerificationCode" (
+const statements = [
+  `CREATE TABLE IF NOT EXISTS "VerificationCode" (
   "id" TEXT NOT NULL,
   "type" TEXT NOT NULL,
   "target" TEXT NOT NULL,
@@ -24,12 +25,15 @@ const sql = `CREATE TABLE IF NOT EXISTS "VerificationCode" (
   "expiresAt" DATETIME NOT NULL,
   "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("id")
-);
-CREATE UNIQUE INDEX IF NOT EXISTS "VerificationCode_type_target_key" ON "VerificationCode"("type", "target");
-CREATE INDEX IF NOT EXISTS "VerificationCode_target_idx" ON "VerificationCode"("target");`;
+)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "VerificationCode_type_target_key" ON "VerificationCode"("type", "target")`,
+  `CREATE INDEX IF NOT EXISTS "VerificationCode_target_idx" ON "VerificationCode"("target")`,
+];
 
 try {
-  await db.execute(sql);
+  for (const sql of statements) {
+    await db.execute(sql);
+  }
   console.log("[完成] VerificationCode 表已确保存在（CREATE TABLE IF NOT EXISTS）。");
 } catch (e) {
   console.error("[失败] 建表出错：", e?.message || e);
