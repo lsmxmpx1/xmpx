@@ -5,6 +5,7 @@ import { deleteUser, setUserRole } from "../actions";
 import UserForm from "./UserForm";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export default async function AdminUsers({
   searchParams,
