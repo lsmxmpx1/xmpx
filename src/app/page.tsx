@@ -8,8 +8,17 @@ import AdSlot from "@/components/ad/AdSlot";
 // 避免 force-dynamic 导致每次请求都连远程 Turso 触发 Vercel 函数 10s 超时。
 export const revalidate = 60;
 
+/** 格式化首页统计数字：>=10000 显示"X万+"，否则加逗号 */
+function formatStatNumber(n: number): string {
+  if (n >= 10_000) {
+    const wan = Math.floor(n / 10_000);
+    return n % 10_000 === 0 ? `${wan}万+` : `${wan}万+`;
+  }
+  return n.toLocaleString("zh-CN");
+}
+
 export default async function HomePage() {
-  const [institutions, courses, articles, categoriesRaw] = await Promise.all([
+  const [institutions, courses, articles, categoriesRaw, stats] = await Promise.all([
     prisma.institution.findMany({
       where: { status: "APPROVED" },
       orderBy: { rating: "desc" },
@@ -31,6 +40,14 @@ export default async function HomePage() {
       include: { children: { orderBy: { name: "asc" } } },
       orderBy: { name: "asc" },
     }),
+    // 统计数据：从数据库实时读取
+    Promise.all([
+      prisma.institution.count({ where: { status: "APPROVED" } }),
+      prisma.course.count({ where: { status: "ACTIVE" } }),
+      prisma.review.count(),
+      prisma.teacher.count(),
+      DISTRICTS.length,
+    ]),
   ]);
 
   // 首页热门分类展示顺序：第一行 4 个（中小学辅导 / 体育运动 / 学历提升 / 考证培训），其余放第二行
@@ -78,12 +95,13 @@ export default async function HomePage() {
 
       {/* Stats */}
       <section className="bg-white -mt-8 relative z-10 container-main">
-        <div className="grid grid-cols-4 divide-x bg-white rounded-2xl shadow-lg p-6">
+        <div className="grid grid-cols-5 divide-x bg-white rounded-2xl shadow-lg p-6">
           {[
-            { value: "2000+", label: "入驻机构" },
-            { value: "5万+", label: "培训课程" },
-            { value: "10万+", label: "用户评价" },
-            { value: "6", label: "覆盖区域" },
+            { value: formatStatNumber(stats[0]), label: "入驻机构" },
+            { value: formatStatNumber(stats[1]), label: "培训课程" },
+            { value: formatStatNumber(stats[2]), label: "用户评价" },
+            { value: formatStatNumber(stats[3]), label: "认证老师" },
+            { value: String(stats[4]), label: "覆盖区域" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl md:text-3xl font-bold text-primary-600">{stat.value}</div>
