@@ -52,6 +52,9 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} - ${SITE_DESC}`,
     description: SITE_DESC,
   },
+  other: {
+    "shenma-site-verification": "060c2f318442b4f1d984aff99a9f4b85_1784899635",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
