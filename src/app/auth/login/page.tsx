@@ -17,12 +17,16 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
       setRegistered(true);
+    }
+    if (searchParams.get("reset") === "true") {
+      setResetDone(true);
     }
   }, [searchParams]);
 
@@ -105,6 +109,13 @@ function LoginForm() {
         <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm mb-4 flex items-center justify-between">
           <span>✅ 注册成功，请登录</span>
           <button onClick={() => setRegistered(false)} className="text-green-400 hover:text-green-600">✕</button>
+        </div>
+      )}
+
+      {resetDone && (
+        <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm mb-4 flex items-center justify-between">
+          <span>✅ 密码已重置，请使用新密码登录</span>
+          <button onClick={() => setResetDone(false)} className="text-green-400 hover:text-green-600">✕</button>
         </div>
       )}
 
@@ -209,6 +220,10 @@ function LoginForm() {
         还没有账号？
         <Link href="/auth/register" className="text-primary-600 font-medium ml-1 hover:underline">
           立即注册
+        </Link>
+        <span className="mx-2 text-gray-300">|</span>
+        <Link href="/auth/forgot-password" className="text-primary-600 font-medium hover:underline">
+          忘记密码？
         </Link>
       </div>
     </div>

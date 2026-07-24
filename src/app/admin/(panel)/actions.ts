@@ -167,6 +167,31 @@ export async function saveSmsConfig(formData: FormData) {
   revalidatePath("/admin/settings");
 }
 
+/* ----------------------- 邮件服务器配置 ----------------------- */
+
+export async function saveEmailConfig(formData: FormData) {
+  const first = await prisma.emailConfig.findFirst();
+  const id = first?.id;
+
+  const data = {
+    enabled: formData.get("enabled") === "on",
+    host: String(formData.get("host") || "").trim() || null,
+    port: parseInt(String(formData.get("port") || "465"), 10) || 465,
+    secure: formData.get("secure") === "on",
+    user: String(formData.get("user") || "").trim() || null,
+    pass: String(formData.get("pass") || "").trim() || null,
+    from: String(formData.get("from") || "").trim() || null,
+  };
+
+  if (id) {
+    await prisma.emailConfig.update({ where: { id }, data });
+  } else {
+    await prisma.emailConfig.create({ data });
+  }
+
+  revalidatePath("/admin/settings");
+}
+
 import bcrypt from "bcryptjs";
 
 /* ----------------------- 工具 ----------------------- */

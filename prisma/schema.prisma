@@ -249,6 +249,18 @@ model SmsConfig {
   updatedAt       DateTime @updatedAt
 }
 
+model EmailConfig {
+  id        String   @id @default(cuid())
+  enabled   Boolean  @default(false) // 是否启用真实 SMTP 发送（否则开发模式打印到控制台）
+  host      String? // SMTP 主机，如 smtp.qq.com / smtp.163.com / smtp.exmail.qq.com
+  port      Int      @default(465) // 465=SSL，587/25=STARTTLS
+  secure    Boolean  @default(true) // true 使用 SSL(465)，false 使用 STARTTLS(587/25)
+  user      String? // 发件账号
+  pass      String? // 授权码 / 密码
+  from      String? // 发件人显示，如 "厦门培训网 <noreply@xmpx.cn>"
+  updatedAt DateTime @updatedAt
+}
+
 model Feedback {
   id          String   @id @default(cuid())
   userId      String?

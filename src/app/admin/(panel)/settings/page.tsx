@@ -1,10 +1,12 @@
 import { getSmsConfig } from "@/lib/sms";
-import { saveSmsConfig } from "../actions";
+import { getEmailConfig } from "@/lib/email";
+import { saveSmsConfig, saveEmailConfig } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettings() {
   const cfg = await getSmsConfig();
+  const emailCfg = await getEmailConfig();
 
   return (
     <div className="max-w-3xl">
@@ -99,6 +101,76 @@ export default async function AdminSettings() {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* 邮件服务器配置 */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-gray-800 mb-1">邮件服务器</h2>
+        <p className="text-gray-500 text-sm mb-6">用于"找回密码"向注册邮箱发送验证码（SMTP 配置）</p>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <span className={`w-2.5 h-2.5 rounded-full ${emailCfg.enabled ? "bg-green-500" : "bg-gray-300"}`} />
+            <span className="text-gray-600">
+              当前状态：{emailCfg.enabled ? "已启用（真实发送）" : "未启用（开发模式，仅打印到控制台）"}
+            </span>
+          </div>
+
+          <form action={saveEmailConfig} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">SMTP 主机</label>
+                <input name="host" defaultValue={emailCfg.host || ""} placeholder="smtp.qq.com" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">端口</label>
+                <input name="port" type="number" defaultValue={String(emailCfg.port)} className="input-field" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">发件账号</label>
+                <input name="user" defaultValue={emailCfg.user || ""} placeholder="noreply@xmpx.cn" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">授权码 / 密码</label>
+                <input name="pass" type="password" defaultValue={emailCfg.pass || ""} className="input-field" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">发件人显示（可选）</label>
+              <input
+                name="from"
+                defaultValue={emailCfg.from || ""}
+                placeholder="厦门培训网 <noreply@xmpx.cn>"
+                className="input-field"
+              />
+            </div>
+
+            <div className="flex items-center gap-6 text-sm">
+              <label className="flex items-center gap-2 text-gray-700 cursor-pointer">
+                <input type="checkbox" name="enabled" defaultChecked={emailCfg.enabled} className="w-4 h-4" />
+                启用真实 SMTP 发送（取消则走开发模式）
+              </label>
+              <label className="flex items-center gap-2 text-gray-700 cursor-pointer">
+                <input type="checkbox" name="secure" defaultChecked={emailCfg.secure} className="w-4 h-4" />
+                使用 SSL（465）；取消则用 STARTTLS（587/25）
+              </label>
+            </div>
+
+            <p className="text-xs text-gray-400">
+              常见配置：QQ 邮箱 smtp.qq.com:587(STARTTLS) 或 :465(SSL)，密码填授权码；163 邮箱 smtp.163.com:465(SSL)。
+            </p>
+
+            <div className="flex justify-end">
+              <button type="submit" className="px-6 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800">
+                保存邮件配置
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

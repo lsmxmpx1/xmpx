@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [captcha, setCaptcha] = useState("");
   const [captchaSrc, setCaptchaSrc] = useState("/api/captcha?t=" + Date.now());
   const [error, setError] = useState("");
@@ -34,6 +35,7 @@ export default function RegisterPage() {
         email: email || undefined,
         phone: phone || undefined,
         password,
+        confirmPassword,
         captcha,
       }),
     });
@@ -87,6 +89,15 @@ export default function RegisterPage() {
             placeholder="请输入密码（至少6位）"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="input-field"
+            required
+            minLength={6}
+          />
+          <input
+            type="password"
+            placeholder="请再次输入密码确认"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             className="input-field"
             required
             minLength={6}

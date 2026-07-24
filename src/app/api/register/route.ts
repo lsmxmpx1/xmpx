@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, password, captcha } = await req.json();
+    const { name, email, phone, password, confirmPassword, captcha } = await req.json();
 
     // 校验图形验证码（防机器人恶意注册）
     const cookieCode = req.cookies.get("captcha")?.value;
@@ -17,6 +17,12 @@ export async function POST(req: NextRequest) {
 
     if (!password || password.length < 6) {
       const fail = NextResponse.json({ error: "密码至少6位" }, { status: 400 });
+      fail.cookies.set("captcha", "", { path: "/", maxAge: 0 });
+      return fail;
+    }
+
+    if (password !== confirmPassword) {
+      const fail = NextResponse.json({ error: "两次输入的密码不一致" }, { status: 400 });
       fail.cookies.set("captcha", "", { path: "/", maxAge: 0 });
       return fail;
     }
