@@ -321,7 +321,7 @@ export default async function HomePage() {
       {/* CTA */}
       <section className="py-16 bg-gradient-to-r from-primary-600 to-primary-800 text-white">
         <div className="container-main text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">你是培训机构？</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">您是培训机构？</h2>
           <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
             免费入驻{SITE_NAME}，展示你的课程，获得更多学员报名
           </p>
