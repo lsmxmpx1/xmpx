@@ -180,7 +180,7 @@ export default function StudentDashboard({
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 w-16 shrink-0">身份：</span>
                 <span className="text-gray-800 flex flex-wrap gap-1.5">
-                  {normalizeRoles(user.roles).map((r) => (
+                  {normalizeRoles(user.roles ?? "USER").map((r) => (
                     <span
                       key={r}
                       className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary-50 text-primary-600 text-xs font-medium"

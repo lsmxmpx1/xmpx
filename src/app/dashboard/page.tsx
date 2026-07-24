@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { normalizeRoles } from "@/lib/utils";
 import StudentDashboard from "./StudentDashboard";
 
 export const dynamic = "force-dynamic";
@@ -60,8 +61,8 @@ export default async function DashboardPage() {
     name: user.name,
     email: user.email,
     phone: user.phone,
-    role: user.role,
-    roles: user.roles,
+    role: user.role || "USER",
+    roles: normalizeRoles(user.roles).join(","),
   };
 
   return (

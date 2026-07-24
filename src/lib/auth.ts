@@ -40,6 +40,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             data: {
               phone: phoneStr,
               name: `用户${phoneStr.slice(-4)}`,
+              roles: "USER",
+              role: "USER",
             },
           });
         }
