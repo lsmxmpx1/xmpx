@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -70,6 +71,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
+      {/* 字节跳动（抖音/头条搜索）自动收录脚本 */}
+      <Script
+        id="ttzz"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `(function(){var el=document.createElement("script");el.src="https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?6a6aea4419cd60cad4aa86de155154eec9c7fcb5b0f7cc19838651853541c70e19d1c501ebd3301f5e2290626f5b53d078c8250527fa0dfd9783a026ff3cf719";el.id="ttzz";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(el,s);})(window)`,
+        }}
+      />
       <body className={`${geistSans.variable} antialiased bg-gray-50 text-gray-900 min-h-screen flex flex-col`}>
         <JsonLd data={organizationLd} />
         <Providers>
