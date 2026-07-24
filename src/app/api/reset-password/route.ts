@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 校验邮箱验证码
-    const result = verifyCode(email, code);
+    const result = await verifyCode(email, code);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

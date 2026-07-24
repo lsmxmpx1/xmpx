@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "手机号和验证码不能为空" }, { status: 400 });
     }
 
-    const result = verifyCode(phone, code);
+    const result = await verifyCode(phone, code);
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

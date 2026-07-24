@@ -26,9 +26,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!phoneStr || !codeStr) return null;
 
         try {
-          // 校验短信验证码
-          const result = verifyCode(phoneStr, codeStr);
-          if (!result.success) {
+        // 校验短信验证码
+        const result = await verifyCode(phoneStr, codeStr);
+        if (!result.success) {
             console.warn("[auth] phonecode authorize: code verify failed", { phone: phoneStr });
             return null;
           }

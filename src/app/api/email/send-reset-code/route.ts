@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 检查发送频率
-    const cooldown = canSend(email);
+    const cooldown = await canSend(email);
     if (!cooldown.ok) {
       return NextResponse.json(
         { error: `发送过于频繁，请 ${cooldown.waitSeconds} 秒后再试` },
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const code = generateCode();
-    saveCode(email, code);
+    await saveCode(email, code);
 
     const cfg = await getEmailConfig();
     const result = await sendEmail({

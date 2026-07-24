@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     // 检查发送频率
-    const cooldown = canSend(phone);
+    const cooldown = await canSend(phone);
     if (!cooldown.ok) {
       return NextResponse.json(
         { error: `发送过于频繁，请 ${cooldown.waitSeconds} 秒后再试` },
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const code = generateCode();
 
     // 保存验证码
-    saveCode(phone, code);
+    await saveCode(phone, code);
 
     // 通过已配置的短信网关发送
     const cfg = await getSmsConfig();

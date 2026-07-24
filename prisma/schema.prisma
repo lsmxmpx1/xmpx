@@ -261,6 +261,21 @@ model EmailConfig {
   updatedAt DateTime @updatedAt
 }
 
+// 验证码持久化存储（替代原内存 Map，兼容 Vercel Serverless 多实例）
+// type: SMS(手机验证码登录) | EMAIL_RESET(邮箱找回密码) | EMAIL_BIND(换绑邮箱)
+model VerificationCode {
+  id        String   @id @default(cuid())
+  type      String
+  target    String // 手机号或邮箱（邮箱统一小写存储）
+  code      String
+  attempts  Int      @default(0) // 已尝试次数，达上限需重新获取
+  expiresAt DateTime
+  createdAt DateTime @default(now()) // 兼作发送冷却时间戳
+
+  @@unique([type, target])
+  @@index([target])
+}
+
 model Feedback {
   id          String   @id @default(cuid())
   userId      String?

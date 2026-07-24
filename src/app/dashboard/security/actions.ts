@@ -36,13 +36,13 @@ export async function sendBindEmailCode(
   }
 
   // 发送频率
-  const cooldown = canSend(email);
+  const cooldown = await canSend(email);
   if (!cooldown.ok) {
     return { error: `发送过于频繁，请 ${cooldown.waitSeconds} 秒后再试` };
   }
 
   const code = generateCode();
-  saveCode(email, code);
+  await saveCode(email, code);
 
   const cfg = await getEmailConfig();
   const result = await sendEmail({
@@ -77,7 +77,7 @@ export async function bindEmail(
   if (!email || !EMAIL_RE.test(email)) return { error: "请输入正确的邮箱" };
   if (!code) return { error: "请输入验证码" };
 
-  const result = verifyCode(email, code);
+  const result = await verifyCode(email, code);
   if (!result.success) return { error: result.error };
 
   // 并发唯一性复查
