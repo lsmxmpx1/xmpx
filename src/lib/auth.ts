@@ -25,36 +25,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!phoneStr || !codeStr) return null;
 
-        // 校验短信验证码
-        const result = verifyCode(phoneStr, codeStr);
-        if (!result.success) return null;
+        try {
+          // 校验短信验证码
+          const result = verifyCode(phoneStr, codeStr);
+          if (!result.success) {
+            console.warn("[auth] phonecode authorize: code verify failed", { phone: phoneStr });
+            return null;
+          }
 
-        // 查找已有用户
-        let user = await prisma.user.findUnique({
-          where: { phone: phoneStr },
-        });
-
-        // 不存在则自动注册
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              phone: phoneStr,
-              name: `用户${phoneStr.slice(-4)}`,
-              roles: "USER",
-              role: "USER",
-            },
+          // 查找已有用户
+          let user = await prisma.user.findUnique({
+            where: { phone: phoneStr },
           });
-        }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          image: user.image,
-          role: user.role,
-          roles: normalizeRoles(user.roles ?? "USER"),
-        };
+          // 不存在则自动注册
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                phone: phoneStr,
+                name: `用户${phoneStr.slice(-4)}`,
+                roles: "USER",
+                role: "USER",
+              },
+            });
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            image: user.image,
+            role: user.role,
+            roles: normalizeRoles(user.roles ?? "USER"),
+          };
+        } catch (err) {
+          console.error("[auth] phonecode authorize threw:", err);
+          return null;
+        }
       },
     }),
 
@@ -71,29 +79,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, phone, password } = credentials;
 
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [
-              email ? { email: email as string } : {},
-              phone ? { phone: phone as string } : {},
-            ].filter((c) => Object.keys(c).length > 0),
-          },
-        });
+        try {
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                email ? { email: email as string } : {},
+                phone ? { phone: phone as string } : {},
+              ].filter((c) => Object.keys(c).length > 0),
+            },
+          });
 
-        if (!user || !user.password) return null;
+          if (!user || !user.password) {
+            console.warn("[auth] credentials authorize: user not found or has no password", {
+              email,
+              phone,
+            });
+            return null;
+          }
 
-        const isValid = await bcrypt.compare(password as string, user.password);
-        if (!isValid) return null;
+          const isValid = await bcrypt.compare(password as string, user.password);
+          if (!isValid) {
+            console.warn("[auth] credentials authorize: password mismatch", { email, phone });
+            return null;
+          }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          image: user.image,
-          role: user.role,
-          roles: normalizeRoles(user.roles ?? "USER"),
-        };
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            image: user.image,
+            role: user.role,
+            roles: normalizeRoles(user.roles ?? "USER"),
+          };
+        } catch (err) {
+          console.error("[auth] credentials authorize threw:", err);
+          return null;
+        }
       },
     }),
 
