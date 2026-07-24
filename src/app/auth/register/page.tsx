@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PuzzleCaptcha from "@/components/PuzzleCaptcha";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,20 +12,21 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [captcha, setCaptcha] = useState("");
-  const [captchaSrc, setCaptchaSrc] = useState("/api/captcha?t=" + Date.now());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // 重新获取验证码（换 cookie）
-  const refreshCaptcha = useCallback(() => {
-    setCaptcha("");
-    setCaptchaSrc("/api/captcha?t=" + Date.now());
-  }, []);
+  const [puzzleReady, setPuzzleReady] = useState(false); // 用户已完成拼图拖拽
+  const [puzzleX, setPuzzleX] = useState(0); // 拼图提交的 X 坐标
+  const puzzleRef = useRef<{ reload: () => void } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!puzzleReady) {
+      setError("请先完成拼图验证");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/register", {
@@ -36,7 +38,7 @@ export default function RegisterPage() {
         phone: phone || undefined,
         password,
         confirmPassword,
-        captcha,
+        puzzleX, // 拼图滑块验证码：提交拖拽的 X 坐标
       }),
     });
 
@@ -44,12 +46,25 @@ export default function RegisterPage() {
 
     if (!res.ok) {
       setError(data.error || "注册失败");
-      refreshCaptcha(); // 失败后刷新验证码
+      setPuzzleReady(false);
+      // 刷新验证码（通过 key 重挂载）
+      setPuzzleX(0);
       setLoading(false);
     } else {
       router.push("/auth/login?registered=true");
     }
   }
+
+  /** 拼图组件回调：用户完成拖拽 */
+  const handlePuzzleVerified = useCallback((x: number) => {
+    setPuzzleX(x);
+    setPuzzleReady(true);
+  }, []);
+
+  /** 拼图组件错误回调 */
+  const handlePuzzleError = useCallback((msg: string) => {
+    console.error("[puzzle]", msg);
+  }, []);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -103,38 +118,15 @@ export default function RegisterPage() {
             minLength={6}
           />
 
-          {/* 图形验证码 */}
-          <div>
-            <div className="flex items-center gap-3">
-              <input
-                type="text"
-                placeholder="请输入右侧验证码"
-                value={captcha}
-                onChange={(e) => setCaptcha(e.target.value.toUpperCase())}
-                className="input-field flex-1"
-                maxLength={5}
-                autoComplete="off"
-                required
-              />
-              <img
-                src={captchaSrc}
-                alt="验证码"
-                onClick={refreshCaptcha}
-                className="h-11 rounded border border-gray-200 cursor-pointer select-none"
-                title="点击图片刷新验证码"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={refreshCaptcha}
-              className="text-xs text-primary-600 hover:underline mt-1"
-            >
-              看不清？换一张
-            </button>
-          </div>
+          {/* 拼图滑块验证码 */}
+          <PuzzleCaptcha
+            key={puzzleX === 0 && !loading ? "puzzle" : `puzzle-${Date.now()}`}
+            onVerified={handlePuzzleVerified}
+            onError={handlePuzzleError}
+          />
 
-          <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
-            {loading ? "注册中..." : "注册"}
+          <button type="submit" disabled={loading || !puzzleReady} className="btn-primary w-full py-3 text-base">
+            {loading ? "注册中..." : !puzzleReady ? "请先完成上方拼图验证" : "注册"}
           </button>
         </form>
 
