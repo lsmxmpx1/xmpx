@@ -630,30 +630,13 @@ function pick<T>(arr: T[]): T {
 }
 
 /**
- * 生成拼图块形状的 SVG path（左侧平直手柄 + 右侧一凸一凹）
+ * 拼图块形状：简单圆角正方形（稳定可靠，左右完全一致）
  */
 function puzzlePath(): string {
   const w = PIECE_W;
   const h = PIECE_H;
   const r = 4;
-  const tabR = 10;
-
-  return [
-    `M ${r} 0`,
-    `L ${w * 0.5 - tabR} 0`,
-    `Q ${w * 0.5} ${-tabR * 0.8} ${w * 0.5 + tabR} 0`,
-    `L ${w - r} 0`,
-    `Q ${w} 0 ${w} ${r}`,
-    `L ${w} ${h * 0.45 - tabR * 0.3}`,
-    `Q ${w + tabR * 0.6} ${h * 0.45} ${w} ${h * 0.45 + tabR * 0.3}`,
-    `L ${w} ${h - r}`,
-    `Q ${w} ${h} ${w - r} ${h}`,
-    `L ${r} ${h}`,
-    `Q 0 ${h} 0 ${h - r}`,
-    `L 0 ${r}`,
-    `Q 0 0 ${r} 0`,
-    "Z",
-  ].join(" ");
+  return `M ${r} 0 L ${w - r} 0 Q ${w} 0 ${w} ${r} L ${w} ${h - r} Q ${w} ${h} ${w - r} ${h} L ${r} ${h} Q 0 ${h} 0 ${h - r} L 0 ${r} Q 0 0 ${r} 0 Z`;
 }
 
 /** 生成带缺口的背景图（PNG buffer）+ 拼图块图片（PNG buffer）+ 正确X坐标 */
@@ -672,24 +655,16 @@ async function generatePuzzle(): Promise<{
     .png()
     .toBuffer();
 
-  const pPath = puzzlePath();
-
-  // ── 2. 在背景上画拼图缺口 ──
-  // 方案：直接用 <path> 填充拼图形状（半透明深色），不依赖 clipPath/mask/filter
-  // sharp 对基础 path fill+stroke 渲染最可靠
+  // ── 2. 在背景上画正方形缺口 ──
   const holeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-    <!-- 缺口主体：拼图形状填充深色，一眼看出"这里缺了一块" -->
-    <path d="${pPath}" transform="translate(${correctX.toFixed(1)},${pieceY.toFixed(1)})"
-          fill="rgba(0,0,0,0.5)"
-          stroke="rgba(0,0,0,0.65)"
-          stroke-width="2.5"
-          stroke-linejoin="round"/>
-    <!-- 内边缘高光线：增加凹陷立体感 -->
-    <path d="${pPath}" transform="translate(${correctX.toFixed(1)},${pieceY.toFixed(1)})"
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          stroke-width="1.2"
-          stroke-linejoin="round"/>
+    <!-- 缺口主体：圆角正方形半透明深色 -->
+    <rect x="${correctX.toFixed(1)}" y="${pieceY.toFixed(1)}" width="${PIECE_W}" height="${PIECE_H}"
+          rx="3" ry="3" fill="rgba(0,0,0,0.5)"
+          stroke="rgba(0,0,0,0.65)" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- 内边缘高光线 -->
+    <rect x="${correctX.toFixed(1)}" y="${pieceY.toFixed(1)}" width="${PIECE_W}" height="${PIECE_H}"
+          rx="3" ry="3" fill="none"
+          stroke="rgba(255,255,255,0.25)" stroke-width="1.2" stroke-linejoin="round"/>
   </svg>`;
 
   const bgWithHole = await sharp(bgBase)
@@ -697,26 +672,23 @@ async function generatePuzzle(): Promise<{
     .png()
     .toBuffer();
 
-  // ── 3. 提取拼图块（裁剪区域 → SVG clipPath 裁切形状 → PNG） ──
+  // ── 3. 提取拼图块（正方形裁剪 + 白色描边 + 投影） ──
   const cropped = await sharp(bgBase)
     .extract({ left: Math.round(correctX), top: Math.round(pieceY), width: PIECE_W, height: PIECE_H })
     .png()
     .toBuffer();
 
-  // 用 SVG <image> + clipPath 裁出拼图形状（比 sharp blend:"in" 更可靠）
-  const croppedB64 = cropped.toString("base64");
+  // 正方形拼图块：直接在裁剪图上加圆角白色描边和投影
   const pieceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${PIECE_W}" height="${PIECE_H}">
     <defs>
-      <clipPath id="pc"><path d="${pPath}"/></clipPath>
       <filter id="ps">
         <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.35"/>
       </filter>
     </defs>
-    <!-- 裁剪后的背景图，按拼图形状裁切 -->
-    <image width="${PIECE_W}" height="${PIECE_H}" href="data:image/png;base64,${croppedB64}" clip-path="url(#pc)"/>
-    <!-- 白色描边 + 投影 -->
-    <path d="${pPath}" fill="none" stroke="rgba(255,255,255,0.95)"
-          stroke-width="2.5" filter="url(#ps)" stroke-linejoin="round"/>
+    <image width="${PIECE_W}" height="${PIECE_H}" href="data:image/png;base64,${cropped.toString("base64")}"/>
+    <rect x="1" y="1" width="${PIECE_W - 2}" height="${PIECE_H - 2}" rx="3" ry="3"
+          fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5"
+          filter="url(#ps)" stroke-linejoin="round"/>
   </svg>`;
 
   const piece = await sharp(Buffer.from(pieceSvg))
