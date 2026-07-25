@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -50,6 +51,10 @@ export async function PUT(
       },
     });
 
+    // 失效后台课程管理页与公开课程列表的缓存，避免"必须点搜索才出最新课程"
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Update course error:", error);
@@ -86,6 +91,10 @@ export async function DELETE(
       where: { id: inst.id },
       data: { courseCount: { decrement: 1 } },
     });
+
+    // 失效后台课程管理页与公开课程列表的缓存，避免"必须点搜索才出最新课程"
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
@@ -89,6 +90,10 @@ export async function POST(request: NextRequest) {
       where: { id: inst.id },
       data: { courseCount: { increment: 1 } },
     });
+
+    // 失效后台课程管理页与公开课程列表的缓存，避免"必须点搜索才出最新课程"
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
 
     return NextResponse.json({ success: true, id: course.id });
   } catch (error) {
