@@ -252,9 +252,8 @@ export default async function CourseDetailPage({ params }: { params: { id: strin
                   {relatedCourses.map((c) => (
                     <Link key={c.id} href={`/courses/${c.id}`} className="card group overflow-hidden">
                       <div className="h-36 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
-                        {c.cover ? (
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={c.cover} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  {c.cover ? (
+                    <img src={c.cover} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-4xl">📖</div>
                         )}

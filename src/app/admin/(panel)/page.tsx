@@ -41,16 +41,26 @@ async function getStats() {
   };
 }
 
-const CARDS = [
+type StatKey = keyof Awaited<ReturnType<typeof getStats>>;
+
+type Card = {
+  key: StatKey;
+  label: string;
+  href: string;
+  color: string;
+  badgeKey?: StatKey;
+};
+
+const CARDS: Card[] = [
   { key: "courses", label: "课程总数", href: "/admin/courses", color: "bg-blue-500" },
-  { key: "institutions", label: "入驻机构", href: "/admin/institutions", color: "bg-emerald-500", badgeKey: "pendingInstitutions" as const },
+  { key: "institutions", label: "入驻机构", href: "/admin/institutions", color: "bg-emerald-500", badgeKey: "pendingInstitutions" },
   { key: "categories", label: "分类数量", href: "/admin/categories", color: "bg-purple-500" },
   { key: "users", label: "注册用户", href: "/admin/users", color: "bg-amber-500" },
   { key: "articles", label: "文章（已发布）", href: "/admin/articles", color: "bg-rose-500" },
   { key: "contacts", label: "咨询留言", href: "/admin/contacts", color: "bg-cyan-500" },
   { key: "reviews", label: "用户评价", href: "#", color: "bg-indigo-500" },
   { key: "ads", label: "广告位", href: "/admin/ads", color: "bg-orange-500" },
-] as const;
+];
 
 export default async function AdminHome() {
   const s = await getStats();

@@ -198,7 +198,6 @@ export default async function QuestionDetailPage({
   return (
     <div className="container-main py-8 max-w-3xl">
       <JsonLd data={[qaLd, qaBreadcrumb]} />
-      <QuestionViewTracker id={q.id} />
 
       <div className="text-sm text-gray-500 mb-4">
         <Link href="/" className="hover:text-primary-600">

@@ -111,7 +111,6 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
           <div className="bg-white rounded-2xl shadow-sm border p-6 md:p-8">
             <div className="flex items-start gap-5">
               {teacher.avatar ? (
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={teacher.avatar}
                   alt={teacher.name}

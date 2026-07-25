@@ -81,9 +81,8 @@ export default async function DistrictCoursesPage({ params }: { params: { distri
             {institutions.map((inst) => (
               <Link key={inst.id} href={`/institutions/${inst.id}`} className="card p-5 group">
                 <div className="flex items-center gap-3 mb-3">
-                  {inst.logo ? (
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={inst.logo} alt={inst.name} className="w-12 h-12 rounded-xl object-cover border" />
+                {inst.logo ? (
+                  <img src={inst.logo} alt={inst.name} className="w-12 h-12 rounded-xl object-cover border" />
                   ) : (
                     <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center text-lg font-bold text-primary-600 shrink-0">
                       {inst.name.slice(0, 2)}
@@ -116,7 +115,6 @@ export default async function DistrictCoursesPage({ params }: { params: { distri
               <Link key={c.id} href={`/courses/${c.id}`} className="card group overflow-hidden">
                 <div className="h-36 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
                   {c.cover ? (
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={c.cover} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl">📖</div>

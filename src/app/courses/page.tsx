@@ -183,7 +183,6 @@ export default async function CoursesPage({
                 <Link key={course.id} href={`/courses/${course.id}`} className="card group overflow-hidden">
                   <div className="h-44 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
                     {course.cover ? (
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={course.cover}
                         alt={course.title}

@@ -196,7 +196,6 @@ export default async function TeachersPage({
                 <Link key={t.id} href={`/teachers/${t.id}`} className="card p-5 group">
                   <div className="flex items-start gap-4">
                     {t.avatar ? (
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={t.avatar}
                         alt={t.name}
