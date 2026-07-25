@@ -90,6 +90,7 @@ export async function upsertTeacher(
 
   revalidatePath("/dashboard/teacher");
   revalidatePath("/teachers");
+  revalidatePath("/admin/teachers");
   return { ok: true, roles: newRolesStr.split(",") };
 }
 
@@ -130,6 +131,7 @@ export async function createEmployment(
 
   revalidatePath("/dashboard/teacher");
   revalidatePath("/teachers");
+  revalidatePath("/admin/teachers");
   return { ok: true };
 }
 
@@ -151,5 +153,6 @@ export async function deleteEmployment(
 
   revalidatePath("/dashboard/teacher");
   revalidatePath("/teachers");
+  revalidatePath("/admin/teachers");
   return { ok: true };
 }

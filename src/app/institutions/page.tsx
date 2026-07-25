@@ -7,7 +7,7 @@ import AdSlot from "@/components/ad/AdSlot";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
 
-export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
