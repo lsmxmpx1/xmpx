@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { DISTRICTS } from "@/lib/utils";
@@ -197,11 +196,10 @@ export default async function TeachersPage({
                 <Link key={t.id} href={`/teachers/${t.id}`} className="card p-5 group">
                   <div className="flex items-start gap-4">
                     {t.avatar ? (
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={t.avatar}
                         alt={t.name}
-                        width={64}
-                        height={64}
                         className="w-16 h-16 rounded-full object-cover border shrink-0"
                       />
                     ) : (

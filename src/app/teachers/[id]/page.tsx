@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -112,11 +111,10 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
           <div className="bg-white rounded-2xl shadow-sm border p-6 md:p-8">
             <div className="flex items-start gap-5">
               {teacher.avatar ? (
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={teacher.avatar}
                   alt={teacher.name}
-                  width={88}
-                  height={88}
                   className="w-22 h-22 rounded-full object-cover border shrink-0"
                 />
               ) : (

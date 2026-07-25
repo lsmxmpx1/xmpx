@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import InstitutionForm from "./InstitutionForm";
 import CourseManager from "./CourseManager";
 import ContactManager from "./ContactManager";
@@ -82,7 +81,8 @@ export default function InstitutionDashboard({
         <div className="flex items-center gap-4 mb-2">
           <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-2xl font-bold text-purple-600 shrink-0 overflow-hidden relative">
             {institution.logo ? (
-              <Image src={institution.logo} alt={institution.name} fill className="rounded-2xl object-cover" sizes="56px" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={institution.logo} alt={institution.name} className="w-full h-full rounded-2xl object-cover" />
             ) : (
               institution.name.slice(0, 2)
             )}

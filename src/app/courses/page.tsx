@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatPrice, DISTRICTS } from "@/lib/utils";
@@ -182,14 +181,13 @@ export default async function CoursesPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {courses.map((course) => (
                 <Link key={course.id} href={`/courses/${course.id}`} className="card group overflow-hidden">
-                  <div className="h-44 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden relative">
+                  <div className="h-44 bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
                     {course.cover ? (
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={course.cover}
                         alt={course.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-5xl">📖</div>

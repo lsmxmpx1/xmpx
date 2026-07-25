@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { DISTRICTS } from "@/lib/utils";
@@ -146,24 +145,22 @@ export default async function InstitutionsPage({
               {institutions.map((inst) => (
                 <Link key={inst.id} href={`/institutions/${inst.id}`} className="card overflow-hidden group">
                   {inst.cover && (
-                    <div className="h-28 overflow-hidden relative">
-                      <Image
+                    <div className="h-28 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={inst.cover}
                         alt={inst.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                   )}
                   <div className="p-5">
                     <div className="flex items-start gap-4">
                       {inst.logo ? (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={inst.logo}
                           alt={inst.name}
-                          width={64}
-                          height={64}
                           className="w-16 h-16 rounded-2xl object-cover border shrink-0"
                         />
                       ) : (

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -114,13 +113,12 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
         <div className="lg:col-span-2 space-y-8">
           {/* Cover image */}
           {institution.cover && (
-            <div className="rounded-2xl overflow-hidden shadow-sm h-48 md:h-64 relative">
-              <Image
+            <div className="rounded-2xl overflow-hidden shadow-sm h-48 md:h-64">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={institution.cover}
                 alt={institution.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 66vw"
+                className="w-full h-full object-cover"
               />
             </div>
           )}
@@ -129,12 +127,11 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
           <div className="bg-white rounded-2xl shadow-sm border p-6 md:p-8">
             <div className="flex items-start gap-5">
               {institution.logo ? (
-                <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={institution.logo}
                   alt={institution.name}
-                  width={80}
-                  height={80}
-                  className="rounded-2xl object-cover border shrink-0"
+                  className="w-20 h-20 rounded-2xl object-cover border shrink-0"
                 />
               ) : (
                 <div className="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center text-3xl font-bold text-primary-600 shrink-0">
@@ -214,13 +211,12 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               <h2 className="text-xl font-bold mb-4">门店环境</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {storeImages.map((img, idx) => (
-                  <div key={idx} className="aspect-video rounded-xl overflow-hidden border relative">
-                    <Image
+                  <div key={idx} className="aspect-video rounded-xl overflow-hidden border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={img}
                       alt={`${institution.name} 门店图 ${idx + 1}`}
-                      fill
-                      className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                     />
                   </div>
                 ))}
@@ -237,9 +233,10 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {institution.courses.map((course) => (
                   <Link key={course.id} href={`/courses/${course.id}`} className="flex gap-4 p-4 border rounded-xl hover:border-primary-300 hover:shadow-sm transition-all group">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-primary-50 shrink-0 flex items-center justify-center relative">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-primary-50 shrink-0 flex items-center justify-center">
                       {course.cover ? (
-                        <Image src={course.cover} alt={course.title} fill className="object-cover" sizes="64px" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={course.cover} alt={course.title} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-2xl">📖</span>
                       )}

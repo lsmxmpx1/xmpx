@@ -32,6 +32,7 @@ export default function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set());
 
   const images = useMemo(() => (value ? value.split(",").filter(Boolean) : []), [value]);
 
@@ -101,6 +102,10 @@ export default function ImageUpload({
     if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
   };
 
+  const handleImageError = (index: number) => {
+    setBrokenImages((prev) => new Set(prev).add(index));
+  };
+
   const handleRemove = (index: number) => {
     if (multiple) {
       const newImages = images.filter((_, i) => i !== index);
@@ -129,7 +134,22 @@ export default function ImageUpload({
             key={index}
             className={`relative ${ASPECT_CLASSES[aspectRatio]} w-24 rounded-xl overflow-hidden border group`}
           >
-            <img src={img} alt={`图片 ${index + 1}`} className="w-full h-full object-cover" />
+            {brokenImages.has(index) ? (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+                <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-[10px]">加载失败</span>
+              </div>
+            ) : (
+              <img
+                src={img}
+                alt={`图片 ${index + 1}`}
+                className="w-full h-full object-cover"
+                crossOrigin="anonymous"
+                onError={() => handleImageError(index)}
+              />
+            )}
             {!disabled && (
               <button
                 type="button"
