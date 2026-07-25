@@ -168,7 +168,7 @@ function sceneSunsetGlow(): string {
       <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="rgba(255,255,200,1)" stop-opacity="1"/>
         <stop offset="40%" stop-color="rgba(255,200,50,0.8)" stop-opacity="0.8"/>
-        <stop offset="100%" stop-color("rgba(255,100,0,0)") stop-opacity="0"/>
+        <stop offset="100%" stop-color="rgba(255,100,0,0)" stop-opacity="0"/>
       </radialGradient>
     </defs>
     <rect width="${W}" height="${H}" fill="url(#sunset)"/>
