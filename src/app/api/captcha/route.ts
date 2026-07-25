@@ -672,25 +672,51 @@ async function generatePuzzle(): Promise<{
     .png()
     .toBuffer();
 
-  // ── 2. 在背景上挖出拼图缺口（暗色遮罩 + 阴影） ──
+  const pPath = puzzlePath();
+
+  // ── 2. 在背景上挖出拼图缺口 ──
+  // 缺口效果：拼图形状区域明显变暗 + 内阴影凹陷感 + 清晰轮廓线
   const holeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
-      <mask id="holeMask">
-        <rect width="${W}" height="${H}" fill="white"/>
-        <path d="${puzzlePath()}" transform="translate(${correctX},${pieceY})" fill="black"/>
-      </mask>
-      <filter id="shadow">
-        <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.5"/>
+      <!-- 拼图形状剪裁：只影响缺口区域 -->
+      <clipPath id="holeClip">
+        <path d="${pPath}" transform="translate(${correctX},${pieceY})"/>
+      </clipPath>
+      <!-- 内阴影滤镜：让缺口看起来像凹进去 -->
+      <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+        <feOffset dx="1" dy="2" result="offsetBlur"/>
+        <feComposite in="SourceAlpha" in2="offsetBlur" operator="arithmetic" k2="-1" k3="1" result="inverse"/>
+        <feFlood flood-color="#000" flood-opacity="0.6" result="color"/>
+        <feComposite in="color" in2="inverse" operator="in" result="shadow"/>
+        <feComposite in="shadow" in2="SourceGraphic" operator="over"/>
+      </filter>
+      <!-- 外投影：缺口边缘向外的阴影 -->
+      <filter id="outerShadow">
+        <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000" flood-opacity="0.45"/>
       </filter>
     </defs>
-    <!-- 缺口外阴影 -->
-    <path d="${puzzlePath()}" transform="translate(${correctX},${pieceY})"
-          fill="none" stroke="#000" stroke-width="2.5" opacity="0.4" filter="url(#shadow)"/>
-    <!-- 缺口内部暗化 -->
-    <rect width="${W}" height="${H}" fill="rgba(0,0,0,0.4)" mask="url(#holeMask)"/>
-    <!-- 缺口内边缘高光 -->
-    <path d="${puzzlePath()}" transform="translate(${correctX},${pieceY})"
-          fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+
+    <!-- 第1层：缺口内填充 — 半透明深色，让缺口清晰可见 -->
+    <rect x="0" y="0" width="${W}" height="${H}" fill="rgba(0,0,0,0.5)" clip-path="url(#holeClip)"/>
+
+    <!-- 第2层：缺口内噪声纹理 — 增加真实感，区别于周围平滑背景 -->
+    <g clip-path="url(#holeClip)" opacity="0.15">
+      ${Array.from({ length: 20 }, () => {
+        const nx = correctX + rand(-2, PIECE_W + 2);
+        const ny = pieceY + rand(-2, PIECE_H + 2);
+        const nr = rand(0.5, 2);
+        return `<circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${nr.toFixed(1)}" fill="#000"/>`;
+      }).join("\n      ")}
+    </g>
+
+    <!-- 第3层：缺口轮廓描边 — 确保拼图形状边缘清晰可见 -->
+    <path d="${pPath}" transform="translate(${correctX},${pieceY})"
+          fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2" filter="url(#outerShadow)"/>
+
+    <!-- 第4层：内高光 — 凹陷边缘的高光线 -->
+    <path d="${pPath}" transform="translate(${correctX},${pieceY})"
+          fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.2"/>
   </svg>`;
 
   const bgWithHole = await sharp(bgBase)
@@ -698,32 +724,34 @@ async function generatePuzzle(): Promise<{
     .png()
     .toBuffer();
 
-  // ── 3. 提取拼图块（裁剪 + 形状蒙版 + 描边 + 投影） ──
+  // ── 3. 提取拼图块（从原始背景裁剪 + 拼图形状蒙版 + 白色描边 + 投影） ──
   const cropped = await sharp(bgBase)
     .extract({ left: Math.round(correctX), top: Math.round(pieceY), width: PIECE_W, height: PIECE_H })
     .png()
     .toBuffer();
 
+  // 拼图蒙版：裁出拼图形状
   const maskSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${PIECE_W}" height="${PIECE_H}">
-    <defs><clipPath id="pc"><path d="${puzzlePath()}"/></clipPath></defs>
+    <defs><clipPath id="pc"><path d="${pPath}"/></clipPath></defs>
     <rect width="${PIECE_W}" height="${PIECE_H}" fill="white"/>
   </svg>`;
 
+  // 描边 + 投影：让拼图块有立体感
   const strokeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${PIECE_W}" height="${PIECE_H}">
     <defs>
       <filter id="ps">
         <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.35"/>
       </filter>
     </defs>
-    <path d="${puzzlePath()}" fill="none" stroke="rgba(255,255,255,0.9)"
+    <path d="${pPath}" fill="none" stroke="rgba(255,255,255,0.95)"
           stroke-width="2.5" filter="url(#ps)" stroke-linejoin="round"/>
   </svg>`;
 
   const piece = await sharp(cropped)
     .ensureAlpha()
     .composite([
-      { input: Buffer.from(maskSvg), blend: "in" },
-      { input: Buffer.from(strokeSvg), blend: "over" },
+      { input: Buffer.from(maskSvg), blend: "in" },   // 裁成拼图形状
+      { input: Buffer.from(strokeSvg), blend: "over" }, // 加白色描边+投影
     ])
     .png()
     .toBuffer();
