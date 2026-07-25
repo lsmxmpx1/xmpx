@@ -116,6 +116,8 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     setDragging(false);
     if (!data) return;
 
+    // 本地标记验证成功：显示"验证成功"并锁定滑块（避免反复拖拽）
+    setVerified(true);
     // 提交验证：用 ref 读最新值（避免 React 状态异步更新导致闭包过期）
     onVerified(Math.round(dragXRef.current));
   }, [dragging, data, onVerified]);
@@ -244,7 +246,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
       {/* 滑块区域 */}
       <div
         ref={containerRef}
-        className={`relative flex h-10 cursor-pointer items-center rounded-b-lg border border-gray-200 bg-gray-100 ${
+        className={`relative flex h-10 ${verified ? "cursor-default" : "cursor-pointer"} items-center rounded-b-lg border border-gray-200 bg-gray-100 ${
           verified ? "bg-green-50" : failed ? "bg-red-50" : ""
         }`}
         onMouseDown={onMouseDown}
