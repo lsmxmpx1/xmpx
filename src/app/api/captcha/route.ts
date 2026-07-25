@@ -659,12 +659,8 @@ async function generatePuzzle(): Promise<{
   const holeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <!-- 缺口主体：圆角正方形半透明深色 -->
     <rect x="${correctX.toFixed(1)}" y="${pieceY.toFixed(1)}" width="${PIECE_W}" height="${PIECE_H}"
-          rx="3" ry="3" fill="rgba(0,0,0,0.5)"
-          stroke="rgba(0,0,0,0.65)" stroke-width="2.5" stroke-linejoin="round"/>
-    <!-- 内边缘高光线 -->
-    <rect x="${correctX.toFixed(1)}" y="${pieceY.toFixed(1)}" width="${PIECE_W}" height="${PIECE_H}"
-          rx="3" ry="3" fill="none"
-          stroke="rgba(255,255,255,0.25)" stroke-width="1.2" stroke-linejoin="round"/>
+          rx="3" ry="3" fill="rgba(0,0,0,0.45)"
+          stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linejoin="round"/>
   </svg>`;
 
   const bgWithHole = await sharp(bgBase)
@@ -672,23 +668,17 @@ async function generatePuzzle(): Promise<{
     .png()
     .toBuffer();
 
-  // ── 3. 提取拼图块（正方形裁剪 + 白色描边 + 投影） ──
+  // ── 3. 提取拼图块（正方形裁剪 + 黑色描边） ──
   const cropped = await sharp(bgBase)
     .extract({ left: Math.round(correctX), top: Math.round(pieceY), width: PIECE_W, height: PIECE_H })
     .png()
     .toBuffer();
 
-  // 正方形拼图块：直接在裁剪图上加圆角白色描边和投影
+  // 正方形拼图块：黑色描边，无模糊投影，保持图像清晰
   const pieceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${PIECE_W}" height="${PIECE_H}">
-    <defs>
-      <filter id="ps">
-        <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.35"/>
-      </filter>
-    </defs>
     <image width="${PIECE_W}" height="${PIECE_H}" href="data:image/png;base64,${cropped.toString("base64")}"/>
     <rect x="1" y="1" width="${PIECE_W - 2}" height="${PIECE_H - 2}" rx="3" ry="3"
-          fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.5"
-          filter="url(#ps)" stroke-linejoin="round"/>
+          fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linejoin="round"/>
   </svg>`;
 
   const piece = await sharp(Buffer.from(pieceSvg))
