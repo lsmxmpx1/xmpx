@@ -29,9 +29,10 @@ interface CourseFormProps {
   initialData?: CourseData | null;
   categories: CategoryData[];
   institutionId: string;
+  onSuccess?: () => void;
 }
 
-export default function CourseForm({ mode, initialData, categories }: CourseFormProps) {
+export default function CourseForm({ mode, initialData, categories, onSuccess }: CourseFormProps) {
   const router = useRouter();
   const [title, setTitle] = useState(initialData?.title || "");
   const [categoryId, setCategoryId] = useState(initialData?.categoryId || categories[0]?.id || "");
@@ -43,6 +44,7 @@ export default function CourseForm({ mode, initialData, categories }: CourseForm
   const [status, setStatus] = useState(initialData?.status || "ACTIVE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,7 +85,12 @@ export default function CourseForm({ mode, initialData, categories }: CourseForm
       });
 
       if (res.ok) {
+        setSuccess(true);
         router.refresh();
+        // 显示成功提示 1.5 秒后自动返回课程列表
+        setTimeout(() => {
+          onSuccess?.();
+        }, 1500);
       } else {
         const data = await res.json();
         setError(data.error || "操作失败");
@@ -115,6 +122,18 @@ export default function CourseForm({ mode, initialData, categories }: CourseForm
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
+      {/* 成功提示 */}
+      {success && (
+        <div className="text-center py-12">
+          <div className="text-5xl mb-4">✅</div>
+          <p className="text-lg font-medium text-green-700 mb-2">
+            {mode === "create" ? "课程发布成功！" : "保存修改成功！"}
+          </p>
+          <p className="text-sm text-gray-400">正在返回课程列表…</p>
+        </div>
+      )}
+
+      {!success && (<>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold">
           {mode === "create" ? "发布新课程" : "编辑课程"}
@@ -267,6 +286,7 @@ export default function CourseForm({ mode, initialData, categories }: CourseForm
           </button>
         </div>
       </form>
+      </>)}
     </div>
   );
 }

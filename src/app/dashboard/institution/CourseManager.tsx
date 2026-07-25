@@ -80,7 +80,7 @@ export default function CourseManager({ categories, institutionId, canPublish }:
             ⚠️ 机构审核通过后才能发布课程，请耐心等待审核。
           </div>
         ) : (
-          <CourseForm mode="create" categories={categories} institutionId={institutionId} />
+          <CourseForm mode="create" categories={categories} institutionId={institutionId} onSuccess={handleBack} />
         )}
       </div>
     );
@@ -92,7 +92,7 @@ export default function CourseManager({ categories, institutionId, canPublish }:
         <button onClick={handleBack} className="text-sm text-gray-500 hover:text-purple-600 mb-4">
           ← 返回课程列表
         </button>
-        <CourseForm mode="edit" initialData={editCourse} categories={categories} institutionId={institutionId} />
+        <CourseForm mode="edit" initialData={editCourse} categories={categories} institutionId={institutionId} onSuccess={handleBack} />
       </div>
     );
   }
