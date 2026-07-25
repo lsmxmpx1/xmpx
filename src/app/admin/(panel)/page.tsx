@@ -7,6 +7,7 @@ async function getStats() {
   const [
     courses,
     institutions,
+    pendingInstitutions,
     categories,
     users,
     articles,
@@ -17,6 +18,7 @@ async function getStats() {
   ] = await Promise.all([
     prisma.course.count(),
     prisma.institution.count(),
+    prisma.institution.count({ where: { status: "PENDING" } }),
     prisma.category.count(),
     prisma.user.count(),
     prisma.article.count(),
@@ -28,6 +30,7 @@ async function getStats() {
   return {
     courses,
     institutions,
+    pendingInstitutions,
     categories,
     users,
     articles,
@@ -40,7 +43,7 @@ async function getStats() {
 
 const CARDS = [
   { key: "courses", label: "课程总数", href: "/admin/courses", color: "bg-blue-500" },
-  { key: "institutions", label: "入驻机构", href: "/admin/institutions", color: "bg-emerald-500" },
+  { key: "institutions", label: "入驻机构", href: "/admin/institutions", color: "bg-emerald-500", badgeKey: "pendingInstitutions" as const },
   { key: "categories", label: "分类数量", href: "/admin/categories", color: "bg-purple-500" },
   { key: "users", label: "注册用户", href: "/admin/users", color: "bg-amber-500" },
   { key: "articles", label: "文章（已发布）", href: "/admin/articles", color: "bg-rose-500" },
@@ -59,10 +62,15 @@ export default async function AdminHome() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {CARDS.map((c) => {
-          const value =
-            c.key === "articles"
-              ? `${s.publishedArticles}/${s.articles}`
-              : (s as Record<string, number | string>)[c.key];
+          let value: string | number;
+          if (c.key === "articles") {
+            value = `${s.publishedArticles}/${s.articles}`;
+          } else if (c.badgeKey && (s as Record<string, number>)[c.badgeKey] > 0) {
+            // Show total + pending count for institutions
+            value = `${s[c.key]} (${s[c.badgeKey]} 待审核)`;
+          } else {
+            value = (s as Record<string, number | string>)[c.key] as string | number;
+          }
           const inner = (
             <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
               <div className={`w-10 h-10 rounded-lg ${c.color} mb-3`} />
@@ -89,12 +97,22 @@ export default async function AdminHome() {
           >
             配置短信网关
           </Link>
-          <Link
-            href="/admin/institutions"
-            className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50"
-          >
-            审核入驻机构
-          </Link>
+          {s.pendingInstitutions > 0 && (
+            <Link
+              href="/admin/institutions"
+              className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm hover:bg-red-100 font-medium"
+            >
+              审核入驻机构（{s.pendingInstitutions} 待审核）
+            </Link>
+          )}
+          {s.pendingInstitutions === 0 && (
+            <Link
+              href="/admin/institutions"
+              className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50"
+            >
+              审核入驻机构
+            </Link>
+          )}
           <Link
             href="/admin/courses"
             className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50"

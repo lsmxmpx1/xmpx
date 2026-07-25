@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { slugify, rolesToString } from "@/lib/utils";
+import { createNotification, NotificationType } from "@/lib/notify";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -52,6 +53,21 @@ export async function POST(request: NextRequest) {
         ownerId: userId,
       },
     });
+
+    // 通知所有管理员有新机构入驻申请
+    const admins = await prisma.user.findMany({ where: { role: "ADMIN" }, select: { id: true } });
+    await Promise.all(
+      admins.map((a) =>
+        createNotification({
+          recipientId: a.id,
+          type: NotificationType.INSTITUTION_APPLIED,
+          title: `新机构入驻申请：${inst.name}`,
+          body: `${district || ""} · ${name.trim()} · 等待审核`,
+          relatedType: "Institution",
+          relatedId: inst.id,
+        }).catch(() => {})
+      )
+    );
 
     // 写入多身份 roles（与老师流程一致）：把 INSTITUTION 追加进逗号分隔的 roles 字符串，
     // 否则用户中心「我是机构」会一直显示「未开通」

@@ -15,6 +15,7 @@ export const NotificationType = {
   QUESTION_APPROVED: "QUESTION_APPROVED",   // 提问审核通过
   ANSWER_APPROVED: "ANSWER_APPROVED",       // 回复被审核通过（通知提问者）
   ADMIN_REPLY_QUESTION: "ADMIN_REPLY_QUESTION", // 管理员回复了提问
+  INSTITUTION_APPLIED: "INSTITUTION_APPLIED", // 新机构入驻申请
 } as const;
 
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
