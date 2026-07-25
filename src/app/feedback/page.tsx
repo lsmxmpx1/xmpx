@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { SessionProviderWrapper } from "./SessionProvider";
 import FeedbackPageClient from "./FeedbackPageClient";
 
 // ISR：公开列表每 60s 重新生成一次，避免每次请求都查远程库导致 Vercel 超时
@@ -42,12 +41,10 @@ export default async function FeedbackPage() {
   });
 
   return (
-    <SessionProviderWrapper>
-      <FeedbackPageClient
-        list={JSON.parse(JSON.stringify(list))}
-        typeLabel={TYPE_LABEL}
-        statusMeta={STATUS_META}
-      />
-    </SessionProviderWrapper>
+    <FeedbackPageClient
+      list={JSON.parse(JSON.stringify(list))}
+      typeLabel={TYPE_LABEL}
+      statusMeta={STATUS_META}
+    />
   );
 }
