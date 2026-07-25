@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { slugify, rolesToString } from "@/lib/utils";
 import { createNotification, NotificationType } from "@/lib/notify";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -78,6 +79,9 @@ export async function POST(request: NextRequest) {
       data: { roles: newRolesStr, role: "INSTITUTION" },
     });
 
+    // 使后台机构列表缓存失效（新机构 status=PENDING 需在后台可见）
+    revalidatePath("/admin/institutions");
+
     return NextResponse.json({ success: true, id: inst.id, roles: newRolesStr.split(",") });
   } catch (error) {
     console.error("Create institution error:", error);
@@ -125,6 +129,9 @@ export async function PUT(request: NextRequest) {
         images: images?.trim() || null,
       },
     });
+
+    // 使后台机构列表缓存失效
+    revalidatePath("/admin/institutions");
 
     return NextResponse.json({ success: true });
   } catch (error) {
