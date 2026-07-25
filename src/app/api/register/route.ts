@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-const PUZZLE_TOLERANCE = 3; // 拼图 X 坐标容差（px），与后端 route.ts 保持一致
+const PUZZLE_TOLERANCE = 8; // 拼图 X 坐标容差（px）
 
 /** 清除拼图验证码 Cookie 的辅助函数 */
 function clearPuzzleCookie(res: NextResponse) {

@@ -32,11 +32,13 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   const sliderRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
   const startDragXRef = useRef(0);
+  const dragXRef = useRef(0); // 始终跟踪最新拖拽 X（解决 React 异步状态闭包过期问题）
 
   // 加载验证码图片
   const loadPuzzle = useCallback(async () => {
     setLoading(true);
     setDragX(0);
+    dragXRef.current = 0; // 同步 ref
     setVerified(false);
     setFailed(false);
     try {
@@ -106,6 +108,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     const maxDrag = data.w - PIECE_W - 10; // 留一点边距（原始坐标空间）
     const newX = Math.max(0, Math.min(startDragXRef.current + delta * (maxDrag / sliderW), maxDrag));
     setDragX(newX);
+    dragXRef.current = newX; // 同步更新 ref，确保 handleDragEnd 能读到最新值
   }, [dragging, data]);
 
   const handleDragEnd = useCallback(() => {
@@ -113,9 +116,9 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     setDragging(false);
     if (!data) return;
 
-    // 提交验证
-    onVerified(Math.round(dragX));
-  }, [dragging, data, dragX, onVerified]);
+    // 提交验证：用 ref 读最新值（避免 React 状态异步更新导致闭包过期）
+    onVerified(Math.round(dragXRef.current));
+  }, [dragging, data, onVerified]);
 
   // Mouse events
   const onMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientX);
@@ -151,7 +154,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   // 失败后自动重置位置
   useEffect(() => {
     if (failed) {
-      const timer = setTimeout(() => setDragX(0), 600);
+      const timer = setTimeout(() => { setDragX(0); dragXRef.current = 0; }, 600);
       return () => clearTimeout(timer);
     }
   }, [failed]);
