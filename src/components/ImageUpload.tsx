@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback, useMemo } from "react";
-import Image from "next/image";
 
 interface ImageUploadProps {
   // Single mode: value is a string URL, multiple mode: value is comma-separated URLs
@@ -130,7 +129,7 @@ export default function ImageUpload({
             key={index}
             className={`relative ${ASPECT_CLASSES[aspectRatio]} w-24 rounded-xl overflow-hidden border group`}
           >
-            <Image src={img} alt={`图片 ${index + 1}`} width={96} height={96} className="object-cover" />
+            <img src={img} alt={`图片 ${index + 1}`} className="w-full h-full object-cover" />
             {!disabled && (
               <button
                 type="button"
