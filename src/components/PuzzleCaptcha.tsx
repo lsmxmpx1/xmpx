@@ -6,6 +6,7 @@ interface PuzzleData {
   bg: string;
   piece: string;
   pieceY: number;
+  correctX: number; // 正确 X 坐标（与后端 cookie 一致），用于前端判断对齐
   w: number;
 }
 
@@ -14,6 +15,9 @@ interface PuzzleCaptchaProps {
   onError?: (msg: string) => void;
   className?: string;
 }
+
+// 前端对齐容差，与服务端 PUZZLE_TOLERANCE 保持一致（8px）
+const CLIENT_TOLERANCE = 8;
 
 const PIECE_W = 44; // 与后端 route.ts 保持一致
 const PIECE_H = 44;
@@ -24,7 +28,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   const [dragX, setDragX] = useState(0); // 拖拽偏移量（原始坐标 px，与后端 W 同尺度）
   const [dragging, setDragging] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [hint, setHint] = useState(""); // 未对齐时的轻提示
   const [scale, setScale] = useState(1); // 背景图实际显示宽度 / 数据宽度
 
   const imgRef = useRef<HTMLImageElement>(null);
@@ -33,6 +37,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   const startXRef = useRef(0);
   const startDragXRef = useRef(0);
   const dragXRef = useRef(0); // 始终跟踪最新拖拽 X（解决 React 异步状态闭包过期问题）
+  const correctXRef = useRef(-1); // 正确 X 坐标（来自接口返回）
 
   // 加载验证码图片
   const loadPuzzle = useCallback(async () => {
@@ -40,12 +45,13 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     setDragX(0);
     dragXRef.current = 0; // 同步 ref
     setVerified(false);
-    setFailed(false);
+    setHint("");
     try {
       const res = await fetch(`/api/captcha?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("加载失败");
       const json = await res.json();
       if (json.error) throw new Error(json.error);
+      correctXRef.current = json.correctX; // 记录正确坐标
       setData(json);
     } catch (e) {
       onError?.(e instanceof Error ? e.message : "验证码加载失败");
@@ -96,7 +102,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   const handleDragStart = useCallback((clientX: number) => {
     if (verified || loading || !data) return;
     setDragging(true);
-    setFailed(false);
+    setHint("");
     startXRef.current = clientX;
     startDragXRef.current = dragX;
   }, [verified, loading, data, dragX]);
@@ -116,10 +122,22 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     setDragging(false);
     if (!data) return;
 
-    // 本地标记验证成功：显示"验证成功"并锁定滑块（避免反复拖拽）
-    setVerified(true);
-    // 提交验证：用 ref 读最新值（避免 React 状态异步更新导致闭包过期）
-    onVerified(Math.round(dragXRef.current));
+    const submitted = Math.round(dragXRef.current);
+    // 前端判断是否与缺口对齐（与服务端容差一致）
+    const isAligned = Math.abs(submitted - correctXRef.current) <= CLIENT_TOLERANCE;
+
+    if (isAligned) {
+      // 对齐：显示"验证成功"并锁定滑块
+      setVerified(true);
+      setHint("");
+      onVerified(submitted);
+    } else {
+      // 未对齐：不显示成功，允许继续拖动，给轻提示
+      setVerified(false);
+      setHint("未对准缺口，请继续拖动");
+      // 1.5s 后清除提示（不影响继续拖动）
+      setTimeout(() => setHint(""), 1500);
+    }
   }, [dragging, data, onVerified]);
 
   // Mouse events
@@ -152,23 +170,6 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
       window.removeEventListener("touchend", onEnd);
     };
   }, [dragging, handleDragMove, handleDragEnd]);
-
-  // 失败后自动重置位置
-  useEffect(() => {
-    if (failed) {
-      const timer = setTimeout(() => { setDragX(0); dragXRef.current = 0; }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [failed]);
-
-  /** 标记验证通过/失败（由父组件调用） */
-  const markResult = useCallback((success: boolean) => {
-    if (success) {
-      setVerified(true);
-    } else {
-      setFailed(true);
-    }
-  }, []);
 
   if (loading) {
     return (
@@ -224,7 +225,6 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
             alt=""
             className="pointer-events-none block h-full w-full"
             draggable={false}
-            style={{ filter: failed ? "grayscale(100%)" : undefined }}
           />
         </div>
 
@@ -247,7 +247,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
       <div
         ref={containerRef}
         className={`relative flex h-10 ${verified ? "cursor-default" : "cursor-pointer"} items-center rounded-b-lg border border-gray-200 bg-gray-100 ${
-          verified ? "bg-green-50" : failed ? "bg-red-50" : ""
+          verified ? "bg-green-50" : ""
         }`}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
@@ -255,17 +255,13 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
         {/* 滑块轨道左侧图标 */}
         <div
           className={`absolute left-0 flex h-full w-10 items-center justify-center rounded-l-md transition-colors ${
-            dragging ? "bg-primary-600 text-white" : verified ? "bg-green-500 text-white" : failed ? "bg-red-500 text-white" : "bg-white text-gray-400 shadow-sm border-r border-gray-200"
+            dragging ? "bg-primary-600 text-white" : verified ? "bg-green-500 text-white" : "bg-white text-gray-400 shadow-sm border-r border-gray-200"
           }`}
-          style={dragging || verified || failed ? { left: `${(dragX / (data.w - PIECE_W)) * (100 - (40 / (containerRef.current?.clientWidth ?? 280) * 100))}%` } : {}}
+          style={dragging || verified ? { left: `${(dragX / (data.w - PIECE_W)) * (100 - (40 / (containerRef.current?.clientWidth ?? 280) * 100))}%` } : {}}
         >
           {verified ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : failed ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -276,19 +272,14 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
 
         {/* 提示文字 */}
         <span className={`pointer-events-none w-full text-center text-sm ${
-          verified ? "text-green-600 font-medium" : failed ? "text-red-500" : "text-gray-400"
+          verified ? "text-green-600 font-medium" : hint ? "text-amber-500" : "text-gray-400"
         }`}>
-          {verified ? "验证成功" : failed ? "验证失败，请重试" : dragging ? "" : "拖动滑块完成拼图"}
+          {verified ? "验证成功" : dragging ? "" : hint || "拖动滑块完成拼图"}
         </span>
       </div>
     </div>
   );
 }
-
-/** 给父组件用的刷新方法 */
-export type PuzzleCaptchaHandle = {
-  reload: () => void;
-};
 
 // 后端背景图的固定高度（用于计算宽高比）
 const H = 160;

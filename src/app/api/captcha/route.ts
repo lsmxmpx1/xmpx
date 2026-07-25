@@ -696,6 +696,7 @@ export async function GET() {
       bg: `data:image/png;base64,${bg.toString("base64")}`,
       piece: `data:image/png;base64,${piece.toString("base64")}`,
       pieceY,
+      correctX, // 前端用于拖拽时判断是否与缺口对齐（与 cookie 中值一致）
       w: W,
     }, {
       headers: {
