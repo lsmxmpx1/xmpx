@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [puzzleReady, setPuzzleReady] = useState(false); // 用户已完成拼图拖拽
   const [puzzleX, setPuzzleX] = useState(0); // 拼图提交的 X 坐标
+  const [captchaKey, setCaptchaKey] = useState("puzzle"); // 验证码组件 key，仅注册失败时刷新
   const puzzleRef = useRef<{ reload: () => void } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,7 +48,8 @@ export default function RegisterPage() {
     if (!res.ok) {
       setError(data.error || "注册失败");
       setPuzzleReady(false);
-      // 刷新验证码（通过 key 重挂载）
+      // 刷新验证码（通过 key 变更强制重挂载，仅失败时触发）
+      setCaptchaKey(`puzzle-${Date.now()}`);
       setPuzzleX(0);
       setLoading(false);
     } else {
@@ -118,9 +120,9 @@ export default function RegisterPage() {
             minLength={6}
           />
 
-          {/* 拼图滑块验证码 */}
+          {/* 拼图滑块验证码 — key 仅在需要强制刷新时才变（注册失败后） */}
           <PuzzleCaptcha
-            key={puzzleX === 0 && !loading ? "puzzle" : `puzzle-${Date.now()}`}
+            key={captchaKey}
             onVerified={handlePuzzleVerified}
             onError={handlePuzzleError}
           />
