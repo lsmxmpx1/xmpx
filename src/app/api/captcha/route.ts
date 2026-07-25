@@ -657,10 +657,9 @@ async function generatePuzzle(): Promise<{
 
   // ── 2. 在背景上画正方形缺口 ──
   const holeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-    <!-- 缺口主体：圆角正方形半透明深色 -->
+    <!-- 缺口主体：圆角正方形半透明深色，无描边 -->
     <rect x="${correctX.toFixed(1)}" y="${pieceY.toFixed(1)}" width="${PIECE_W}" height="${PIECE_H}"
-          rx="3" ry="3" fill="rgba(0,0,0,0.45)"
-          stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linejoin="round"/>
+          rx="3" ry="3" fill="rgba(0,0,0,0.45)"/>
   </svg>`;
 
   const bgWithHole = await sharp(bgBase)
