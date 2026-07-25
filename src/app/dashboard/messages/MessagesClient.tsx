@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { sendMessage } from "./actions";
@@ -45,12 +45,22 @@ export default function MessagesClient({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [sentCount, setSentCount] = useState(0);
 
   const selected = conversations.find((c) => c.id === selectedId) || null;
 
+  /** 滚动消息列表到底部（即时，不用 smooth 避免被 refresh 打断） */
+  const scrollToBottom = useCallback(() => {
+    const el = listRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, []);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, selectedId]);
+    scrollToBottom();
+  }, [messages.length, selectedId, sentCount, scrollToBottom]);
 
   async function handleSend() {
     if (!selectedId || !text.trim() || sending) return;
@@ -63,7 +73,13 @@ export default function MessagesClient({
       return;
     }
     setText("");
+    setSentCount((c) => c + 1);
+    // 先刷新服务端数据，refresh 完成后再次确保在底部
     router.refresh();
+    // refresh 是异步的，等下一帧 RSC 合成后再次校正滚动位置
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => scrollToBottom());
+    });
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -116,7 +132,7 @@ export default function MessagesClient({
       </div>
 
       {/* 消息流 */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 max-h-[50vh] md:max-h-[52vh]">
+      <div ref={listRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3 max-h-[50vh] md:max-h-[52vh]">
         {messages.length === 0 ? (
           <div className="text-center text-gray-400 text-sm py-10">
             开始和{selected.otherName}的对话吧
