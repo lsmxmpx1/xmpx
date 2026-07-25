@@ -231,7 +231,7 @@ export default async function QuestionDetailPage({
               {QUESTION_STATUS_LABEL[q.status] || q.status}
             </span>
           )}
-          <span className="text-xs text-gray-400">{q.views} 浏览</span>
+          <QuestionViewTracker id={q.id} initialViews={q.views} />
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 leading-snug">{q.title}</h1>
