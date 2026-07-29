@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createArticle, updateArticle } from "../actions";
 import ImageUpload from "../_components/ImageUpload";
+import MarkdownEditor from "../_components/MarkdownEditor";
 
 type Existing = {
   id: string;
@@ -113,13 +114,8 @@ export default function ArticleForm({ existing = null }: { existing?: Existing }
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-600">正文</label>
-                <textarea
-                  name="content"
-                  rows={8}
-                  defaultValue={existing?.content || ""}
-                  className="input-field w-full font-mono text-sm"
-                />
+                <label className="mb-1 block text-sm text-gray-600">正文（支持 Markdown）</label>
+                <MarkdownEditor defaultValue={existing?.content || ""} />
               </div>
               <div>
                 <label className="mb-1 block text-sm text-gray-600">标签（逗号分隔）</label>

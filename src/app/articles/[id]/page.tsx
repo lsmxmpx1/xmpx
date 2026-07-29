@@ -7,6 +7,7 @@ import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
 import Faq from "@/components/seo/Faq";
 import { getArticleFaqs } from "@/lib/faq";
+import { renderMarkdown } from "@/lib/markdown";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -94,9 +95,14 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
             </div>
           )}
 
-          <div className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {article.content || "暂无详细内容"}
-          </div>
+          {article.content ? (
+            <div
+              className="article-content"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(article.content) }}
+            />
+          ) : (
+            <div className="text-gray-400">暂无详细内容</div>
+          )}
         </div>
 
         <Faq items={getArticleFaqs()} />
