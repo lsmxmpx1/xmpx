@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { notifyIndexNow } from "@/lib/indexnow";
 
 // PUT - update a course
 export async function PUT(
@@ -54,6 +55,9 @@ export async function PUT(
     // 失效后台课程管理页与公开课程列表的缓存，避免"必须点搜索才出最新课程"
     revalidatePath("/admin/courses");
     revalidatePath("/courses");
+
+    // 通知搜索引擎更新收录（fire-and-forget）
+    notifyIndexNow([`https://www.xmpx.cn/courses/${params.id}`]).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

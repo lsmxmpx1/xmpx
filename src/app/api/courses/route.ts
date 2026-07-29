@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
+import { notifyIndexNow } from "@/lib/indexnow";
 
 // GET - list courses for the logged-in institution owner
 export async function GET() {
@@ -94,6 +95,9 @@ export async function POST(request: NextRequest) {
     // 失效后台课程管理页与公开课程列表的缓存，避免"必须点搜索才出最新课程"
     revalidatePath("/admin/courses");
     revalidatePath("/courses");
+
+    // 通知搜索引擎收录新课程（fire-and-forget，失败不影响主流程）
+    notifyIndexNow([`https://www.xmpx.cn/courses/${course.id}`]).catch(() => {});
 
     return NextResponse.json({ success: true, id: course.id });
   } catch (error) {

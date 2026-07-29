@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createNotification, NotificationType } from "@/lib/notify";
+import { notifyIndexNow } from "@/lib/indexnow";
 
 /* ----------------------- 课程 ----------------------- */
 
@@ -58,6 +59,8 @@ export async function approveInstitution(id: string) {
   revalidatePath("/");
   revalidatePath("/recommend");
   revalidatePath("/search");
+  // 审核通过后通知搜索引擎收录机构页（fire-and-forget）
+  notifyIndexNow([`https://www.xmpx.cn/institutions/${id}`]).catch(() => {});
 }
 
 export async function rejectInstitution(id: string) {
@@ -110,11 +113,16 @@ export async function deleteArticle(id: string) {
 export async function toggleArticlePublished(id: string) {
   const a = await prisma.article.findUnique({ where: { id }, select: { published: true, publishedAt: true } });
   if (!a) return;
+  const nowPublished = !a.published;
   await prisma.article.update({
     where: { id },
-    data: { published: !a.published, publishedAt: !a.published ? new Date() : a.publishedAt },
+    data: { published: nowPublished, publishedAt: nowPublished ? new Date() : a.publishedAt },
   });
   revalidatePath("/admin/articles");
+  // 发布时通知搜索引擎（fire-and-forget）
+  if (nowPublished) {
+    notifyIndexNow([`https://www.xmpx.cn/articles/${id}`]).catch(() => {});
+  }
 }
 
 /* ----------------------- 广告 ----------------------- */
@@ -271,7 +279,7 @@ export async function createArticle(formData: FormData) {
   const category = String(formData.get("category") || "").trim() || null;
   const tags = String(formData.get("tags") || "").trim() || null;
   const published = formData.get("published") === "on";
-  await prisma.article.create({
+  const article = await prisma.article.create({
     data: {
       title,
       slug,
@@ -285,6 +293,10 @@ export async function createArticle(formData: FormData) {
     },
   });
   revalidatePath("/admin/articles");
+  // 发布文章时通知搜索引擎收录（fire-and-forget）
+  if (published) {
+    notifyIndexNow([`https://www.xmpx.cn/articles/${article.id}`]).catch(() => {});
+  }
 }
 
 export async function updateArticle(id: string, formData: FormData) {
@@ -308,6 +320,10 @@ export async function updateArticle(id: string, formData: FormData) {
     data: { title, slug, summary, content, cover, category, tags, published, publishedAt },
   });
   revalidatePath("/admin/articles");
+  // 发布/更新已发布文章时通知搜索引擎（fire-and-forget）
+  if (published) {
+    notifyIndexNow([`https://www.xmpx.cn/articles/${id}`]).catch(() => {});
+  }
 }
 
 /* ----------------------- 广告 添加/修改 ----------------------- */
@@ -527,6 +543,8 @@ export async function approveQuestion(id: string) {
   revalidatePath("/admin/questions");
   revalidatePath("/questions");
   revalidatePath(`/questions/${id}`);
+  // 审核通过后通知搜索引擎收录（fire-and-forget）
+  notifyIndexNow([`https://www.xmpx.cn/questions/${id}`]).catch(() => {});
 }
 
 export async function rejectQuestion(id: string) {
@@ -551,6 +569,10 @@ export async function toggleQuestionPublic(id: string) {
   revalidatePath("/admin/questions");
   revalidatePath("/questions");
   revalidatePath(`/questions/${id}`);
+  // 设为公开时通知搜索引擎收录（fire-and-forget）
+  if (nextPublic) {
+    notifyIndexNow([`https://www.xmpx.cn/questions/${id}`]).catch(() => {});
+  }
 }
 
 export async function replyQuestion(id: string, formData: FormData): Promise<void> {
