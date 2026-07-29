@@ -39,13 +39,17 @@ export async function POST(req: NextRequest) {
 
     if (!result.success) {
       console.error(`[EMAIL] 发送失败: ${result.error}`);
+      return NextResponse.json(
+        { error: `邮件发送失败：${result.error}，请联系管理员检查邮件服务器配置` },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
-      message: "验证码已发送，请查收邮箱",
-      // 未启用 SMTP 时，开发环境返回验证码便于调试
-      ...(process.env.NODE_ENV === "development" && !cfg.enabled ? { debugCode: code } : {}),
+      message: result.dev ? `验证码已生成（开发模式）：${code}` : "验证码已发送，请查收邮箱（5 分钟内有效）",
+      // 开发模式未启用 SMTP 时返回验证码便于调试
+      ...(result.dev ? { debugCode: code } : {}),
     });
   } catch {
     return NextResponse.json({ error: "发送失败，请稍后重试" }, { status: 500 });

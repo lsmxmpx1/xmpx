@@ -1,6 +1,7 @@
 import { getSmsConfig } from "@/lib/sms";
 import { getEmailConfig } from "@/lib/email";
 import { saveSmsConfig, saveEmailConfig } from "../actions";
+import EmailTestButton from "./EmailTestButton";
 
 export const dynamic = "force-dynamic";
 
@@ -147,6 +148,9 @@ export default async function AdminSettings() {
                 placeholder="厦门培训网 <noreply@xmpx.cn>"
                 className="input-field"
               />
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠️ QQ/163 邮箱要求发件地址与认证账号一致，否则可能被拒发。若填了此字段但收不到邮件，请先清空该字段重试。
+              </p>
             </div>
 
             <div className="flex items-center gap-6 text-sm">
@@ -164,10 +168,11 @@ export default async function AdminSettings() {
               常见配置：QQ 邮箱 smtp.qq.com:587(STARTTLS) 或 :465(SSL)，密码填授权码；163 邮箱 smtp.163.com:465(SSL)。
             </p>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
               <button type="submit" className="px-6 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800">
                 保存邮件配置
               </button>
+              <EmailTestButton enabled={emailCfg.enabled} />
             </div>
           </form>
         </div>

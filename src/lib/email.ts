@@ -42,10 +42,17 @@ export async function sendEmail(opts: {
       port: cfg.port,
       secure: cfg.secure,
       auth: { user: cfg.user, pass: cfg.pass },
+      // QQ/163 等国内邮箱 TLS 兼容
+      tls: { rejectUnauthorized: false },
     });
 
+    // from 地址：优先用配置的显示名，回退到认证账号本身
+    // 注意：QQ 邮箱 SMTP 要求 from 地址与认证账号一致（或已验证域名），
+    // 若配置了不匹配的 from 可能被服务器拒绝
+    const fromAddress = cfg.from || cfg.user;
+
     await transporter.sendMail({
-      from: cfg.from || cfg.user,
+      from: fromAddress,
       to: opts.to,
       subject: opts.subject,
       text: opts.text,
@@ -54,7 +61,9 @@ export async function sendEmail(opts: {
 
     return { success: true };
   } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : "邮件发送失败" };
+    const msg = e instanceof Error ? e.message : "邮件发送失败";
+    console.error(`[EMAIL] sendMail error: ${msg}`);
+    return { success: false, error: msg };
   }
 }
 
