@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import PuzzleCaptcha from "@/components/PuzzleCaptcha";
@@ -12,11 +12,21 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailCode, setEmailCode] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [puzzleReady, setPuzzleReady] = useState(false); // 用户已拖到正确位置
   const [puzzleX, setPuzzleX] = useState(0); // 拼图提交的 X 坐标
   const [captchaKey, setCaptchaKey] = useState("puzzle"); // 验证码组件 key，仅注册失败时刷新
+  const [sendingCode, setSendingCode] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => setCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +37,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!emailCode) {
+      setError("请输入邮箱验证码");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/register", {
@@ -34,11 +49,12 @@ export default function RegisterPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        email: email || undefined,
+        email,
         phone: phone || undefined,
         password,
         confirmPassword,
         puzzleX, // 拼图滑块验证码：提交拖拽的 X 坐标
+        emailCode, // 邮箱验证码
       }),
     });
 
@@ -54,6 +70,32 @@ export default function RegisterPage() {
     } else {
       router.push("/auth/login?registered=true");
     }
+  }
+
+  /** 获取邮箱验证码 */
+  async function handleSendCode() {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("请输入正确的邮箱");
+      return;
+    }
+    setError("");
+    setInfo("");
+    setSendingCode(true);
+    try {
+      const res = await fetch("/api/email/send-register-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "发送失败");
+      setCountdown(60);
+      const devHint = data.debugCode ? `（开发模式验证码：${data.debugCode}）` : "";
+      setInfo(`验证码已发送，请查收邮箱（5 分钟内有效）${devHint}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "发送失败");
+    }
+    setSendingCode(false);
   }
 
   /** 拼图组件回调：用户拖到正确位置才触发 */
@@ -76,6 +118,9 @@ export default function RegisterPage() {
         {error && (
           <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">{error}</div>
         )}
+        {info && (
+          <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm mb-4">{info}</div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -91,7 +136,26 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="input-field"
+            required
           />
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="请输入邮箱验证码"
+              value={emailCode}
+              onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
+              className="input-field flex-1"
+              maxLength={6}
+            />
+            <button
+              type="button"
+              onClick={handleSendCode}
+              disabled={sendingCode || countdown > 0}
+              className="px-4 py-3 bg-primary-50 text-primary-600 font-medium rounded-xl hover:bg-primary-100 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
+            >
+              {countdown > 0 ? `${countdown}s` : sendingCode ? "发送中" : "获取验证码"}
+            </button>
+          </div>
           <input
             type="text"
             placeholder="请输入手机号（选填）"

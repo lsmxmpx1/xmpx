@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { verifyCodeRegister } from "@/lib/email-store";
 
 const PUZZLE_TOLERANCE = 8; // 拼图 X 坐标容差（px）
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** 清除拼图验证码 Cookie 的辅助函数 */
 function clearPuzzleCookie(res: NextResponse) {
@@ -11,7 +14,7 @@ function clearPuzzleCookie(res: NextResponse) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, password, confirmPassword, puzzleX } = await req.json();
+    const { name, email, phone, password, confirmPassword, puzzleX, emailCode } = await req.json();
 
     // ─── 校验拼图滑块验证码（防机器人恶意注册） ───
     const cookieX = req.cookies.get("puzzle_x")?.value;
@@ -31,6 +34,13 @@ export async function POST(req: NextRequest) {
     }
     // 拼图验证通过，清除 Cookie（一次性使用）
     // （后续每个错误响应也会清除）
+
+    // ─── 邮箱必填 + 格式校验（注册需邮箱验证码，故邮箱为必填项） ───
+    if (!email || !EMAIL_RE.test(email)) {
+      const fail = NextResponse.json({ error: "请输入正确的邮箱" }, { status: 400 });
+      clearPuzzleCookie(fail);
+      return fail;
+    }
 
     // ─── 密码校验 ───
     if (!password || password.length < 6) {
@@ -63,6 +73,19 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       const fail = NextResponse.json({ error: "该邮箱或手机号已注册" }, { status: 400 });
+      clearPuzzleCookie(fail);
+      return fail;
+    }
+
+    // ─── 邮箱验证码校验（注册需校验邮箱所有权） ───
+    if (!emailCode) {
+      const fail = NextResponse.json({ error: "请输入邮箱验证码" }, { status: 400 });
+      clearPuzzleCookie(fail);
+      return fail;
+    }
+    const codeResult = await verifyCodeRegister(email, emailCode);
+    if (!codeResult.success) {
+      const fail = NextResponse.json({ error: codeResult.error }, { status: 400 });
       clearPuzzleCookie(fail);
       return fail;
     }

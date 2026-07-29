@@ -31,3 +31,18 @@ export function verifyCode(email: string, code: string) {
 export function clearCode(email: string) {
   return cc("EMAIL_RESET", email.trim().toLowerCase());
 }
+
+// ─── 注册验证码（EMAIL_REGISTER） ───
+// 用于注册时校验邮箱所有权。与 EMAIL_RESET 区分，避免找回密码与注册流程互相覆盖验证码。
+
+export function canSendRegister(email: string) {
+  return cs("EMAIL_REGISTER", email.trim().toLowerCase());
+}
+
+export function saveCodeRegister(email: string, code: string) {
+  return sc("EMAIL_REGISTER", email.trim().toLowerCase(), code);
+}
+
+export function verifyCodeRegister(email: string, code: string) {
+  return vc("EMAIL_REGISTER", email.trim().toLowerCase(), code);
+}

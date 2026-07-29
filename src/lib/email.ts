@@ -86,3 +86,13 @@ export function buildBindMailHtml(code: string, siteName = "厦门培训网"): s
   <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0">如非本人操作，请忽略此邮件，您的邮箱不会被更改。</p>
 </div>`;
 }
+
+/** 注册邮箱验证码邮件模板 */
+export function buildRegisterMailHtml(code: string, siteName = "厦门培训网"): string {
+  return `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1f2937">
+  <h2 style="margin:0 0 16px;font-size:20px">${siteName} · 注册验证</h2>
+  <p style="font-size:14px;line-height:1.6;margin:0 0 16px">您好，欢迎注册${siteName}！请使用以下验证码完成邮箱验证（5 分钟内有效）：</p>
+  <div style="font-size:28px;font-weight:700;letter-spacing:6px;background:#f3f4f6;border-radius:10px;padding:16px;text-align:center;color:#2563eb;margin:0 0 16px">${code}</div>
+  <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0">如非本人操作，请忽略此邮件，您的账号不会被创建。</p>
+</div>`;
+}

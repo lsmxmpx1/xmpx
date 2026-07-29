@@ -5,11 +5,11 @@
  * 「手机验证码登录 / 邮箱找回密码 / 换绑邮箱」在线上必失败。现统一落库到
  * VerificationCode 表，按 (type, target) 唯一约束，保留原冷却/过期/次数限制。
  *
- * type 取值：SMS(手机验证码登录) | EMAIL_RESET(邮箱找回密码) | EMAIL_BIND(换绑邮箱)
+ * type 取值：SMS(手机验证码登录) | EMAIL_RESET(邮箱找回密码) | EMAIL_BIND(换绑邮箱) | EMAIL_REGISTER(邮箱注册校验)
  */
 import { prisma } from "./prisma";
 
-export type CodeType = "SMS" | "EMAIL_RESET" | "EMAIL_BIND";
+export type CodeType = "SMS" | "EMAIL_RESET" | "EMAIL_BIND" | "EMAIL_REGISTER";
 
 const CODE_EXPIRE_MS = 5 * 60 * 1000; // 5 分钟过期
 const MAX_ATTEMPTS = 5; // 最多验证 5 次
