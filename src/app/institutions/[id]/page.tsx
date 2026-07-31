@@ -10,6 +10,7 @@ import ReviewList from "@/components/ReviewList";
 import MessageButton from "@/components/MessageButton";
 import { SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
+import AMapMap, { type MapPoint } from "@/components/map/AMapMap";
 import { breadcrumbLd } from "@/lib/seo";
 import Faq from "@/components/seo/Faq";
 import { getInstitutionFaqs } from "@/lib/faq";
@@ -33,6 +34,7 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
     where: { id: params.id },
     include: {
       courses: { where: { status: "ACTIVE" }, include: { category: true }, take: 10 },
+      campuses: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
     },
   });
 
@@ -54,6 +56,18 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
   const storeImages = institution.images
     ? institution.images.split(",").filter(Boolean)
     : [];
+
+  // 校区地图点（仅含已解析经纬度的校区）
+  const campusPoints: MapPoint[] = institution.campuses
+    .filter((c) => Number.isFinite(c.lng) && Number.isFinite(c.lat))
+    .map((c) => ({
+      id: c.id,
+      lng: Number(c.lng),
+      lat: Number(c.lat),
+      title: c.name,
+      address: c.address || undefined,
+      phone: c.phone || undefined,
+    }));
 
   // 结构化数据：EducationalOrganization + 面包屑
   const instUrl = `${SITE_URL}/institutions/${institution.id}`;
@@ -220,6 +234,52 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
                     />
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* 校区分布 */}
+          {institution.campuses.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border p-6 md:p-8 space-y-5">
+              <h2 className="text-xl font-bold">校区分布（{institution.campuses.length}）</h2>
+              {campusPoints.length > 0 && <AMapMap points={campusPoints} height={360} />}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {institution.campuses.map((c) => {
+                  const cImgs = c.images ? c.images.split(",").filter(Boolean) : [];
+                  return (
+                    <div key={c.id} className="border border-gray-100 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <h4 className="font-semibold">{c.name}</h4>
+                        {c.isMain && (
+                          <span className="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">
+                            主校区
+                          </span>
+                        )}
+                        {c.district && <span className="text-xs text-gray-400">{c.district}</span>}
+                      </div>
+                      {c.address && (
+                        <div className="text-sm text-gray-500 mb-1">📍 {c.address}</div>
+                      )}
+                      {c.phone && (
+                        <div className="text-sm text-gray-500 mb-1">📞 {c.phone}</div>
+                      )}
+                      {cImgs.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2 mt-2">
+                          {cImgs.map((img, i) => (
+                            <div key={i} className="aspect-video rounded-lg overflow-hidden border">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={img}
+                                alt={`${c.name} 校区图 ${i + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

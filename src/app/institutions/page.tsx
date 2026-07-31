@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { DISTRICTS } from "@/lib/utils";
 import AdSlot from "@/components/ad/AdSlot";
+import InstitutionsMapPanel from "@/components/institutions/InstitutionsMapPanel";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/constants";
 
@@ -126,6 +127,9 @@ export default async function InstitutionsPage({
             )}
             <button type="submit" className="btn-primary px-8">搜索</button>
           </form>
+
+          {/* 地图找机构（全市地图 + 就近筛选） */}
+          <InstitutionsMapPanel initialDistrict={searchParams.district} />
 
           {/* INSTITUTION_LIST 广告位 */}
           <AdSlot position={["INSTITUTION_LIST", "LISTING_BOOST"]} variant="banner" className="mb-6" />

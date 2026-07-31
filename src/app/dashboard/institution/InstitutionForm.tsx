@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ImageUpload from "@/components/ImageUpload";
+import CampusManager from "@/components/institution/CampusManager";
 
 interface InstitutionData {
   id: string;
@@ -297,6 +298,13 @@ export default function InstitutionForm({ mode, initialData }: InstitutionFormPr
           </p>
         )}
       </form>
+
+      {/* 校区管理：编辑模式且已通过审核（信息可修改）时展示 */}
+      {mode === "edit" && !isReadOnly && (
+        <div className="mt-8">
+          <CampusManager />
+        </div>
+      )}
     </div>
   );
 }

@@ -79,12 +79,36 @@ model Institution {
   adOrders    AdOrder[]
   currentTeachers   Teacher[]           @relation("TeacherCurrentInstitution")
   teacherEmployments TeacherEmployment[] @relation("TeacherEmploymentInstitution")
+  campuses    Campus[]    @relation("InstitutionCampuses")
   ownerId     String?      @unique
   owner       User?        @relation("InstitutionOwner", fields: [ownerId], references: [id])
 
   @@index([status])
   @@index([district])
   @@index([rating])
+}
+
+// ──────────────────── 校区（一个机构可有多个校区） ────────────────────
+// 每个校区可单独配置地址、电话、图片，并解析经纬度用于地图展示/就近筛选。
+// lng/lat 由高德地理编码根据 address 自动解析，也可在表单中拖拽微调。
+model Campus {
+  id           String      @id @default(cuid())
+  institutionId String
+  institution  Institution @relation("InstitutionCampuses", fields: [institutionId], references: [id], onDelete: Cascade)
+  name         String // 校区名称，如「思明校区」「软件园校区」
+  address      String? // 详细地址
+  district     String? // 区域（复用 DISTRICTS：思明/湖里/集美/海沧/同安/翔安)
+  phone        String? // 校区独立联系电话
+  images       String? // 校区图片，逗号分隔多个 URL
+  lng          Float? // 经度（高德坐标系 GCJ-02）
+  lat          Float? // 纬度（高德坐标系 GCJ-02）
+  isMain       Boolean     @default(false) // 是否为主校区
+  sortOrder    Int         @default(0) // 展示排序，小在前
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([institutionId])
+  @@index([district])
 }
 
 model Course {
