@@ -1,0 +1,29 @@
+-- ============================================================================
+-- 生产 Turso 增量同步（厦门培训网 / xmpx）
+-- ============================================================================
+-- 用途：把本次新增的「文章浏览次数」字段同步到生产数据库（Turso）。
+--
+-- 背景：项目生产库此前已通过「完整 schema SQL」一次性建立全部表与字段，
+--       应用线上运行正常即证明所有表均已存在。
+--       本次相对上次生产同步的唯一变更 = 给 Article 增加 `views` 字段。
+--       其余表 / 字段（含各表 updatedAt）在生产库均已存在，无需改动。
+--
+-- ⚠️ 重要警告：
+--   切勿使用 `prisma migrate diff --from-migrations` 或 `--from-empty` 生成的
+--   「完整重建 SQL」灌入生产库——那些脚本会对 Article / Advertisement /
+--   Category / Contact / Institution / User 等做 DROP TABLE 再重建，
+--   会清空生产数据！本文件只做【追加一列】，是安全的最小变更。
+--
+-- 执行方式（在你本机，二选一）：
+--   A) 用 Turso CLI：
+--        turso db shell xmpx-prod < migrations/production/add_article_views.sql
+--   B) 用 libsql 客户端脚本（需把 TURSO_URL 设成
+--      libsql://<id>.turso.io?authToken=<token>）：
+--        TURSO_URL="$TURSO_URL" node -e "/* 见下方说明 */"
+--
+-- 幂等：SQLite 不支持 ADD COLUMN IF NOT EXISTS，本语句执行一次即可；
+--       若重复执行报 "duplicate column" 属正常，可忽略。
+-- ============================================================================
+
+-- 仅新增浏览次数字段，默认 0，不影响已有数据。
+ALTER TABLE "Article" ADD COLUMN "views" INTEGER NOT NULL DEFAULT 0;
