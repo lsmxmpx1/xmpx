@@ -14,7 +14,7 @@ const FOOTER_LINKS = {
     { label: "机构入驻", href: "/dashboard/institution" },
     { label: "找课程", href: "/courses" },
     { label: "找机构", href: "/institutions" },
-    { label: "教育资讯", href: "/articles" },
+    { label: "培训咨询", href: "/articles" },
   ],
   "帮助中心": [
     { label: "搜索课程", href: "/search" },

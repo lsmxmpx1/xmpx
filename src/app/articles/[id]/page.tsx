@@ -8,6 +8,7 @@ import { breadcrumbLd } from "@/lib/seo";
 import Faq from "@/components/seo/Faq";
 import { getArticleFaqs } from "@/lib/faq";
 import { renderMarkdown } from "@/lib/markdown";
+import ArticleViewTracker from "@/components/ArticleViewTracker";
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!article) return { title: "文章未找到" };
   return {
     title: article.title,
-    description: article.summary || `${article.title} - 厦门培训网教育资讯`,
+    description: article.summary || `${article.title} - 厦门培训网培训咨询`,
   };
 }
 
@@ -50,7 +51,7 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
   };
   const articleBreadcrumb = breadcrumbLd([
     { name: "首页", path: "/" },
-    { name: "资讯", path: "/articles" },
+    { name: "培训咨询", path: "/articles" },
     { name: article.title, path: `/articles/${article.id}` },
   ]);
 
@@ -84,8 +85,9 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
           )}
           <h1 className="text-2xl md:text-3xl font-bold mb-4">{article.title}</h1>
           {article.publishedAt && (
-            <div className="text-sm text-gray-400 mb-8">
-              发布于 {new Date(article.publishedAt).toLocaleDateString("zh-CN")}
+            <div className="text-sm text-gray-400 mb-8 flex items-center gap-4">
+              <span>发布于 {new Date(article.publishedAt).toLocaleDateString("zh-CN")}</span>
+              <ArticleViewTracker id={article.id} initialViews={article.views ?? 0} />
             </div>
           )}
 

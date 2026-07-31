@@ -279,8 +279,8 @@ export default async function HomePage() {
             <section>
               <div className="flex justify-between items-end mb-10">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold">教育资讯</h2>
-                  <p className="text-gray-500 mt-2">最新教育政策、考试信息、学习攻略</p>
+                  <h2 className="text-2xl md:text-3xl font-bold">培训咨询</h2>
+                  <p className="text-gray-500 mt-2">最新培训政策、选课攻略、学习建议</p>
                 </div>
                 <Link href="/articles" className="text-primary-600 font-medium hover:underline">
                   查看全部 →

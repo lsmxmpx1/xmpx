@@ -8,9 +8,9 @@ export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "教育资讯 - 厦门培训网",
+    title: "培训咨询 - 厦门培训网",
     description:
-      "厦门教育培训政策解读、考试资讯、机构测评与学习攻略，帮你选对课程、避开套路。",
+      "厦门培训政策解读、选课攻略、机构测评与学习建议，帮你选对课程、避开套路。",
     alternates: { canonical: `${SITE_URL}/articles` },
   };
 }
@@ -27,10 +27,10 @@ export default async function ArticlesPage() {
       <div className="text-sm text-gray-500 mb-6">
         <Link href="/" className="hover:text-primary-600">首页</Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-900">教育资讯</span>
+        <span className="text-gray-900">培训咨询</span>
       </div>
 
-      <h1 className="text-2xl font-bold mb-8">教育资讯</h1>
+      <h1 className="text-2xl font-bold mb-8">培训咨询</h1>
 
       {/* ARTICLE_LIST 广告位 */}
       <AdSlot position="ARTICLE_LIST" variant="banner" className="mb-8" />
@@ -67,8 +67,9 @@ export default async function ArticlesPage() {
                   <p className="text-sm text-gray-500 line-clamp-2">{article.summary}</p>
                 )}
                 {article.publishedAt && (
-                  <div className="text-xs text-gray-400 mt-4">
-                    {new Date(article.publishedAt).toLocaleDateString("zh-CN")}
+                  <div className="text-xs text-gray-400 mt-4 flex items-center gap-3">
+                    <span>{new Date(article.publishedAt).toLocaleDateString("zh-CN")}</span>
+                    <span>{article.views ?? 0} 次浏览</span>
                   </div>
                 )}
               </div>

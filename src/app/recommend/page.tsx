@@ -71,7 +71,7 @@ export default async function RecommendPage() {
               </div>
               <div className="bg-white/10 rounded-xl px-5 py-3 backdrop-blur-sm">
                 <div className="text-2xl font-bold">{stats.articleCount}+</div>
-                <div className="text-sm text-white/70 mt-1">教育资讯</div>
+                <div className="text-sm text-white/70 mt-1">培训咨询</div>
               </div>
             </div>
           </div>
