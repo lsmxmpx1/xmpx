@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!article) return { title: "文章未找到" };
   return {
     title: article.title,
-    description: article.summary || `${article.title} - 厦门培训网培训咨询`,
+    description: article.summary || `${article.title} - 厦门培训网培训资讯`,
   };
 }
 
@@ -51,7 +51,7 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
   };
   const articleBreadcrumb = breadcrumbLd([
     { name: "首页", path: "/" },
-    { name: "培训咨询", path: "/articles" },
+    { name: "培训资讯", path: "/articles" },
     { name: article.title, path: `/articles/${article.id}` },
   ]);
 

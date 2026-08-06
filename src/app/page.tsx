@@ -72,7 +72,7 @@ export default async function HomePage() {
             <input
               type="text"
               name="q"
-              placeholder="搜索课程、机构、老师..."
+              placeholder="搜索课程、机构、老师、培训资讯..."
               className="flex-1 px-5 py-4 rounded-xl text-gray-900 text-lg focus:outline-none focus:ring-2 focus:ring-accent-500"
             />
             <button type="submit" className="btn-accent px-8 py-4 rounded-xl text-lg font-bold">
@@ -118,6 +118,57 @@ export default async function HomePage() {
       <div className="container-main py-8">
         <div className="flex gap-8">
           <div className="flex-1 min-w-0 space-y-12">
+            {/* Articles (培训资讯) - 移至热门培训分类上方 */}
+            <section>
+              <div className="flex justify-between items-end mb-10">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold">培训资讯</h2>
+                  <p className="text-gray-500 mt-2">最新培训政策、选课攻略、学习建议</p>
+                </div>
+                <Link href="/articles" className="text-primary-600 font-medium hover:underline">
+                  查看全部 →
+                </Link>
+              </div>
+              {articles.length === 0 ? (
+                <div className="text-center text-gray-400 py-12">暂无资讯，请先添加种子数据</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {articles.map((article) => (
+                    <Link key={article.id} href={`/articles/${article.id}`} className="card group overflow-hidden">
+                      {article.cover ? (
+                        <div className="h-40 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={article.cover}
+                            alt={article.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      ) : null}
+                      <div className="p-5">
+                        {article.category && (
+                          <span className="text-xs bg-accent-50 text-accent-600 px-2 py-0.5 rounded-full">
+                            {article.category}
+                          </span>
+                        )}
+                        <h3 className="font-semibold mt-2 group-hover:text-primary-600 transition-colors line-clamp-2">
+                          {article.title}
+                        </h3>
+                        {article.summary && (
+                          <p className="text-sm text-gray-500 mt-2 line-clamp-2">{article.summary}</p>
+                        )}
+                        {article.publishedAt && (
+                          <div className="text-xs text-gray-400 mt-3">
+                            {new Date(article.publishedAt).toLocaleDateString("zh-CN")}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+
             {/* Category Navigation */}
             <section>
               <div className="text-center mb-10">
@@ -275,56 +326,6 @@ export default async function HomePage() {
               </div>
             </section>
 
-            {/* Articles */}
-            <section>
-              <div className="flex justify-between items-end mb-10">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold">培训咨询</h2>
-                  <p className="text-gray-500 mt-2">最新培训政策、选课攻略、学习建议</p>
-                </div>
-                <Link href="/articles" className="text-primary-600 font-medium hover:underline">
-                  查看全部 →
-                </Link>
-              </div>
-              {articles.length === 0 ? (
-                <div className="text-center text-gray-400 py-12">暂无资讯，请先添加种子数据</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {articles.map((article) => (
-                    <Link key={article.id} href={`/articles/${article.id}`} className="card group overflow-hidden">
-                      {article.cover ? (
-                        <div className="h-40 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={article.cover}
-                            alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                      ) : null}
-                      <div className="p-5">
-                        {article.category && (
-                          <span className="text-xs bg-accent-50 text-accent-600 px-2 py-0.5 rounded-full">
-                            {article.category}
-                          </span>
-                        )}
-                        <h3 className="font-semibold mt-2 group-hover:text-primary-600 transition-colors line-clamp-2">
-                          {article.title}
-                        </h3>
-                        {article.summary && (
-                          <p className="text-sm text-gray-500 mt-2 line-clamp-2">{article.summary}</p>
-                        )}
-                        {article.publishedAt && (
-                          <div className="text-xs text-gray-400 mt-3">
-                            {new Date(article.publishedAt).toLocaleDateString("zh-CN")}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
           </div>
 
           {/* HOME_SIDEBAR 广告位 */}

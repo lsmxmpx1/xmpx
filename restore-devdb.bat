@@ -22,5 +22,5 @@ IF ERRORLEVEL 1 (
 )
 
 echo [成功] dev.db 已更新（含 6 篇文章 + views 浏览次数字段）。
-echo 现在可运行：npm run dev  查看培训咨询与浏览次数效果。
+echo 现在可运行：npm run dev  查看培训资讯与浏览次数效果。
 ENDLOCAL
