@@ -11,6 +11,8 @@ const NAV_LINKS = [
   { href: "/courses", label: "找课程" },
   { href: "/institutions", label: "找机构" },
   { href: "/teachers", label: "找老师" },
+  { href: "/guide/institution", label: "我是机构", highlight: true },
+  { href: "/guide/teacher", label: "我是老师", highlight: true },
   { href: "/recommend", label: "精选推荐" },
   { href: "/articles", label: "资讯" },
   { href: "/questions", label: "问答社区" },
@@ -169,7 +171,9 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                  link.href === "/recommend"
+                  link.highlight
+                    ? "text-accent-600 bg-accent-50 hover:bg-accent-100 border border-accent-200"
+                    : link.href === "/recommend"
                     ? "text-primary-600 bg-primary-50 hover:bg-primary-100"
                     : "text-gray-600 hover:text-primary-600 hover:bg-primary-50"
                 }`}
@@ -209,7 +213,9 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 className={`block px-4 py-3 rounded-lg transition-colors ${
-                  link.href === "/recommend"
+                  link.highlight
+                    ? "text-accent-600 bg-accent-50 font-semibold border border-accent-200"
+                    : link.href === "/recommend"
                     ? "text-primary-600 bg-primary-50 font-semibold"
                     : "text-gray-600 hover:bg-primary-50 hover:text-primary-600"
                 }`}

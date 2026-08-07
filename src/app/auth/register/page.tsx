@@ -2,11 +2,25 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import PuzzleCaptcha from "@/components/PuzzleCaptcha";
+
+const ROLE_TEXT: Record<string, { title: string; desc: string }> = {
+  institution: {
+    title: "注册机构账号",
+    desc: "注册后可在用户中心开通机构身份，发布课程、接收咨询线索",
+  },
+  teacher: {
+    title: "注册老师账号",
+    desc: "注册后可在用户中心开通老师身份，建立个人专业主页",
+  },
+};
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = searchParams.get("role") || "";
+  const roleInfo = ROLE_TEXT[role] || null;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -112,8 +126,20 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center mb-2">创建账号</h1>
-        <p className="text-gray-500 text-center mb-8">注册厦门培训网，开启学习之旅</p>
+        <h1 className="text-2xl font-bold text-center mb-2">
+          {roleInfo?.title || "创建账号"}
+        </h1>
+        <p className="text-gray-500 text-center mb-8">
+          {roleInfo?.desc || "注册厦门培训网，开启学习之旅"}
+        </p>
+        {roleInfo && (
+          <div className="mb-6 rounded-xl bg-primary-50 border border-primary-200 px-4 py-3 text-sm text-primary-700 text-center">
+            注册完成后，请前往
+            <Link href="/dashboard" className="font-medium underline">用户中心</Link>
+            开通
+            {role === "institution" ? "机构" : "老师"}身份 →
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">{error}</div>
