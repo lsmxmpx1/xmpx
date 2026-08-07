@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import PuzzleCaptcha from "@/components/PuzzleCaptcha";
@@ -16,7 +16,7 @@ const ROLE_TEXT: Record<string, { title: string; desc: string }> = {
   },
 };
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get("role") || "";
@@ -229,5 +229,15 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams 在静态预渲染时需要挂在 Suspense 边界内，否则 Vercel 构建报
+// "missing-suspense-with-csr-bailout"。这里把实际用到该 hook 的表单组件包一层。
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[80vh] flex items-center justify-center text-gray-400">加载中...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }
