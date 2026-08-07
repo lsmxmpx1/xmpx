@@ -65,7 +65,7 @@ export default function GuideTeacherPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/auth/register?role=teacher"
-              className="inline-flex items-center justify-center px-8 py-4 bg-white text-accent-700 font-bold text-lg rounded-xl hover:bg-accent-50 transition-colors shadow-lg shadow-black/20"
+              className="inline-flex items-center justify-center px-8 py-4 bg-white text-accent-600 font-bold text-lg rounded-xl hover:bg-accent-50 transition-colors shadow-lg shadow-black/20"
             >
               立即开通老师主页
             </Link>
@@ -114,7 +114,7 @@ export default function GuideTeacherPage() {
                 className="bg-gray-50 rounded-2xl p-6 text-center hover:bg-accent-50 hover:shadow-lg transition-all duration-300 border border-transparent hover:border-accent-200 group"
               >
                 <span className="text-4xl mb-4 block">{f.icon}</span>
-                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-accent-700">{f.title}</h3>
+                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-accent-600">{f.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -222,7 +222,7 @@ export default function GuideTeacherPage() {
           </p>
           <Link
             href="/auth/register?role=teacher"
-            className="inline-flex items-center px-10 py-4 bg-white text-accent-700 font-bold text-lg rounded-xl hover:bg-accent-50 transition-colors shadow-lg"
+            className="inline-flex items-center px-10 py-4 bg-white text-accent-600 font-bold text-lg rounded-xl hover:bg-accent-50 transition-colors shadow-lg"
           >
             免费开通老师主页
           </Link>

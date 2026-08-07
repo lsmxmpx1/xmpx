@@ -4,8 +4,8 @@ import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "我是机构 - 免费入驻厦门培训网 | 厦门培训网",
-  description:
-    "培训机构免费入驻厦门培训网，发布课程、接收咨询线索、提升品牌曝光。已有2000+优质机构入驻，立即开通您的机构主页！",
+    description:
+      "培训机构免费入驻厦门培训网，发布课程、接收咨询线索、提升品牌曝光。立即开通您的机构主页！",
 };
 
 const FEATURES = [
@@ -64,7 +64,7 @@ export default function GuideInstitutionPage() {
             <span className="text-primary-200">让更多学员找到你的培训课程</span>
           </h1>
           <p className="text-lg md:text-xl text-primary-100 mb-10 max-w-2xl mx-auto">
-            厦门培训网已覆盖 2000+ 优质培训机构，每日数千名学员主动搜索课程。
+            本网站在百度、Bing 等搜索引擎中搜索"厦门培训网"排名第一，自带天然流量。
             入驻后即可发布课程、接收咨询线索、提升品牌曝光。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -203,7 +203,7 @@ export default function GuideInstitutionPage() {
             准备好开始了吗？
           </h2>
           <p className="text-primary-100 text-lg mb-8">
-            立即免费入驻，加入厦门 2000+ 培训机构的行列
+            立即免费入驻，加入厦门优质培训机构的行列
           </p>
           <Link
             href="/auth/register?role=institution"

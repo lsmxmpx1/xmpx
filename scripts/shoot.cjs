@@ -74,7 +74,7 @@ async function shoot(page, url, file, full = true) {
     await clickTab(org, "推广中心");
     await org.screenshot({ path: path.join(OUT, "org-ad.png"), fullPage: true });
     console.log("📸 org-ad.png");
-    await shoot(org, `${BASE}/institutions/xiamen-youxue`, "org-public.png");
+    await shoot(org, `${BASE}/institutions/cmsixev5b000a6co4ja638zy0`, "org-public.png");
     await ctxOrg.close();
 
     // ── 老师 ──
@@ -82,7 +82,7 @@ async function shoot(page, url, file, full = true) {
     const tch = await ctxTch.newPage();
     await login(tch, TCH);
     await shoot(tch, `${BASE}/dashboard/teacher`, "teacher-dashboard.png");
-    await shoot(tch, `${BASE}/teachers/zhang-ming`, "teacher-public.png");
+    await shoot(tch, `${BASE}/teachers/cmsixevwt000w6co4xd02trlq`, "teacher-public.png");
     await ctxTch.close();
 
     console.log("✅ 全部截图完成 →", OUT);
