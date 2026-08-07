@@ -114,11 +114,10 @@ export default async function HomePage() {
       {/* HOME_TOP 广告位 */}
       <AdSlot position={["HOME_TOP", "HOME_BANNER"]} variant="banner" className="container-main mt-8" />
 
-      {/* 主内容 + 侧栏 */}
+      {/* 主内容 - 居中展示 */}
       <div className="container-main py-8">
-        <div className="flex gap-8">
-          <div className="flex-1 min-w-0 space-y-12">
-            {/* Articles (培训资讯) - 移至热门培训分类上方 */}
+        <div className="max-w-5xl mx-auto space-y-12">
+          {/* Articles (培训资讯) - 移至热门培训分类上方 */}
             <section>
               <div className="flex justify-between items-end mb-10">
                 <div>
@@ -328,13 +327,11 @@ export default async function HomePage() {
 
           </div>
 
-          {/* HOME_SIDEBAR 广告位 */}
-          <aside className="hidden lg:block w-72 shrink-0">
-            <div className="sticky top-24">
-              <AdSlot position={["HOME_SIDEBAR", "HOME_FEATURED"]} variant="sidebar" title="推荐" />
-            </div>
-          </aside>
-        </div>
+      {/* HOME_SIDEBAR 广告位 */}
+      <div className="container-main mt-4">
+        <AdSlot position={["HOME_SIDEBAR", "HOME_FEATURED"]} variant="banner" title="推荐" />
+      </div>
+
       </div>
 
       {/* CTA */}
