@@ -65,7 +65,7 @@ export default async function HomePage() {
         <div className="container-main text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">{SITE_DESC}</h1>
           <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
-            汇聚厦门本地2000+优质培训机构，覆盖K12辅导、兴趣培养、职业技能、考证培训等全品类课程
+            汇聚厦门本地优质培训机构，覆盖K12辅导、兴趣培养、职业技能、考证培训等全品类课程
           </p>
           {/* Search Bar */}
           <form action="/search" className="max-w-2xl mx-auto flex gap-2">

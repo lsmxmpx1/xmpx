@@ -59,7 +59,7 @@ export default function Header() {
       {/* Top bar */}
       <div className="bg-primary-600 text-white text-sm">
         <div className="container-main flex justify-between items-center py-1.5">
-          <span>厦门本地2000+优质培训机构入驻中，找培训就上{SITE_NAME}</span>
+          <span>厦门本地优质培训机构入驻中，找培训就上{SITE_NAME}</span>
           <div className="hidden sm:flex gap-4 items-center">
             {session?.user ? (
               <>
