@@ -15,12 +15,26 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ArticlesPage() {
-  const articles = await prisma.article.findMany({
-    where: { published: true },
-    orderBy: { publishedAt: "desc" },
-    take: 20,
-  });
+export default async function ArticlesPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const page = Math.max(1, parseInt(searchParams.page || "1") || 1);
+  const pageSize = 12;
+
+  const [articles, total] = await Promise.all([
+    prisma.article.findMany({
+      where: { published: true },
+      orderBy: { publishedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.article.count({ where: { published: true } }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, totalPages);
 
   return (
     <div className="container-main py-8">
@@ -30,7 +44,10 @@ export default async function ArticlesPage() {
         <span className="text-gray-900">培训资讯</span>
       </div>
 
-      <h1 className="text-2xl font-bold mb-8">培训资讯</h1>
+      <h1 className="text-2xl font-bold mb-8">
+        培训资讯
+        <span className="text-gray-400 text-lg ml-2">({total})</span>
+      </h1>
 
       {/* ARTICLE_LIST 广告位 */}
       <AdSlot position="ARTICLE_LIST" variant="banner" className="mb-8" />
@@ -75,6 +92,37 @@ export default async function ArticlesPage() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-10 gap-2">
+          {currentPage > 1 && (
+            <Link
+              href={`/articles?page=${currentPage - 1}`}
+              className="w-10 h-10 rounded-lg flex items-center justify-center font-medium bg-white border text-gray-600 hover:bg-gray-50"
+            >
+              ‹
+            </Link>
+          )}
+          {Array.from({ length: totalPages }, (_, i) => (
+            <Link
+              key={i}
+              href={`/articles?page=${i + 1}`}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium ${currentPage === i + 1 ? "bg-primary-600 text-white" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
+            >
+              {i + 1}
+            </Link>
+          ))}
+          {currentPage < totalPages && (
+            <Link
+              href={`/articles?page=${currentPage + 1}`}
+              className="w-10 h-10 rounded-lg flex items-center justify-center font-medium bg-white border text-gray-600 hover:bg-gray-50"
+            >
+              ›
+            </Link>
+          )}
         </div>
       )}
     </div>
