@@ -10,10 +10,21 @@ import ReviewList from "@/components/ReviewList";
 import MessageButton from "@/components/MessageButton";
 import { SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
-import AMapMap, { type MapPoint } from "@/components/map/AMapMap";
+import dynamic from "next/dynamic";
+import type { MapPoint } from "@/components/map/AMapMap";
 import { breadcrumbLd } from "@/lib/seo";
 import Faq from "@/components/seo/Faq";
 import { getInstitutionFaqs } from "@/lib/faq";
+
+// ssr: false 避免高德 JS API 注入 <script> 导致 hydration mismatch
+const AMapMap = dynamic(() => import("@/components/map/AMapMap").then((m) => m.default), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-400" style={{ height: 360 }}>
+      地图加载中…
+    </div>
+  ),
+});
 
 export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 

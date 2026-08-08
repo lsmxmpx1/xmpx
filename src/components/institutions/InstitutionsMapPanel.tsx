@@ -2,9 +2,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import AMapMap, { type MapPoint } from "@/components/map/AMapMap";
 import { DISTRICTS } from "@/lib/utils";
+import type { MapPoint } from "@/components/map/AMapMap";
+
+// 用 ssr: false 延迟加载地图组件，避免高德 JS API 注入 <script> 导致 hydration mismatch
+const AMapMap = dynamic(() => import("@/components/map/AMapMap").then((m) => m.default), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-400" style={{ height: 420 }}>
+      地图加载中…
+    </div>
+  ),
+});
 
 interface CampusDTO {
   id: string;

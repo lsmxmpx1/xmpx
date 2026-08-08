@@ -74,18 +74,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      {/* 字节跳动（抖音/头条搜索）自动收录脚本 */}
+      {/* 字节跳动（抖音/头条搜索）自动收录脚本 — afterInteractive 避免 hydration mismatch */}
       <Script
         id="ttzz"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `(function(){var el=document.createElement("script");el.src="https://lf1-cdn-tos.bytegoofy.com/goofy/ttzz/push.js?6a6aea4419cd60cad4aa86de155154eec9c7fcb5b0f7cc19838651853541c70e19d1c501ebd3301f5e2290626f5b53d078c8250527fa0dfd9783a026ff3cf719";el.id="ttzz";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(el,s);})(window)`,
         }}
       />
-      {/* Microsoft Clarity 热力图 / 行为分析 */}
+      {/* Microsoft Clarity 热力图 / 行为分析 — afterInteractive 避免 hydration mismatch */}
       <Script
         id="ms-clarity"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","xrh3evz7uo");`,
         }}

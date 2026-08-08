@@ -72,11 +72,19 @@ export default function AMapMap({
         const map = new AMap.Map(containerRef.current, {
           zoom,
           center: [c.lng, c.lat],
-          viewMode: "2D",
+          viewMode: "2D",        // Canvas2D 渲染器，瓦片加载比 3D(WebGL) 更稳定
+          mapStyle: "amap://styles/normal",  // 强制标准样式
         });
         map.addControl(new AMap.Scale());
         map.addControl(new AMap.ToolBar());
         mapRef.current = map;
+        // 延迟 resize：确保容器已挂载且有实际尺寸后再触发瓦片重绘
+        requestAnimationFrame(() => {
+          try { map.resize(); } catch { /* ignore */ }
+        });
+        // 监听瓦片加载状态，方便调试
+        map.on("complete", () => console.log("[AMap] 瓦片加载完成"));
+        map.on("mapmoveend", () => {});
         drawMarkers(AMap, map, validPoints, onMarkerClick);
       })
       .catch((e) => setErr(e?.message || "地图加载失败"));
