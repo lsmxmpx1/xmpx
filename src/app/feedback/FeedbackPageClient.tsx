@@ -12,6 +12,10 @@ type FeedbackItem = {
   status: string;
   adminReply: string | null;
   isPublic: boolean;
+  isGuest?: boolean;
+  ipAddress?: string | null;
+  ipCountry?: string | null;
+  ipCity?: string | null;
   createdAt: string;
   user: { id: string; name: string | null; image: string | null } | null;
   replies: Array<{
@@ -58,8 +62,8 @@ export default function FeedbackPageClient({
     <div className="container-main py-10 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">网站留言板</h1>
       <p className="text-sm text-gray-500 mb-6">
-        注册用户可反馈机构问题、课程问题或其他问题。针对违规内容，管理员将进行下架处理；
-        所有留言内容及处理结果公开透明，匿名用户也可浏览。
+        注册用户或游客均可留言反馈机构问题、课程问题或其他问题；游客留言将公开显示 IP
+        地址及所在国家 / 城市。针对违规内容，管理员将进行下架处理，所有留言内容及处理结果公开透明。
       </p>
 
       {/* 提交区域 */}
@@ -90,6 +94,11 @@ export default function FeedbackPageClient({
                       <span className="text-sm font-medium text-gray-800">
                         {f.authorName || f.user?.name || "匿名用户"}
                       </span>
+                      {f.isGuest && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          游客
+                        </span>
+                      )}
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
                         {typeLabel[f.type] ?? "其他问题"}
                       </span>
@@ -114,6 +123,21 @@ export default function FeedbackPageClient({
                 <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3 ml-11">
                   {f.content}
                 </p>
+
+                {/* 游客匿名留言：展示 IP 及所在国家 / 城市 */}
+                {f.isGuest && (
+                  <div className="ml-11 mb-3 flex items-center gap-1.5 text-xs text-gray-400">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z" />
+                      <circle cx="12" cy="10" r="2.5" />
+                    </svg>
+                    <span>
+                      来自 {f.ipAddress || "本地"}
+                      {f.ipCountry ? ` · ${f.ipCountry}` : ""}
+                      {f.ipCity ? ` ${f.ipCity}` : ""}
+                    </span>
+                  </div>
+                )}
 
                 {/* 管理员回复 */}
                 {f.adminReply && (

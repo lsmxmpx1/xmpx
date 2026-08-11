@@ -51,6 +51,10 @@ type FeedbackItem = {
   status: string;
   adminReply: string | null;
   isPublic: boolean;
+  isGuest?: boolean;
+  ipAddress?: string | null;
+  ipCountry?: string | null;
+  ipCity?: string | null;
   createdAt: string;
   updatedAt: string;
   user: { id: string; name: string | null; image: string | null } | null;
@@ -110,6 +114,9 @@ function FeedbackCard({ item }: { item: FeedbackItem }) {
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-gray-800">{item.authorName || item.user?.name || "匿名用户"}</span>
+            {item.isGuest && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">游客</span>
+            )}
             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">{TYPE_LABEL[item.type] ?? "其他"}</span>
             {item.targetName && <span className="text-xs text-gray-500">关联：{item.targetName}</span>}
             {!item.isPublic && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">前台隐藏</span>}
@@ -121,6 +128,21 @@ function FeedbackCard({ item }: { item: FeedbackItem }) {
 
       {/* 内容 */}
       <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3 ml-11">{item.content}</p>
+
+      {/* 游客匿名留言：展示来源 IP 及国家 / 城市，便于审核溯源 */}
+      {item.isGuest && (
+        <div className="ml-11 mb-3 flex items-center gap-1.5 text-xs text-gray-400">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11Z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          <span>
+            来源：{item.ipAddress || "本地"}
+            {item.ipCountry ? ` · ${item.ipCountry}` : ""}
+            {item.ipCity ? ` ${item.ipCity}` : ""}
+          </span>
+        </div>
+      )}
 
       {/* 用户回复列表 */}
       {item.replies.length > 0 && (
@@ -156,7 +178,13 @@ function FeedbackCard({ item }: { item: FeedbackItem }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">处理状态</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)}
+                <select value={status} onChange={(e) => {
+                  const v = e.target.value;
+                  setStatus(v);
+                  // 审核完成（已处理）默认公开；已下架/已驳回默认隐藏；待处理保持现状（默认隐藏）
+                  if (v === "RESOLVED") setIsPublic(true);
+                  else if (v === "TAKEDOWN" || v === "REJECTED") setIsPublic(false);
+                }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
                   {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>

@@ -1,11 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { submitFeedback, submitFeedbackReply } from "./actions";
 import EmojiPicker from "./EmojiPicker";
+import PuzzleCaptcha from "@/components/PuzzleCaptcha";
+
+const MAX_CONTENT_LEN = 200;
 
 export default function FeedbackForm() {
   const { data: session, status } = useSession();
@@ -13,137 +16,150 @@ export default function FeedbackForm() {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [content, setContent] = useState("");
+  const [nickname, setNickname] = useState("");
+
+  // 拼图滑块验证码状态（仅游客需要）
+  const [puzzleReady, setPuzzleReady] = useState(false);
+  const [puzzleX, setPuzzleX] = useState(0);
+  const [captchaKey, setCaptchaKey] = useState("puzzle");
+
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
-  /** 在光标处插入表情 */
   function insertEmoji(emoji: string) {
     const ta = contentRef.current;
-    if (!ta) {
-      setContent((c) => c + emoji);
-      return;
-    }
+    if (!ta) { setContent((c) => c + emoji); return; }
     const start = ta.selectionStart ?? content.length;
     const end = ta.selectionEnd ?? content.length;
     const next = content.slice(0, start) + emoji + content.slice(end);
     setContent(next);
-    requestAnimationFrame(() => {
-      ta.focus();
-      const pos = start + emoji.length;
-      ta.setSelectionRange(pos, pos);
-    });
+    requestAnimationFrame(() => { ta.focus(); const pos = start + emoji.length; ta.setSelectionRange(pos, pos); });
   }
+
+  const handlePuzzleVerified = useCallback((x: number) => { setPuzzleX(x); setPuzzleReady(true); }, []);
+  const handlePuzzleError = useCallback((msg: string) => { console.error("[puzzle]", msg); }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    const isGuest = !session;
+    if (isGuest && !puzzleReady) { setError("请先完成拼图验证"); return; }
     setSubmitting(true);
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     fd.set("content", content);
+    if (isGuest) {
+      fd.set("puzzleX", String(puzzleX));
+      fd.set("nickname", nickname.trim());
+    }
     const res = await submitFeedback(fd);
     setSubmitting(false);
     if (res?.error) {
       setError(res.error);
+      if (isGuest) { setPuzzleReady(false); setPuzzleX(0); setCaptchaKey(`puzzle-${Date.now()}`); }
       return;
     }
     setDone(true);
     setContent("");
-    e.currentTarget.reset();
+    setNickname("");
+    form.reset();
     router.refresh();
   }
 
-  // 加载中
   if (status === "loading") {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center text-sm text-gray-400">
-        加载中…
-      </div>
-    );
+    return <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center text-sm text-gray-400">加载中…</div>;
   }
 
-  // 未登录 → 显示提示
-  if (!session) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
-        <p className="text-sm text-gray-500 mb-3">仅注册用户可提交反馈</p>
-        <Link
-          href="/auth/login"
-          className="inline-block px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-        >
-          去登录
-        </Link>
-      </div>
-    );
-  }
+  const isGuest = !session;
 
-  // 提交成功
   if (done) {
     return (
       <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">
         提交成功！我们会尽快核实处理，处理结果将公开显示在下方列表中。
-        <button
-          className="ml-3 text-green-800 underline"
-          onClick={() => setDone(false)}
-        >
-          再提交一条
-        </button>
+        <button className="ml-3 text-green-800 underline" onClick={() => setDone(false)}>再提交一条</button>
       </div>
     );
   }
 
-  // 已登录 → 直接显示表单
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+      {isGuest && (
+        <div className="rounded-lg bg-gray-50 border border-gray-100 px-4 py-3 space-y-3">
+          <div className="flex items-start gap-2 text-xs text-gray-500">
+            <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">i</span>
+            <span>
+              您未登录，将以<b className="text-gray-700">游客</b>身份留言。留言内容将公开展示，并显示您的
+              <b className="text-gray-700"> IP 地址及所在国家 / 城市</b>。
+            </span>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">昵称（选填，留空将显示为「游客」）</label>
+            <input
+              name="nickname" type="text" value={nickname} maxLength={20}
+              onChange={(e) => setNickname(e.target.value)} placeholder="游客"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm text-gray-600 mb-1">反馈类型</label>
-          <select
-            name="type"
-            defaultValue="INSTITUTION"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          >
+          <select name="type" defaultValue="INSTITUTION"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
             <option value="INSTITUTION">机构问题</option>
             <option value="COURSE">课程问题</option>
             <option value="OTHER">其他问题</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
-            关联机构 / 课程名称（选填）
-          </label>
-          <input
-            name="targetName"
-            type="text"
-            placeholder="如：某某培训机构"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
+          <label className="block text-sm text-gray-600 mb-1">关联机构 / 课程名称（选填）</label>
+          <input name="targetName" type="text" placeholder="如：某某培训机构"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
         </div>
       </div>
+
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="block text-sm text-gray-600">反馈内容</label>
           <EmojiPicker onSelect={insertEmoji} />
         </div>
         <textarea
-          ref={contentRef}
-          name="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-          rows={4}
-          maxLength={2000}
-          placeholder="请描述您遇到的问题，如虚假宣传、违规内容、课程纠纷等"
+          ref={contentRef} name="content" value={content}
+          onChange={(e) => setContent(e.target.value)} required rows={4}
+          maxLength={MAX_CONTENT_LEN}
+          placeholder="请描述您遇到的问题，如虚假宣传、违规内容、课程纠纷等（最多 200 字，请勿发布外部链接或违规内容）"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
+        <div className="text-right text-xs text-gray-400 mt-1">{content.length} / {MAX_CONTENT_LEN}</div>
       </div>
+
+      {/* 蜜罐字段：真人不可见，机器人常自动填充；若被填写则服务端拒绝提交 */}
+      <div style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }} aria-hidden="true">
+        <label htmlFor="website">请勿填写</label>
+        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
+      {/* 拼图滑块图形校验：仅游客（未登录）需要；注册用户已登录免校验 */}
+      {isGuest && (
+        <PuzzleCaptcha key={captchaKey} onVerified={handlePuzzleVerified} onError={handlePuzzleError} />
+      )}
+
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || (isGuest && !puzzleReady)}
         className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-60"
       >
-        {submitting ? "提交中…" : "提交反馈"}
+        {submitting ? "提交中…" : isGuest && !puzzleReady ? "请先完成上方拼图验证" : "提交反馈"}
       </button>
+
+      {isGuest && (
+        <p className="text-xs text-gray-400">
+          已有账号？ <Link href="/auth/login" className="text-blue-600 hover:underline">登录后留言</Link> 可获得更多特权（如回复、消息通知）。
+        </p>
+      )}
     </form>
   );
 }
@@ -159,19 +175,12 @@ export function ReplyForm({ feedbackId }: { feedbackId: string }) {
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
-  /** 在光标处插入表情 */
   function insertEmoji(emoji: string) {
     const ta = contentRef.current;
     const start = ta?.selectionStart ?? content.length;
     const end = ta?.selectionEnd ?? content.length;
-    const next = content.slice(0, start) + emoji + content.slice(end);
-    setContent(next);
-    requestAnimationFrame(() => {
-      if (!ta) return;
-      ta.focus();
-      const pos = start + emoji.length;
-      ta.setSelectionRange(pos, pos);
-    });
+    setContent((c) => c.slice(0, start) + emoji + c.slice(end));
+    requestAnimationFrame(() => { if (!ta) return; ta.focus(); const pos = start + emoji.length; ta.setSelectionRange(pos, pos); });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -184,10 +193,7 @@ export function ReplyForm({ feedbackId }: { feedbackId: string }) {
     fd.set("content", content.trim());
     const res = await submitFeedbackReply(fd);
     setSubmitting(false);
-    if (res?.error) {
-      setErr(res.error);
-      return;
-    }
+    if (res?.error) { setErr(res.error); return; }
     setContent("");
     setDone(true);
     router.refresh();
@@ -195,36 +201,23 @@ export function ReplyForm({ feedbackId }: { feedbackId: string }) {
   }
 
   if (status === "loading") return null;
-
-  // 未登录 → 不显示回复框
   if (!session) return null;
-
-  if (done) {
-    return (
-      <div className="mt-2 text-sm text-green-600">回复成功！</div>
-    );
-  }
+  if (done) return <div className="mt-2 text-sm text-green-600">回复成功！</div>;
 
   return (
     <form onSubmit={handleSubmit} className="mt-3 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">回复</span>
+        <span className="text-xs text-gray-400">回复（最多 200 字）</span>
         <EmojiPicker onSelect={insertEmoji} />
       </div>
       <textarea
-        ref={contentRef}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        required
-        rows={2}
-        maxLength={1000}
-        placeholder="写下你的回复…"
+        ref={contentRef} value={content} onChange={(e) => setContent(e.target.value)} required rows={2}
+        maxLength={200} placeholder="写下你的回复…"
         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
       />
       {err && <p className="text-xs text-red-500">{err}</p>}
       <button
-        type="submit"
-        disabled={submitting || !content.trim()}
+        type="submit" disabled={submitting || !content.trim()}
         className="px-4 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-lg hover:bg-blue-100 disabled:opacity-50"
       >
         {submitting ? "发送中…" : "回复"}
