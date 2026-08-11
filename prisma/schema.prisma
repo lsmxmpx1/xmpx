@@ -503,3 +503,20 @@ model Answer {
   @@index([status])
   @@index([isPublic])
 }
+
+/// 百度搜索资源平台推送日志（API 提交 / sitemap / 手动）
+model BaiduPushLog {
+  id          String   @id @default(cuid())
+  type        String   @default("api")       // api | sitemap | manual
+  urls        String   // 推送的 URL 列表（换行分隔，便于查看）
+  count       Int      @default(0)           // 本次推送 URL 数量
+  success     Int      @default(0)           // 成功收录数
+  remain      Int?                          // 当日剩余配额
+  error       String?                        // 错误信息
+  response    String?                       // 原始响应 JSON
+  triggeredBy String  @default("manual")     // manual | cron | api
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type])
+}
