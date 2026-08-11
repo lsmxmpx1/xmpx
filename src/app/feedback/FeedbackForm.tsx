@@ -143,7 +143,7 @@ export default function FeedbackForm() {
 
       {/* 拼图滑块图形校验：仅游客（未登录）需要；注册用户已登录免校验 */}
       {isGuest && (
-        <PuzzleCaptcha key={captchaKey} onVerified={handlePuzzleVerified} onError={handlePuzzleError} />
+        <PuzzleCaptcha key={captchaKey} onVerified={handlePuzzleVerified} onError={handlePuzzleError} maxWidth={280} />
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}

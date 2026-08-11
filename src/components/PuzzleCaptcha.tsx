@@ -14,6 +14,8 @@ interface PuzzleCaptchaProps {
   onVerified: (x: number) => void;
   onError?: (msg: string) => void;
   className?: string;
+  /** 最大显示宽度（px）；不传或 0 则撑满容器 */
+  maxWidth?: number;
 }
 
 // 前端对齐容差，与服务端 PUZZLE_TOLERANCE 保持一致（8px）
@@ -22,7 +24,7 @@ const CLIENT_TOLERANCE = 8;
 const PIECE_W = 44; // 与后端 route.ts 保持一致
 const PIECE_H = 44;
 
-export default function PuzzleCaptcha({ onVerified, onError, className = "" }: PuzzleCaptchaProps) {
+export default function PuzzleCaptcha({ onVerified, onError, className = "", maxWidth }: PuzzleCaptchaProps) {
   const [data, setData] = useState<PuzzleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dragX, setDragX] = useState(0); // 拖拽偏移量（原始坐标 px，与后端 W 同尺度）
@@ -154,14 +156,17 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
     };
   }, [dragging, handleDragMove, handleDragEnd]);
 
-  // Touch events
+  // Touch events — 阻止浏览器默认手势（滚动/滑动返回/缩放）
   const onTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     handleDragStart(e.touches[0].clientX);
   };
   useEffect(() => {
     if (!dragging) return;
-    const onMove = (e: TouchEvent) => handleDragMove(e.touches[0].clientX);
+    const onMove = (e: TouchEvent) => {
+      e.preventDefault(); // 阻止滚动
+      handleDragMove(e.touches[0].clientX);
+    };
     const onEnd = () => handleDragEnd();
     window.addEventListener("touchmove", onMove, { passive: false });
     window.addEventListener("touchend", onEnd);
@@ -173,7 +178,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
 
   if (loading) {
     return (
-      <div className={`w-full rounded-lg border border-gray-200 bg-gray-50 ${className}`}>
+      <div className={`w-full rounded-lg border border-gray-200 bg-gray-50 ${className}`} style={{ touchAction: "none" }}>
         <div className="flex h-[160px] items-center justify-center text-sm text-gray-400">
           验证码加载中...
         </div>
@@ -190,7 +195,10 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
   const displayDragX = dragX * scale;
 
   return (
-    <div className={`w-full select-none ${className}`}>
+    <div
+      className={`w-full select-none ${className}`}
+      style={{ touchAction: "none", ...(maxWidth ? { maxWidth } : {}) }}
+    >
       {/* 提示文字 */}
       <p className="mb-2 text-sm font-medium text-gray-700">
         请完成下方拼图验证后继续
@@ -199,7 +207,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
       {/* 图片区域 — 固定宽高比容器，确保缩放一致 */}
       <div
         className="relative overflow-hidden rounded-t-lg border border-b-0 border-gray-200 bg-gray-100"
-        style={{ paddingBottom: `${(H / data.w) * 100}%` }} // 160/280 ≈ 57.14%
+        style={{ paddingBottom: `${(H / data.w) * 100}%`, touchAction: "none" }} // 160/280 ≈ 57.14%
       >
         {/* 背景图 — 绝对填充容器 */}
         <img
@@ -249,6 +257,7 @@ export default function PuzzleCaptcha({ onVerified, onError, className = "" }: P
         className={`relative flex h-10 ${verified ? "cursor-default" : "cursor-pointer"} items-center rounded-b-lg border border-gray-200 bg-gray-100 ${
           verified ? "bg-green-50" : ""
         }`}
+        style={{ touchAction: "none" }}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
       >

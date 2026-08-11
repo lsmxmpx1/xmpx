@@ -49,6 +49,14 @@ function Avatar({ src, name, size = 36 }: { src?: string | null; name?: string |
   );
 }
 
+/** 将 IPv4 地址最后两段用 * 隐藏（如 180.155.5.29 → 180.155.*.*） */
+function maskIp(ip: string | null | undefined): string {
+  if (!ip) return "本地";
+  const parts = ip.trim().split(".");
+  if (parts.length !== 4 || parts.some((p) => !/^\d{1,3}$/.test(p))) return ip;
+  return `${parts[0]}.${parts[1]}.*.*`;
+}
+
 export default function FeedbackPageClient({
   list,
   typeLabel,
@@ -124,7 +132,7 @@ export default function FeedbackPageClient({
                   {f.content}
                 </p>
 
-                {/* 游客匿名留言：展示 IP 及所在国家 / 城市 */}
+                {/* 游客匿名留言：展示隐藏后的 IP 及所在国家 / 城市 */}
                 {f.isGuest && (
                   <div className="ml-11 mb-3 flex items-center gap-1.5 text-xs text-gray-400">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -132,7 +140,7 @@ export default function FeedbackPageClient({
                       <circle cx="12" cy="10" r="2.5" />
                     </svg>
                     <span>
-                      来自 {f.ipAddress || "本地"}
+                      来自 {maskIp(f.ipAddress)}
                       {f.ipCountry ? ` · ${f.ipCountry}` : ""}
                       {f.ipCity ? ` ${f.ipCity}` : ""}
                     </span>
