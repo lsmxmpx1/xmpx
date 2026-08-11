@@ -9,7 +9,7 @@
  */
 
 const BAIDU_API_URL =
-  "http://data.zz.baidu.com/urls?site=www.xmpx.cn&token=PEIKdvyhZCyQrWI3";
+  "http://data.zz.baidu.com/urls?site=www.xmpx.cn&token=g4ME8qS9yMKPbkOO";
 const SITE_HOST = "https://www.xmpx.cn";
 
 /** 单次推送最多 URL 数（百度限制） */
