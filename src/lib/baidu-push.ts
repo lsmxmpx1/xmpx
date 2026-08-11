@@ -123,18 +123,18 @@ export async function collectPublicUrls(
   const { prisma } = await import("@/lib/prisma");
   const urls: string[] = [];
 
-  // 文章
+  // 文章（按发布时间）
   const articleWhere: Record<string, unknown> = { published: true };
   if (since) articleWhere.publishedAt = { gte: since };
   const articles = await prisma.article.findMany({
     where: articleWhere,
-    select: { id: true },
-    orderBy: { publishedAt: "desc" },
+    select: { id: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
     take: BATCH_SIZE,
   });
   for (const a of articles) urls.push(`${SITE_HOST}/articles/${a.id}`);
 
-  // 课程
+  // 课程（按创建时间）
   const courseWhere: Record<string, unknown> = { status: "ACTIVE" };
   if (since) courseWhere.createdAt = { gte: since };
   const courses = await prisma.course.findMany({
@@ -145,7 +145,7 @@ export async function collectPublicUrls(
   });
   for (const c of courses) urls.push(`${SITE_HOST}/courses/${c.id}`);
 
-  // 机构
+  // 机构（按创建时间）
   const instWhere: Record<string, unknown> = {};
   if (since) instWhere.createdAt = { gte: since };
   const institutions = await prisma.institution.findMany({
@@ -156,7 +156,7 @@ export async function collectPublicUrls(
   });
   for (const i of institutions) urls.push(`${SITE_HOST}/institutions/${i.id}`);
 
-  // 老师
+  // 老师（按创建时间）
   const teacherWhere: Record<string, unknown> = {};
   if (since) teacherWhere.createdAt = { gte: since };
   const teachers = await prisma.teacher.findMany({
@@ -167,13 +167,13 @@ export async function collectPublicUrls(
   });
   for (const t of teachers) urls.push(`${SITE_HOST}/teachers/${t.id}`);
 
-  // 问答（已审核公开的）
+  // 问答（按创建时间，非 updatedAt）
   const qWhere: Record<string, unknown> = { isPublic: true };
-  if (since) qWhere.updatedAt = { gte: since };
+  if (since) qWhere.createdAt = { gte: since };
   const questions = await prisma.question.findMany({
     where: qWhere,
     select: { id: true },
-    orderBy: { updatedAt: "desc" },
+    orderBy: { createdAt: "desc" },
     take: BATCH_SIZE,
   });
   for (const q of questions) urls.push(`${SITE_HOST}/questions/${q.id}`);
