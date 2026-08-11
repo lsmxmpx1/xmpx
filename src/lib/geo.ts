@@ -68,9 +68,58 @@ export interface ClientGeo {
   ipAddress: string;
   /** 国家中文名；无法识别时为 null */
   ipCountry: string | null;
-  /** 城市名；无法识别时为 null */
+  /** 城市名；无法识别时为 null（Vercel 头或 API 均无） */
   ipCity: string | null;
 }
+
+// ── IP 地理定位兜底 API ──
+
+/** 免费无需 key 的 IP 地理定位接口（限 45 次/分钟，足够留言板使用） */
+const FALLBACK_GEO_API = "http://ip-api.com/json/";
+
+interface IpApiResult {
+  status: "success" | "fail";
+  city?: string;
+  regionName?: string; // 省份名（英文）
+  country?: string;
+  countryCode?: string;
+}
+
+/**
+ * 当 Vercel Geo 头未返回城市时，通过第三方 API 查询城市名。
+ * 仅在服务端调用（Server Action / Route Handler）。
+ * 返回城市英文名（如 "Xiamen"、"Zhangzhou"），查询失败返回 null。
+ */
+export async function resolveCityByIp(ip: string): Promise<string | null> {
+  if (!ip || ip === "本地" || ip === "127.0.0.1" || ip === "::1") return null;
+  // 私有地址 / 内网不查
+  if (
+    ip.startsWith("10.") ||
+    ip.startsWith("172.16.") ||
+    ip.startsWith("172.17.") ||
+    ip.startsWith("172.18.") ||
+    ip.startsWith("172.19.") ||
+    ip.startsWith("172.2") ||
+    ip.startsWith("172.3") ||
+    ip.startsWith("192.168.") ||
+    ip === "localhost"
+  ) {
+    return null;
+  }
+  try {
+    const res = await fetch(`${FALLBACK_GEO_API}${ip}?fields=status,city,regionName`, {
+      next: { revalidate: 86400 }, // 缓存一天（同一 IP 不重复请求）
+      signal: AbortSignal.timeout(3000), // 3s 超时
+    });
+    if (!res.ok) return null;
+    const data: IpApiResult = await res.json();
+    return data.status === "success" ? (data.city?.trim() || data.regionName?.trim() || null) : null;
+  } catch {
+    return null; // 网络错误等静默失败，不影响主流程
+  }
+}
+
+// ── 主函数：从请求头解析地理信息 ──
 
 /**
  * 从请求头解析匿名留言者的 IP 与国家/城市。
@@ -79,6 +128,9 @@ export interface ClientGeo {
  *
  * 注意：仅在服务端（Server Action / Route Handler）调用，
  * headers() 在请求上下文中可用。
+ *
+ * 返回的 ipCity 可能因 Vercel 头缺失而为 null；
+ * 调发方可在需要时用 resolveCityByIp(ip) 异步补查。
  */
 export function getClientGeo(): ClientGeo {
   const h = headers();
@@ -109,6 +161,20 @@ export function getClientGeo(): ClientGeo {
   }
 
   return { ipAddress: ip, ipCountry, ipCity };
+}
+
+/**
+ * 获取完整地理信息（含 API 兜底城市查询）。
+ * 先从 Vercel 头读取；若城市为空且 IP 非内网，异步调 API 补查。
+ * 推荐在留言提交等场景使用此函数替代 getClientGeo()。
+ */
+export async function getClientGeoWithCity(): Promise<ClientGeo> {
+  const geo = getClientGeo();
+  if (!geo.ipCity && geo.ipAddress && geo.ipAddress !== "本地") {
+    const fallbackCity = await resolveCityByIp(geo.ipAddress);
+    if (fallbackCity) geo.ipCity = fallbackCity;
+  }
+  return geo;
 }
 
 /**

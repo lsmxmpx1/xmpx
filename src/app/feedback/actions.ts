@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { createNotification, NotificationType } from "@/lib/notify";
-import { getClientGeo, type ClientGeo } from "@/lib/geo";
+import { getClientGeo, getClientGeoWithCity, type ClientGeo } from "@/lib/geo";
 import { checkSensitiveContent, containsExternalLink } from "@/lib/moderation";
 
 const VALID_TYPES = ["INSTITUTION", "COURSE", "OTHER"] as const;
@@ -120,7 +120,7 @@ export async function submitFeedback(formData: FormData): Promise<{ error?: stri
       return { error: "昵称包含违规内容，无法提交" };
     }
     authorName = nick || "游客";
-    geo = getClientGeo();
+    geo = await getClientGeoWithCity(); // 含 IP API 兜底城市查询（Vercel 头无城市时自动补查）
   }
 
   await prisma.feedback.create({
