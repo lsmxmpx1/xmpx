@@ -12,12 +12,14 @@ interface PushLog {
   error: string | null;
   triggeredBy: string;
   createdAt: string;
+  urlList?: string[]; // 该条日志推送的 URL 列表
 }
 
 interface Stats {
   todayPushed: number;
   todayRemain: number | null;
   pendingCount: number;
+  pushedCount?: number; // 已成功推送去重数
   pendingUrls: string[];
 }
 
@@ -37,6 +39,8 @@ export default function AdminSeoPage() {
     message?: string;
   } | null>(null);
   const [sinceDays, setSinceDays] = useState(1);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+  const [logDetail, setLogDetail] = useState<string[] | null>(null);
 
   // 加载推送历史和统计
   const loadData = useCallback(async () => {
@@ -113,6 +117,28 @@ export default function AdminSeoPage() {
       minute: "2-digit",
     });
 
+  // 点击成功数展开/收起该条日志的 URL 明细
+  const toggleLogDetail = async (logId: string) => {
+    if (expandedLogId === logId) {
+      setExpandedLogId(null);
+      setLogDetail(null);
+      return;
+    }
+    setExpandedLogId(logId);
+    setLogDetail(null); // 加载中
+    try {
+      const res = await fetch(`/api/admin/baidu-push?logId=${logId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLogDetail(data.urls || []);
+      } else {
+        setLogDetail([]);
+      }
+    } catch {
+      setLogDetail([]);
+    }
+  };
+
   return (
     <div className="max-w-4xl">
       <h2 className="text-xl font-bold text-gray-800 mb-1">SEO 推送管理</h2>
@@ -143,7 +169,7 @@ export default function AdminSeoPage() {
 
       {/* 统计概览 */}
       {stats && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border p-4 text-center">
             <div className="text-2xl font-bold text-primary-600">{stats.todayPushed}</div>
             <div className="text-xs text-gray-500 mt-1">今日已推送</div>
@@ -151,6 +177,12 @@ export default function AdminSeoPage() {
           <div className="bg-white rounded-xl border p-4 text-center">
             <div className="text-2xl font-bold text-green-600">{stats.pendingCount}</div>
             <div className="text-xs text-gray-500 mt-1">待推送页面</div>
+          </div>
+          <div className="bg-white rounded-xl border p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.pushedCount ?? 0}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">已推送去重</div>
           </div>
           <div className="bg-white rounded-xl border p-4 text-center">
             <div className="text-2xl font-bold text-amber-600">
@@ -226,11 +258,11 @@ export default function AdminSeoPage() {
             </div>
           )}
 
-          {/* 待推送预览 */}
+          {/* 待推送预览（已成功推送的自动排除） */}
           {stats?.pendingUrls && stats.pendingUrls.length > 0 && (
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">
-                待推送 URL（前 {Math.min(stats.pendingUrls.length, 20)} 条，共{" "}
+                待推送 URL（已排除 {stats.pushedCount ?? 0} 条已推送成功的，剩余{" "}
                 {stats.pendingCount} 条）
               </h4>
               <div className="bg-gray-50 rounded-lg p-3 max-h-60 overflow-y-auto">
@@ -245,6 +277,11 @@ export default function AdminSeoPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+          {stats?.pendingUrls && stats.pendingUrls.length === 0 && stats.pushedCount !== undefined && stats.pushedCount > 0 && (
+            <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-700">
+              所有公开页面均已推送成功，暂无待推送内容。
             </div>
           )}
         </div>
@@ -348,43 +385,86 @@ export default function AdminSeoPage() {
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id} className="border-t border-gray-100">
-                    <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
-                      {formatTime(log.createdAt)}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-600">
-                        {log.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">{log.count}</td>
-                    <td className="px-4 py-2.5 font-medium text-green-600">
-                      {log.success}
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-500">
-                      {log.remain ?? "-"}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs ${
-                          log.triggeredBy === "cron"
-                            ? "bg-purple-50 text-purple-600"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {log.triggeredBy === "cron" ? "定时任务" : "手动"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {log.error ? (
-                        <span className="text-red-500 text-xs" title={log.error}>
-                          失败
+                  <>
+                    <tr key={log.id} className="border-t border-gray-100">
+                      <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
+                        {formatTime(log.createdAt)}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-600">
+                          {log.type}
                         </span>
-                      ) : (
-                        <span className="text-green-500 text-xs">成功</span>
-                      )}
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="px-4 py-2.5">{log.count}</td>
+                      <td className="px-4 py-2.5">
+                        {log.success > 0 ? (
+                          <button
+                            onClick={() => toggleLogDetail(log.id)}
+                            className="font-medium text-green-600 hover:text-green-700 hover:underline cursor-pointer bg-transparent border-none p-0 text-left"
+                            title="点击查看推送明细"
+                          >
+                            {log.success}
+                          </button>
+                        ) : (
+                          <span className="text-gray-400">{log.success}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-gray-500">
+                        {log.remain ?? "-"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs ${
+                            log.triggeredBy === "cron"
+                              ? "bg-purple-50 text-purple-600"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {log.triggeredBy === "cron" ? "定时任务" : "手动"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {log.error ? (
+                          <span className="text-red-500 text-xs" title={log.error}>
+                            失败
+                          </span>
+                        ) : (
+                          <span className="text-green-500 text-xs">成功</span>
+                        )}
+                      </td>
+                    </tr>
+                    {/* 展开的 URL 明细行 */}
+                    {expandedLogId === log.id && (
+                      <tr key={`${log.id}-detail`} className="border-t border-blue-100 bg-blue-50/30">
+                        <td colSpan={7} className="px-4 py-3">
+                          <div className="text-xs text-gray-500 mb-1.5 font-medium">
+                            推送明细（{logDetail?.length ?? "..."} 条）
+                          </div>
+                          {logDetail === null ? (
+                            <div className="text-xs text-gray-400">加载中...</div>
+                          ) : logDetail.length === 0 ? (
+                            <div className="text-xs text-gray-400">无 URL 记录</div>
+                          ) : (
+                            <div className="bg-white rounded-lg border p-3 max-h-48 overflow-y-auto space-y-0.5">
+                              {logDetail.map((u, i) => (
+                                <div key={i} className="text-xs text-gray-600 font-mono truncate flex items-center gap-2">
+                                  <span className="text-green-500 shrink-0">✓</span>
+                                  <a
+                                    href={u}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-primary-600 hover:underline truncate"
+                                  >
+                                    {u}
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>

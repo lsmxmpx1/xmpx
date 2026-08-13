@@ -76,7 +76,10 @@ export async function POST(req: NextRequest) {
 /**
  * GET /api/admin/baidu-push
  *
- * 获取推送历史记录 + 待推送内容概览
+ * 获取推送历史记录 + 待推送内容概览（已成功推送的自动排除）
+ *
+ * 查询参数（可选）：
+ *   - logId: string — 查看某条日志的 URL 明细（用于点击「成功数」展开）
  */
 export async function GET(req: NextRequest) {
   try {
@@ -88,11 +91,39 @@ export async function GET(req: NextRequest) {
 
     const { prisma } = await import("@/lib/prisma");
 
-    // 推送历史（最近 20 条）
+    // 查询单条日志明细（点击成功数时用）
+    const logId = req.nextUrl.searchParams.get("logId");
+    if (logId) {
+      const log = await prisma.baiduPushLog.findUnique({
+        where: { id: logId },
+      });
+      if (!log) {
+        return NextResponse.json({ error: "日志不存在" }, { status: 404 });
+      }
+      const urlList = (log.urls || "").split("\n").filter(Boolean);
+      return NextResponse.json({
+        id: log.id,
+        type: log.type,
+        count: log.count,
+        success: log.success,
+        remain: log.remain,
+        error: log.error,
+        triggeredBy: log.triggeredBy,
+        createdAt: log.createdAt,
+        urls: urlList,
+      });
+    }
+
+    // 推送历史（最近 20 条，每条附带 URL 列表供前端展示）
     const logs = await prisma.baiduPushLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
     });
+    // 为每条日志解析 URL 数组
+    const logsWithUrls = logs.map((l) => ({
+      ...l,
+      urlList: (l.urls || "").split("\n").filter(Boolean),
+    }));
 
     // 统计今日推送情况
     const today = new Date();
@@ -103,17 +134,39 @@ export async function GET(req: NextRequest) {
     });
     const todayTotal = todayLogs.reduce((sum, l) => sum + l.success, 0);
 
-    // 待推送内容数量（最近 7 天内的新增/更新）
+    // 收集所有已成功推送过的 URL（从 success > 0 且无 error 的日志中提取）
+    const successfulLogs = await prisma.baiduPushLog.findMany({
+      where: {
+        AND: [
+          { success: { gt: 0 } },
+          { OR: [{ error: null }, { error: "" }] },
+        ],
+      },
+      select: { urls: true },
+    });
+    const pushedUrlSet = new Set<string>();
+    for (const sl of successfulLogs) {
+      if (sl.urls) {
+        for (const u of sl.urls.split("\n")) {
+          const t = u.trim();
+          if (t) pushedUrlSet.add(t);
+        }
+      }
+    }
+
+    // 待推送内容（最近 7 天内的新增/更新），排除已推送成功的
     const weekAgo = new Date(Date.now() - 7 * 86400000);
-    const pendingUrls = await (await import("@/lib/baidu-push")).collectPublicUrls(weekAgo);
+    const allPendingUrls = await (await import("@/lib/baidu-push")).collectPublicUrls(weekAgo);
+    const unpushedUrls = allPendingUrls.filter((u) => !pushedUrlSet.has(u));
 
     return NextResponse.json({
-      logs,
+      logs: logsWithUrls,
       stats: {
         todayPushed: todayTotal,
         todayRemain: todayLogs[0]?.remain ?? null,
-        pendingCount: pendingUrls.length,
-        pendingUrls: pendingUrls.slice(0, 50), // 预览前 50 条
+        pendingCount: unpushedUrls.length,
+        pushedCount: pushedUrlSet.size, // 已推送去重数
+        pendingUrls: unpushedUrls.slice(0, 50), // 预览前 50 条（仅未推送的）
       },
     });
   } catch (e) {
