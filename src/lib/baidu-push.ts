@@ -8,8 +8,11 @@
  *   - 代码内调用：await pushToBaidu(["https://www.xmpx.cn/articles/123"])
  */
 
+// token 优先读环境变量 BAIDU_PUSH_TOKEN（Vercel 后台配置），缺省回退到历史硬编码值。
+// 这样无需改代码即可在 Vercel 后台更新 token，避免代码里写死导致与百度后台不一致。
+const BAIDU_TOKEN = (process.env.BAIDU_PUSH_TOKEN ?? "").trim() || "g4ME8qS9yMKPbkOO";
 const BAIDU_API_URL =
-  "http://data.zz.baidu.com/urls?site=www.xmpx.cn&token=g4ME8qS9yMKPbkOO";
+  `http://data.zz.baidu.com/urls?site=www.xmpx.cn&token=${BAIDU_TOKEN}`;
 const SITE_HOST = "https://www.xmpx.cn";
 
 /** 单次推送最多 URL 数（百度限制） */
