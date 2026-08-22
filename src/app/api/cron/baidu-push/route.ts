@@ -17,6 +17,9 @@ function todayMidnight(): Date {
 
 async function runPush() {
   const since = todayMidnight();
+  console.log(
+    `[VercelCron][BaiduPush] token来源: ${process.env.BAIDU_PUSH_TOKEN ? "环境变量" : "硬编码回退"}`,
+  );
   const urls = await collectPublicUrls(since);
   console.log(`[VercelCron][BaiduPush] 收集到 ${urls.length} 条当日新增 URL`);
 
@@ -27,7 +30,7 @@ async function runPush() {
       count: 0,
       success: 0,
       remain: null,
-      error: "no new urls since midnight",
+      error: null, // 无新增内容不算失败
       triggeredBy: "vercel-cron",
     });
     return {

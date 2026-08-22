@@ -118,16 +118,21 @@ export default function AdminSeoPage() {
     });
 
   // 点击成功数展开/收起该条日志的 URL 明细
-  const toggleLogDetail = async (logId: string) => {
-    if (expandedLogId === logId) {
+  const toggleLogDetail = async (log: PushLog) => {
+    if (expandedLogId === log.id) {
       setExpandedLogId(null);
       setLogDetail(null);
       return;
     }
-    setExpandedLogId(logId);
+    setExpandedLogId(log.id);
+    // 列表接口已返回 urlList，优先直接用，避免二次请求
+    if (log.urlList && log.urlList.length > 0) {
+      setLogDetail(log.urlList);
+      return;
+    }
     setLogDetail(null); // 加载中
     try {
-      const res = await fetch(`/api/admin/baidu-push?logId=${logId}`);
+      const res = await fetch(`/api/admin/baidu-push?logId=${log.id}`);
       if (res.ok) {
         const data = await res.json();
         setLogDetail(data.urls || []);
@@ -395,11 +400,23 @@ export default function AdminSeoPage() {
                           {log.type}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5">{log.count}</td>
+                      <td className="px-4 py-2.5">
+                        {log.count > 0 ? (
+                          <button
+                            onClick={() => toggleLogDetail(log)}
+                            className="hover:text-primary-600 hover:underline cursor-pointer bg-transparent border-none p-0 text-left"
+                            title="点击查看推送 URL 明细"
+                          >
+                            {log.count}
+                          </button>
+                        ) : (
+                          <span className="text-gray-400">{log.count}</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2.5">
                         {log.success > 0 ? (
                           <button
-                            onClick={() => toggleLogDetail(log.id)}
+                            onClick={() => toggleLogDetail(log)}
                             className="font-medium text-green-600 hover:text-green-700 hover:underline cursor-pointer bg-transparent border-none p-0 text-left"
                             title="点击查看推送明细"
                           >
@@ -415,19 +432,26 @@ export default function AdminSeoPage() {
                       <td className="px-4 py-2.5">
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs ${
-                            log.triggeredBy === "cron"
+                            log.triggeredBy === "cron" || log.triggeredBy === "vercel-cron"
                               ? "bg-purple-50 text-purple-600"
                               : "bg-gray-100 text-gray-600"
                           }`}
                         >
-                          {log.triggeredBy === "cron" ? "定时任务" : "手动"}
+                          {log.triggeredBy === "cron" || log.triggeredBy === "vercel-cron"
+                            ? "定时任务"
+                            : "手动"}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-4 py-2.5 align-top">
                         {log.error ? (
-                          <span className="text-red-500 text-xs" title={log.error}>
-                            失败
-                          </span>
+                          <div className="text-red-500 text-xs max-w-xs">
+                            <span className="font-medium">失败</span>
+                            <span className="block text-red-400 truncate" title={log.error}>
+                              {log.error}
+                            </span>
+                          </div>
+                        ) : log.count === 0 ? (
+                          <span className="text-green-500 text-xs">成功（无新增）</span>
                         ) : (
                           <span className="text-green-500 text-xs">成功</span>
                         )}
