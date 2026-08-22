@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   pushToBaidu,
   collectPublicUrls,
+  getPendingPushUrls,
   logBaiduPush,
 } from "@/lib/baidu-push";
 
@@ -134,30 +135,11 @@ export async function GET(req: NextRequest) {
     });
     const todayTotal = todayLogs.reduce((sum, l) => sum + l.success, 0);
 
-    // 收集所有已成功推送过的 URL（从 success > 0 且无 error 的日志中提取）
-    const successfulLogs = await prisma.baiduPushLog.findMany({
-      where: {
-        AND: [
-          { success: { gt: 0 } },
-          { OR: [{ error: null }, { error: "" }] },
-        ],
-      },
-      select: { urls: true },
-    });
-    const pushedUrlSet = new Set<string>();
-    for (const sl of successfulLogs) {
-      if (sl.urls) {
-        for (const u of sl.urls.split("\n")) {
-          const t = u.trim();
-          if (t) pushedUrlSet.add(t);
-        }
-      }
-    }
-
-    // 待推送内容（最近 7 天内的新增/更新），排除已推送成功的
+    // 待推送内容（最近 7 天内的新增/更新），排除已成功推送过的
     const weekAgo = new Date(Date.now() - 7 * 86400000);
-    const allPendingUrls = await (await import("@/lib/baidu-push")).collectPublicUrls(weekAgo);
-    const unpushedUrls = allPendingUrls.filter((u) => !pushedUrlSet.has(u));
+    const { pending: unpushedUrls, pushedCount } = await getPendingPushUrls({
+      since: weekAgo,
+    });
 
     return NextResponse.json({
       logs: logsWithUrls,
@@ -165,7 +147,7 @@ export async function GET(req: NextRequest) {
         todayPushed: todayTotal,
         todayRemain: todayLogs[0]?.remain ?? null,
         pendingCount: unpushedUrls.length,
-        pushedCount: pushedUrlSet.size, // 已推送去重数
+        pushedCount, // 已推送去重数
         pendingUrls: unpushedUrls.slice(0, 50), // 预览前 50 条（仅未推送的）
       },
     });

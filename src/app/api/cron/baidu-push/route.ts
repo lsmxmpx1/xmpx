@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   pushToBaidu,
-  collectPublicUrls,
+  getPendingPushUrls,
   logBaiduPush,
 } from "@/lib/baidu-push";
 
@@ -9,19 +9,14 @@ import {
 // 该路由不使用 next-auth 会话鉴权，改用 CRON_SECRET 校验（Vercel 自动注入 Authorization 头）。
 export const maxDuration = 60;
 
-function todayMidnight(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 async function runPush() {
-  const since = todayMidnight();
   console.log(
     `[VercelCron][BaiduPush] token来源: ${process.env.BAIDU_PUSH_TOKEN ? "环境变量" : "硬编码回退"}`,
   );
-  const urls = await collectPublicUrls(since);
-  console.log(`[VercelCron][BaiduPush] 收集到 ${urls.length} 条当日新增 URL`);
+  // 推送所有尚未成功推送的公开 URL（不限时间窗），与后台待推送列表口径一致，
+  // 这样每天 10 点会自动清空待推送，而不会因“当日无新增”而跳过历史遗留。
+  const { pending: urls } = await getPendingPushUrls();
+  console.log(`[VercelCron][BaiduPush] 待推送(未成功) ${urls.length} 条`);
 
   if (urls.length === 0) {
     await logBaiduPush({
@@ -30,14 +25,14 @@ async function runPush() {
       count: 0,
       success: 0,
       remain: null,
-      error: null, // 无新增内容不算失败
+      error: null, // 无待推送不算失败
       triggeredBy: "vercel-cron",
     });
     return {
       success: true,
       submitted: 0,
       successCount: 0,
-      message: "当日无新增内容，未推送",
+      message: "暂无待推送内容",
     };
   }
 

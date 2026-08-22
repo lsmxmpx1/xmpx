@@ -211,3 +211,43 @@ export async function logBaiduPush(params: {
     },
   });
 }
+
+/**
+ * 获取「待推送」URL 列表：收集公开页面 URL，排除已成功推送过的。
+ *
+ * 与后台 /admin/seo 待推送列表口径一致，供 GET 接口与 Vercel Cron 共用，
+ * 避免重复实现导致口径不一致。
+ *
+ * @param opts.since 可选，只统计该时间之后新增/更新的公开页面（缺省=全量）
+ * @returns pending 待推送 URL 数组；pushedCount 已成功推送去重数
+ */
+export async function getPendingPushUrls(opts?: {
+  since?: Date;
+}): Promise<{ pending: string[]; pushedCount: number }> {
+  const { prisma } = await import("@/lib/prisma");
+
+  // 已成功推送过的 URL 集合（success > 0 且无 error）
+  const successfulLogs = await prisma.baiduPushLog.findMany({
+    where: {
+      AND: [
+        { success: { gt: 0 } },
+        { OR: [{ error: null }, { error: "" }] },
+      ],
+    },
+    select: { urls: true },
+  });
+  const pushed = new Set<string>();
+  for (const sl of successfulLogs) {
+    if (sl.urls) {
+      for (const u of sl.urls.split("\n")) {
+        const t = u.trim();
+        if (t) pushed.add(t);
+      }
+    }
+  }
+
+  // 收集公开页面 URL（可限时间窗）
+  const all = await collectPublicUrls(opts?.since);
+  const pending = all.filter((u) => !pushed.has(u));
+  return { pending, pushedCount: pushed.size };
+}
