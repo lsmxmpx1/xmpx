@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { adminLogin } from "../actions";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -11,12 +13,26 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await adminLogin(new FormData(e.currentTarget));
+
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") || "").trim();
+    const password = String(formData.get("password") || "");
+
+    // 使用客户端 signIn（next-auth/react），避免在 Server Action 内调用
+    // 服务端 signIn 导致的内部请求挂起问题（会一直卡在“登录中”）。
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
     if (res?.error) {
-      setError(res.error);
+      setError("账号或密码错误");
       setLoading(false);
+    } else {
+      router.push("/admin");
+      router.refresh();
     }
-    // 成功时 server action 内部 redirect，不会走到这里
   }
 
   return (
