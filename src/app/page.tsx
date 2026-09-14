@@ -278,7 +278,7 @@ export default async function HomePage() {
                 </Link>
               </div>
               {courses.length === 0 ? (
-                <div className="text-center text-gray-400 py-12">暂无课程数据，请先添加种子数据</div>
+                <div className="text-center text-gray-400 py-12">课程正在陆续上线，敬请期待</div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {courses.map((course) => (
