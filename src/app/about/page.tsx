@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "关于我们 - 厦门培训网",
   description: "厦门培训网是厦门本地领先的培训教育信息平台，致力于为用户提供最全面、最准确的培训机构和课程信息。",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

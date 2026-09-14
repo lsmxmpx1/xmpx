@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: `${fullName} - 厦门培训课程`,
     description: `厦门${fullName}培训课程大全，找优质${category.name}培训机构和课程`,
+    alternates: { canonical: `/courses/category/${params.slug}` },
   };
 }
 

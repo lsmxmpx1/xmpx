@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import FeedbackPageClient from "./FeedbackPageClient";
+import type { Metadata } from "next";
 
 // ISR：公开列表每 60s 重新生成一次，避免每次请求都查远程库导致 Vercel 超时
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "留言反馈 - 厦门培训网",
+  description: "对厦门培训网的意见、建议或问题反馈，帮助我们做得更好。",
+  alternates: { canonical: "/feedback" },
+};
 
 const TYPE_LABEL: Record<string, string> = {
   INSTITUTION: "机构问题",

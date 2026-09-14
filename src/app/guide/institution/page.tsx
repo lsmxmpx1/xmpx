@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "我是机构 - 免费入驻厦门培训网 | 厦门培训网",
     description:
       "培训机构免费入驻厦门培训网，发布课程、接收咨询线索、提升品牌曝光。立即开通您的机构主页！",
+  alternates: { canonical: "/guide/institution" },
 };
 
 const FEATURES = [

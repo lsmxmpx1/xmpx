@@ -36,9 +36,8 @@ export const metadata: Metadata = {
   description: SITE_DESC,
   keywords: ["厦门培训", "培训机构", "辅导班", "兴趣班", "职业技能培训", "考证培训", "厦门教育"],
   robots: { index: true, follow: true },
-  alternates: {
-    canonical: SITE_URL,
-  },
+  // 注意：不在根 layout 设全局 canonical，避免所有子页面继承首页 URL。
+  // 每个页面应自行声明指向自身的 canonical（见各 page 的 metadata/generateMetadata）。
   openGraph: {
     type: "website",
     locale: "zh_CN",

@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title: `${inst.name} - ${inst.district || "厦门"}培训机构`,
     description: inst.description || `${inst.name}，厦门${inst.district || ""}优质培训机构，查看课程、评分、学员评价`,
+    alternates: { canonical: `/institutions/${params.id}` },
   };
 }
 

@@ -6,6 +6,12 @@ import SearchResults from "@/components/search/SearchResults";
 
 export const revalidate = 30; // 搜索页 ISR 30s（搜索参数变化多）
 
+// 搜索结果页不应被收录：设为 noindex，避免重复/低质内容污染索引
+export const metadata: Metadata = {
+  title: "搜索 - 厦门培训网",
+  robots: { index: false, follow: true },
+};
+
 type CourseWithRelations = Prisma.CourseGetPayload<{
   include: { institution: true; category: true };
 }>;

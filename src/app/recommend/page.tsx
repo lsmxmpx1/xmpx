@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "精选推荐 - 厦门培训网",
   description: "厦门本地优质培训机构精选推荐，品质有保障，一站式对比选择。",
+  alternates: { canonical: "/recommend" },
 };
 
 export const revalidate = 120; // 推荐页 ISR 120s（数据更新不频繁）

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "我是老师 - 展示专业实力 | 厦门培训网",
   description:
     "培训老师入驻厦门培训网，建立个人专业主页、展示教学履历、收获学员评价。让更多学员认可你的专业能力！",
+  alternates: { canonical: "/guide/teacher" },
 };
 
 const FEATURES = [

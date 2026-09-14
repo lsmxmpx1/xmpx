@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title: article.title,
     description: article.summary || `${article.title} - 厦门培训网培训资讯`,
+    alternates: { canonical: `/articles/${params.id}` },
   };
 }
 

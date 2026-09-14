@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "联系我们 - 厦门培训网",
   description: "有任何问题或建议？欢迎联系厦门培训网客服团队。",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

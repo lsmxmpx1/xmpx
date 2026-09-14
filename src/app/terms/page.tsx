@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "用户协议 - 厦门培训网",
   description: "厦门培训网用户服务协议",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

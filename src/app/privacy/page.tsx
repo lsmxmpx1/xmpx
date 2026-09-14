@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "隐私政策 - 厦门培训网",
   description: "厦门培训网隐私政策",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

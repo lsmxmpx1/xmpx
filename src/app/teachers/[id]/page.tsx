@@ -30,6 +30,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title: `${teacher.name}${teacher.title ? ` - ${teacher.title}` : ""} - 厦门培训名师`,
     description: desc,
+    alternates: { canonical: `/teachers/${params.id}` },
   };
 }
 

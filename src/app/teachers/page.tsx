@@ -9,6 +9,7 @@ export const revalidate = 60; // ISR: 避免每次请求连远程 Turso 超时
 export const metadata: Metadata = {
   title: "找老师 - 厦门培训名师库",
   description: "厦门优质培训老师展示平台，查看老师擅长课程、任职机构、历史履历与学员评价，找到适合你的好老师。",
+  alternates: { canonical: "/teachers" },
 };
 
 const SORT_OPTIONS = [

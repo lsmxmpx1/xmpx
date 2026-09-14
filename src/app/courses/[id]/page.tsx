@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   return {
     title: `${course.title} - ${course.category?.name || "课程详情"}`,
     description: course.description || `${course.title}，厦门培训网优质培训课程`,
+    alternates: { canonical: `/courses/${params.id}` },
   };
 }
 
