@@ -7,8 +7,8 @@ import type { Metadata } from "next";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "留言反馈 - 厦门培训网",
-  description: "对厦门培训网的意见、建议或问题反馈，帮助我们做得更好。",
+  title: "网站留言板 | 厦门培训网",
+  description: "反馈机构问题、课程问题或其他问题，违规内容将做下架处理，处理结果公开透明。",
   alternates: { canonical: "/feedback" },
 };
 
@@ -23,11 +23,6 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   RESOLVED: { label: "已处理", cls: "bg-green-100 text-green-700" },
   TAKEDOWN: { label: "已下架", cls: "bg-red-100 text-red-700" },
   REJECTED: { label: "已驳回", cls: "bg-orange-100 text-orange-700" },
-};
-
-export const metadata = {
-  title: "网站留言板 | 厦门培训网",
-  description: "反馈机构问题、课程问题或其他问题，违规内容将做下架处理，处理结果公开透明。",
 };
 
 // 服务端获取数据，传给客户端组件渲染（含回复和头像）
