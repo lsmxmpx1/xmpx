@@ -18,6 +18,9 @@ interface InstitutionData {
   logo: string | null;
   cover: string | null;
   images: string | null;
+  educationalContent?: string | null;
+  licenseNo?: string | null;
+  organizer?: string | null;
   status: string;
   rating: number;
   reviewCount: number;
@@ -192,6 +195,22 @@ export default function InstitutionDashboard({
               <div className="mt-4 pt-4 border-t">
                 <span className="text-gray-400 text-sm">机构简介：</span>
                 <p className="text-gray-700 text-sm mt-1 leading-relaxed">{institution.description}</p>
+              </div>
+            )}
+            {(institution.educationalContent || institution.licenseNo || institution.organizer) && (
+              <div className="mt-4 pt-4 border-t">
+                <span className="text-gray-400 text-sm">办学资质：</span>
+                <dl className="mt-2 space-y-1 text-sm text-gray-700">
+                  {institution.educationalContent && (
+                    <div><span className="text-gray-400">办学内容：</span>{institution.educationalContent}</div>
+                  )}
+                  {institution.licenseNo && (
+                    <div><span className="text-gray-400">办学许可证编号：</span>{institution.licenseNo}</div>
+                  )}
+                  {institution.organizer && (
+                    <div><span className="text-gray-400">举办者：</span>{institution.organizer}</div>
+                  )}
+                </dl>
               </div>
             )}
             <div className="mt-4 pt-4 border-t">

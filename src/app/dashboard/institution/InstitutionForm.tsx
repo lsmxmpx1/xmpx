@@ -17,6 +17,9 @@ interface InstitutionData {
   logo: string | null;
   cover: string | null;
   images: string | null;
+  educationalContent?: string | null;
+  licenseNo?: string | null;
+  organizer?: string | null;
   status: string;
 }
 
@@ -42,6 +45,9 @@ export default function InstitutionForm({ mode, initialData }: InstitutionFormPr
   const [phone, setPhone] = useState(initialData?.phone || "");
   const [desc, setDesc] = useState(initialData?.description || "");
   const [website, setWebsite] = useState(initialData?.website || "");
+  const [educationalContent, setEducationalContent] = useState(initialData?.educationalContent || "");
+  const [licenseNo, setLicenseNo] = useState(initialData?.licenseNo || "");
+  const [organizer, setOrganizer] = useState(initialData?.organizer || "");
   const [logo, setLogo] = useState(initialData?.logo || "");
   const [cover, setCover] = useState(initialData?.cover || "");
   const [images, setImages] = useState(initialData?.images || "");
@@ -62,6 +68,9 @@ export default function InstitutionForm({ mode, initialData }: InstitutionFormPr
         phone,
         description: desc,
         website,
+        educationalContent,
+        licenseNo,
+        organizer,
         logo,
         cover,
         images,
@@ -228,6 +237,45 @@ export default function InstitutionForm({ mode, initialData }: InstitutionFormPr
             placeholder="https://www.example.com"
             disabled={isReadOnly}
           />
+        </div>
+
+        {/* 办学资质字段 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">办学内容</label>
+          <textarea
+            value={educationalContent}
+            onChange={(e) => setEducationalContent(e.target.value)}
+            className="input-field"
+            rows={3}
+            maxLength={500}
+            placeholder="如：中小学学科辅导、艺术培训、职业资格培训等"
+            disabled={isReadOnly}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">办学许可证编号</label>
+            <input
+              type="text"
+              value={licenseNo}
+              onChange={(e) => setLicenseNo(e.target.value)}
+              className="input-field"
+              placeholder="如：教民135020372000XXX号"
+              disabled={isReadOnly}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">举办者</label>
+            <input
+              type="text"
+              value={organizer}
+              onChange={(e) => setOrganizer(e.target.value)}
+              className="input-field"
+              placeholder="机构举办者/法人名称"
+              disabled={isReadOnly}
+            />
+          </div>
         </div>
 
         {/* Logo upload */}

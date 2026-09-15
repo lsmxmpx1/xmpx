@@ -194,6 +194,33 @@ export default async function InstitutionDetailPage({ params }: { params: { id: 
               </div>
             )}
 
+            {/* 办学资质信息（办学内容 / 办学许可证编号 / 举办者） */}
+            {(institution.educationalContent || institution.licenseNo || institution.organizer) && (
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-bold text-gray-900 mb-3">办学资质</h3>
+                <dl className="space-y-2 text-sm">
+                  {institution.educationalContent && (
+                    <div className="flex gap-3">
+                      <dt className="text-gray-400 shrink-0">办学内容</dt>
+                      <dd className="text-gray-700">{institution.educationalContent}</dd>
+                    </div>
+                  )}
+                  {institution.licenseNo && (
+                    <div className="flex gap-3">
+                      <dt className="text-gray-400 shrink-0">办学许可证编号</dt>
+                      <dd className="text-gray-700">{institution.licenseNo}</dd>
+                    </div>
+                  )}
+                  {institution.organizer && (
+                    <div className="flex gap-3">
+                      <dt className="text-gray-400 shrink-0">举办者</dt>
+                      <dd className="text-gray-700">{institution.organizer}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
             {/* 机构导览（基于真实数据的长尾引导段） */}
             <div className="mt-4 bg-primary-50/60 rounded-xl p-4 text-sm text-gray-600 leading-relaxed">
               {institution.name}位于{institution.district || "厦门"}，已开设约 {institution.courseCount} 门课程，综合评分 {institution.rating.toFixed(1)}。

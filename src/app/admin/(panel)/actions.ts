@@ -72,6 +72,46 @@ export async function rejectInstitution(id: string) {
   revalidatePath("/search");
 }
 
+/* 管理员后台新增机构（不受「一人一机构」限制，默认已通过审核） */
+export async function createInstitutionAdmin(formData: FormData) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    throw new Error("无权限执行该操作");
+  }
+  const name = String(formData.get("name") || "").trim();
+  if (!name) throw new Error("机构名称不能为空");
+  if (name.length < 2) throw new Error("机构名称至少2个字符");
+  const district = String(formData.get("district") || "").trim();
+  if (!district) throw new Error("请选择所在区域");
+
+  const slug = slugify(name);
+  const existingSlug = await prisma.institution.findUnique({ where: { slug } });
+  if (existingSlug) throw new Error("已存在同名机构（slug 冲突），请更换名称");
+
+  await prisma.institution.create({
+    data: {
+      name,
+      slug,
+      district,
+      address: String(formData.get("address") || "").trim() || null,
+      phone: String(formData.get("phone") || "").trim() || null,
+      website: String(formData.get("website") || "").trim() || null,
+      description: String(formData.get("description") || "").trim() || null,
+      educationalContent: String(formData.get("educationalContent") || "").trim() || null,
+      licenseNo: String(formData.get("licenseNo") || "").trim() || null,
+      organizer: String(formData.get("organizer") || "").trim() || null,
+      status: "APPROVED",
+    },
+  });
+
+  // 失效前台与后台缓存，使新机构立即可见
+  revalidatePath("/admin/institutions");
+  revalidatePath("/institutions");
+  revalidatePath("/");
+  revalidatePath("/recommend");
+  revalidatePath("/search");
+}
+
 /* ----------------------- 分类 ----------------------- */
 
 export async function deleteCategory(id: string) {

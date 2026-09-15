@@ -59,6 +59,9 @@ model Institution {
   cover       String?
   images      String?
   description String?
+  educationalContent String? // 办学内容
+  licenseNo         String? // 办学许可证编号
+  organizer         String? // 举办者
   address     String?
   district    String?
   phone       String?

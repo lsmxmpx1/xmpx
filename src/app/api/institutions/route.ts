@@ -15,7 +15,20 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, district, address, phone, description, website, logo, cover, images } = body;
+    const {
+      name,
+      district,
+      address,
+      phone,
+      description,
+      website,
+      logo,
+      cover,
+      images,
+      educationalContent,
+      licenseNo,
+      organizer,
+    } = body;
 
     if (!name || name.trim().length < 2) {
       return NextResponse.json({ error: "机构名称至少2个字符" }, { status: 400 });
@@ -50,6 +63,9 @@ export async function POST(request: NextRequest) {
         logo: logo?.trim() || null,
         cover: cover?.trim() || null,
         images: images?.trim() || null,
+        educationalContent: educationalContent?.trim() || null,
+        licenseNo: licenseNo?.trim() || null,
+        organizer: organizer?.trim() || null,
         status: "PENDING",
         ownerId: userId,
       },
@@ -99,7 +115,20 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, district, address, phone, description, website, logo, cover, images } = body;
+    const {
+      name,
+      district,
+      address,
+      phone,
+      description,
+      website,
+      logo,
+      cover,
+      images,
+      educationalContent,
+      licenseNo,
+      organizer,
+    } = body;
 
     // Find user's institution
     const inst = await prisma.institution.findUnique({ where: { ownerId: userId } });
@@ -127,6 +156,9 @@ export async function PUT(request: NextRequest) {
         logo: logo?.trim() || null,
         cover: cover?.trim() || null,
         images: images?.trim() || null,
+        educationalContent: educationalContent?.trim() || null,
+        licenseNo: licenseNo?.trim() || null,
+        organizer: organizer?.trim() || null,
       },
     });
 

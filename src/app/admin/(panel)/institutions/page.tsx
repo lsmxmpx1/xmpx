@@ -7,6 +7,7 @@ import {
   approveInstitution,
   rejectInstitution,
 } from "../actions";
+import InstitutionForm from "./InstitutionForm";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default async function AdminInstitutions({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-800">机构管理</h2>
-        <span className="text-sm text-gray-500">共 {institutions.length} 条</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500">共 {institutions.length} 条</span>
+          <InstitutionForm />
+        </div>
       </div>
 
       <form className="mb-4 flex gap-2" method="get">
@@ -52,6 +56,7 @@ export default async function AdminInstitutions({
             <tr>
               <th className="text-left p-3 font-medium">机构</th>
               <th className="text-left p-3 font-medium">区域</th>
+              <th className="text-left p-3 font-medium">举办者</th>
               <th className="text-left p-3 font-medium">课程数</th>
               <th className="text-left p-3 font-medium">推荐</th>
               <th className="text-left p-3 font-medium">状态</th>
@@ -70,6 +75,7 @@ export default async function AdminInstitutions({
                     <div className="text-xs text-gray-400">{inst.district || "-"}</div>
                   </td>
                   <td className="p-3 text-gray-600">{inst.district || "-"}</td>
+                  <td className="p-3 text-gray-600">{inst.organizer || "-"}</td>
                   <td className="p-3 text-gray-600">{inst._count.courses}</td>
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs ${inst.featured ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}>
@@ -108,7 +114,7 @@ export default async function AdminInstitutions({
             })}
             {institutions.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-gray-400">暂无机构</td>
+                <td colSpan={9} className="p-8 text-center text-gray-400">暂无机构</td>
               </tr>
             )}
           </tbody>
