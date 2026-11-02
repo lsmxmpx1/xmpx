@@ -6,12 +6,6 @@ import SearchResults from "@/components/search/SearchResults";
 
 export const revalidate = 30; // 搜索页 ISR 30s（搜索参数变化多）
 
-// 搜索结果页不应被收录：设为 noindex，避免重复/低质内容污染索引
-export const metadata: Metadata = {
-  title: "搜索 - 厦门培训网",
-  robots: { index: false, follow: true },
-};
-
 type CourseWithRelations = Prisma.CourseGetPayload<{
   include: { institution: true; category: true };
 }>;
@@ -39,7 +33,7 @@ type ArticleResult = {
 
 export function generateMetadata({ searchParams }: { searchParams: { q?: string } }): Metadata {
   return {
-    title: searchParams.q ? `搜索: ${searchParams.q}` : "搜索课程、机构、老师和培训资讯",
+    title: searchParams.q ? `搜索: ${searchParams.q}` : "搜索 - 厦门培训网",
     description: `在厦门培训网搜索${searchParams.q ? `"${searchParams.q}"` : ""}相关课程、培训机构、老师与培训资讯`,
     // 动态搜索结果页不收录，避免重复/低质页进入索引
     robots: { index: false, follow: true },
