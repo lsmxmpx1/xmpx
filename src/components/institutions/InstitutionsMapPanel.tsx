@@ -37,6 +37,14 @@ interface InstDTO {
   address: string | null;
   campuses: CampusDTO[];
 }
+interface SchoolDTO {
+  id: string;
+  name: string;
+  address: string | null;
+  district: string | null;
+  lng: number | null;
+  lat: number | null;
+}
 
 // 地球半径（km），用于 haversine 计算两点距离
 const R = 6371;
@@ -66,6 +74,13 @@ function nearestKm(inst: InstDTO, loc: { lng: number; lat: number }): number {
   return min;
 }
 
+function schoolNearestKm(s: SchoolDTO, loc: { lng: number; lat: number }): number {
+  if (Number.isFinite(s.lng) && Number.isFinite(s.lat)) {
+    return haversine(loc, { lng: Number(s.lng), lat: Number(s.lat) });
+  }
+  return Infinity;
+}
+
 export default function InstitutionsMapPanel({
   initialDistrict,
 }: {
@@ -74,22 +89,33 @@ export default function InstitutionsMapPanel({
   const [open, setOpen] = useState(false);
   const [district, setDistrict] = useState(initialDistrict || "");
   const [insts, setInsts] = useState<InstDTO[]>([]);
+  const [schools, setSchools] = useState<SchoolDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [userLoc, setUserLoc] = useState<{ lng: number; lat: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
   const listRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const schoolRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // 打开面板或切换区域时拉取地图点
+  // 打开面板或切换区域时拉取地图点（入驻机构 + 系统备案机构）
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/institutions/campus-points?district=${encodeURIComponent(district)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!cancelled && Array.isArray(d.institutions)) setInsts(d.institutions);
-      })
-      .catch(() => setInsts([]))
+    Promise.all([
+      fetch(`/api/institutions/campus-points?district=${encodeURIComponent(district)}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (!cancelled && Array.isArray(d.institutions)) setInsts(d.institutions);
+        })
+        .catch(() => setInsts([])),
+      fetch(`/api/school-directories/points?district=${encodeURIComponent(district)}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (!cancelled && Array.isArray(d.schools)) setSchools(d.schools);
+        })
+        .catch(() => setSchools([])),
+    ])
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
@@ -111,23 +137,46 @@ export default function InstitutionsMapPanel({
       }
     });
   });
+  // 系统备案机构：单个学校地址落点
+  schools.forEach((s) => {
+    if (Number.isFinite(s.lng) && Number.isFinite(s.lat)) {
+      points.push({
+        id: `sch_${s.id}`,
+        lng: Number(s.lng),
+        lat: Number(s.lat),
+        title: s.name,
+        address: s.address || undefined,
+      });
+    }
+  });
 
   // 离我最近排序
   const sortedInsts = userLoc
     ? [...insts].sort((a, b) => nearestKm(a, userLoc) - nearestKm(b, userLoc))
     : insts;
+  const sortedSchools = userLoc
+    ? [...schools].sort((a, b) => schoolNearestKm(a, userLoc) - schoolNearestKm(b, userLoc))
+    : schools;
 
   const handleLocateMe = (loc: { lng: number; lat: number }) => {
     setUserLoc(loc);
   };
 
   const handleMarkerClick = (p: MapPoint) => {
+    if (p.id?.startsWith("sch_")) {
+      const sid = p.id.slice(4);
+      setSelectedSchoolId(sid);
+      schoolRefs.current[sid]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     const inst = insts.find((i) => i.campuses.some((c) => c.id === p.id));
     if (inst) {
       setSelectedId(inst.id);
       listRefs.current[inst.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
+
+  const totalPoints = points.length;
 
   return (
     <div className="mb-6">
@@ -147,6 +196,7 @@ export default function InstitutionsMapPanel({
               onChange={(e) => {
                 setDistrict(e.target.value);
                 setSelectedId(null);
+                setSelectedSchoolId(null);
               }}
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
             >
@@ -156,11 +206,13 @@ export default function InstitutionsMapPanel({
               ))}
             </select>
             <span className="text-sm text-gray-500">
-              {loading ? "加载中…" : `共 ${insts.length} 家机构 · ${points.length} 个校区落点`}
+              {loading
+                ? "加载中…"
+                : `共 ${insts.length} 家入驻机构 · ${schools.length} 家备案机构 · ${totalPoints} 个落点`}
             </span>
           </div>
 
-          {points.length > 0 ? (
+          {totalPoints > 0 ? (
             <AMapMap
               points={points}
               height={420}
@@ -170,7 +222,7 @@ export default function InstitutionsMapPanel({
             />
           ) : (
             <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500">
-              当前筛选下暂无已标注地图坐标的校区。
+              当前筛选下暂无已标注地图坐标的机构。
               {userLoc && "（已按您的位置排序下方列表）"}
             </div>
           )}
@@ -244,6 +296,53 @@ export default function InstitutionsMapPanel({
               );
             })}
           </div>
+
+          {/* 系统备案机构（教育局备案名录） */}
+          {sortedSchools.length > 0 && (
+            <div className="pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-sm font-bold text-gray-700">教育局备案机构</h3>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                  系统名录
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {sortedSchools.map((s) => {
+                  const distLabel = userLoc
+                    ? (() => {
+                        const d = schoolNearestKm(s, userLoc);
+                        return Number.isFinite(d) ? `约 ${d.toFixed(1)} km` : "暂无坐标";
+                      })()
+                    : null;
+                  return (
+                    <div
+                      key={s.id}
+                      ref={(el) => {
+                        schoolRefs.current[s.id] = el;
+                      }}
+                      className={`card p-4 transition-all ${
+                        selectedSchoolId === s.id ? "ring-2 ring-blue-400" : ""
+                      }`}
+                    >
+                      <Link
+                        href={`/schools/${s.id}`}
+                        className="font-semibold hover:text-blue-600"
+                      >
+                        {s.name}
+                      </Link>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {s.district || "厦门"}
+                        {distLabel && <span className="text-blue-500 ml-2">{distLabel}</span>}
+                      </div>
+                      {s.address && (
+                        <div className="text-xs text-gray-500 mt-1 truncate">📍 {s.address}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

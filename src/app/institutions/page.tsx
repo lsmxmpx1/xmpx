@@ -42,11 +42,26 @@ export default async function InstitutionsPage({
     ];
   }
 
+  // 系统备案机构（教育局备案名录）：沿用同样的区域 / 关键词筛选。
+  // 前台详情为独立页面 /schools/[id]，与用户自主入驻机构页面分开。
+  const q = searchParams.q?.trim() || "";
+  const schoolWhere: Prisma.SchoolDirectoryWhereInput = { status: "PUBLISHED" };
+  if (searchParams.district) schoolWhere.district = searchParams.district;
+  if (q) {
+    schoolWhere.OR = [
+      { name: { contains: q } },
+      { address: { contains: q } },
+      { authority: { contains: q } },
+    ];
+  }
+
   let orderBy: Prisma.InstitutionOrderByWithRelationInput = { rating: "desc" };
   if (searchParams.sort === "courses") orderBy = { courseCount: "desc" };
   if (searchParams.sort === "reviews") orderBy = { reviewCount: "desc" };
 
-  const [institutions, total] = await Promise.all([
+  // 注意：schools 查询包一层 catch。生产库未执行迁移（school_directories 表缺失）时，
+  // 仅让「教育局备案机构」区块为空，避免整页 500。迁移执行后即正常显示。
+  const [institutions, total, schools] = await Promise.all([
     prisma.institution.findMany({
       where,
       orderBy,
@@ -54,6 +69,13 @@ export default async function InstitutionsPage({
       take: pageSize,
     }),
     prisma.institution.count({ where }),
+    prisma.schoolDirectory
+      .findMany({
+        where: schoolWhere,
+        orderBy: { name: "asc" },
+        take: 200,
+      })
+      .catch(() => [] as Awaited<ReturnType<typeof prisma.schoolDirectory.findMany>>),
   ]);
 
   const totalPages = Math.ceil(total / pageSize);
@@ -206,6 +228,46 @@ export default async function InstitutionsPage({
                   {i + 1}
                 </Link>
               ))}
+            </div>
+          )}
+
+          {/* 教育局备案机构（系统录入，独立于用户入驻机构） */}
+          {schools.length > 0 && (
+            <div className="mt-12 pt-8 border-t border-gray-100">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-xl font-bold">教育局备案机构</h2>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                  系统名录 · {schools.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {schools.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/schools/${s.id}`}
+                    className="card overflow-hidden group p-5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-lg group-hover:text-primary-600 transition-colors">
+                        {s.name}
+                      </h3>
+                      <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 whitespace-nowrap">
+                        教育局备案
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">{s.district || "厦门"}</div>
+                    {s.authority && (
+                      <div className="text-sm text-gray-500 mt-2">主管部门：{s.authority}</div>
+                    )}
+                    {s.address && (
+                      <div className="text-sm text-gray-500 mt-1 truncate">📍 {s.address}</div>
+                    )}
+                    {s.contact && (
+                      <div className="text-sm text-gray-500 mt-1">📞 {s.contact}</div>
+                    )}
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>

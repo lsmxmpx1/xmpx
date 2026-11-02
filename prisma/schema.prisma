@@ -527,3 +527,29 @@ model BaiduPushLog {
   @@index([createdAt])
   @@index([type])
 }
+
+// ──────────────────── 系统新增机构名录（与用户注册机构区分） ────────────────────
+// 由管理员后台手动录入的「学校/机构」名录，字段精简为备案信息 8 项，标识(id)由系统生成。
+// 与用户自主注册入驻的培训机构(Institution)相互独立：前台单独成页 /schools，
+// 不改变原 /institutions 用户机构页面。lng/lat 由 address 经高德地理编码得到，用于地图展示。
+model SchoolDirectory {
+  id          String   @id @default(cuid()) // 系统生成标识
+  name        String   // 学校名称
+  authority   String?  // 主管部门
+  educationalContent String? // 办学内容
+  licenseNo   String?  // 办学许可证编号
+  organizer   String?  // 举办者
+  address     String?  // 学校地址
+  legalPerson String?  // 法定代表人
+  contact     String?  // 联系方式
+  lng         Float?   // 经度（高德 GCJ-02，由 address 地理编码得出）
+  lat         Float?   // 纬度（高德 GCJ-02）
+  district    String?  // 所属区域（思明/湖里/集美/海沧/同安/翔安，按地址自动识别，便于地图/筛选）
+  status      String   @default("PUBLISHED") // PUBLISHED=前台可见
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([district])
+  @@index([name])
+}
