@@ -23,28 +23,49 @@ function formatStatNumber(n: number): string {
 }
 
 export default async function HomePage() {
+  // 数据库查询包 .catch 兜底：构建期(ISR 预渲染)或运行时若远程 Turso 短暂不可达/
+  // 出现偶发异常，降级为空数据而非整页 500 / 构建失败。生产表结构缺失请走 DDL 补齐。
   const [institutions, courses, articles, categoriesRaw, stats] = await Promise.all([
-    prisma.institution.findMany({
-      where: { status: "APPROVED" },
-      orderBy: { rating: "desc" },
-      take: 8,
-    }),
-    prisma.course.findMany({
-      where: { status: "ACTIVE" },
-      include: { institution: true, category: true },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    prisma.article.findMany({
-      where: { published: true },
-      orderBy: { publishedAt: "desc" },
-      take: 6,
-    }),
-    prisma.category.findMany({
-      where: { parentId: null },
-      include: { children: { orderBy: { name: "asc" } } },
-      orderBy: { name: "asc" },
-    }),
+    prisma.institution
+      .findMany({
+        where: { status: "APPROVED" },
+        orderBy: { rating: "desc" },
+        take: 8,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          cover: true,
+          logo: true,
+          district: true,
+          rating: true,
+          reviewCount: true,
+          courseCount: true,
+        },
+      })
+      .catch(() => []),
+    prisma.course
+      .findMany({
+        where: { status: "ACTIVE" },
+        include: { institution: true, category: true },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+      })
+      .catch(() => []),
+    prisma.article
+      .findMany({
+        where: { published: true },
+        orderBy: { publishedAt: "desc" },
+        take: 6,
+      })
+      .catch(() => []),
+    prisma.category
+      .findMany({
+        where: { parentId: null },
+        include: { children: { orderBy: { name: "asc" } } },
+        orderBy: { name: "asc" },
+      })
+      .catch(() => []),
     // 统计数据：从数据库实时读取
     Promise.all([
       prisma.institution.count({ where: { status: "APPROVED" } }),
@@ -52,7 +73,7 @@ export default async function HomePage() {
       prisma.review.count(),
       prisma.teacher.count(),
       DISTRICTS.length,
-    ]),
+    ]).catch(() => [0, 0, 0, 0, DISTRICTS.length]),
   ]);
 
   // 首页热门分类展示顺序：第一行 4 个（中小学辅导 / 体育运动 / 学历提升 / 考证培训），其余放第二行

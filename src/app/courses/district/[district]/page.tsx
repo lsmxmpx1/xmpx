@@ -7,7 +7,8 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
 
-export const revalidate = 60; // ISR: 首次请求时按需生成并缓存 60s（不在构建期预渲染，避免构建环境连不上数据库导致导出失败）
+// 强制运行时渲染：不在构建期预渲染/查库，避免 Vercel 构建环境连不上数据库导致导出失败
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { district: string } }): Promise<Metadata> {
   const district = decodeURIComponent(params.district);
@@ -25,7 +26,7 @@ export default async function DistrictCoursesPage({ params }: { params: { distri
   const district = decodeURIComponent(params.district);
   if (!DISTRICTS.includes(district)) notFound();
 
-  const [institutions, courses] = await Promise.all([
+  const query = await Promise.all([
     prisma.institution.findMany({
       where: { district, status: "APPROVED" },
       include: { courses: { where: { status: "ACTIVE" }, include: { category: true }, take: 6 } },
@@ -38,7 +39,13 @@ export default async function DistrictCoursesPage({ params }: { params: { distri
       orderBy: { createdAt: "desc" },
       take: 24,
     }),
-  ]);
+  ]).catch((e) => {
+    // 数据库不可用时降级为空列表，避免整页 500
+    console.error("[courses/district] DB query failed:", e);
+    return null;
+  });
+  const institutions = query?.[0] ?? [];
+  const courses = query?.[1] ?? [];
 
   const districtPath = `/courses/district/${encodeURIComponent(district)}`;
   const breadcrumb = breadcrumbLd([
