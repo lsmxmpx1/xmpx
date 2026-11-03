@@ -7,11 +7,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import JsonLd from "@/components/seo/JsonLd";
 import { breadcrumbLd } from "@/lib/seo";
 
-export const revalidate = 60; // ISR: 静态预生成 + 按需再生成
-
-export function generateStaticParams() {
-  return DISTRICTS.map((district) => ({ district }));
-}
+export const revalidate = 60; // ISR: 首次请求时按需生成并缓存 60s（不在构建期预渲染，避免构建环境连不上数据库导致导出失败）
 
 export async function generateMetadata({ params }: { params: { district: string } }): Promise<Metadata> {
   const district = decodeURIComponent(params.district);
