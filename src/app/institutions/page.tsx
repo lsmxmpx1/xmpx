@@ -73,7 +73,6 @@ export default async function InstitutionsPage({
       .findMany({
         where: schoolWhere,
         orderBy: { name: "asc" },
-        take: 200,
       })
       .catch(() => [] as Awaited<ReturnType<typeof prisma.schoolDirectory.findMany>>),
   ]);
@@ -156,8 +155,51 @@ export default async function InstitutionsPage({
           {/* INSTITUTION_LIST 广告位 */}
           <AdSlot position={["INSTITUTION_LIST", "LISTING_BOOST"]} variant="banner" className="mb-6" />
 
+          {/* 教育局备案机构（系统录入，独立于用户入驻机构）—— 默认优先展示全部学校名录 */}
+          {schools.length > 0 && (
+            <div className="mb-12">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-2xl font-bold">厦门教育培训机构名录</h2>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
+                  教育局备案 · {schools.length}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 mb-5">
+                以下为厦门市教育局备案的培训机构，按区域与名称整理，点击查看地址与联系方式，可在地图上定位。
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                {schools.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/schools/${s.id}`}
+                    className="card overflow-hidden group p-5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-lg group-hover:text-primary-600 transition-colors">
+                        {s.name}
+                      </h3>
+                      <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 whitespace-nowrap">
+                        教育局备案
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">{s.district || "厦门"}</div>
+                    {s.authority && (
+                      <div className="text-sm text-gray-500 mt-2">主管部门：{s.authority}</div>
+                    )}
+                    {s.address && (
+                      <div className="text-sm text-gray-500 mt-1 truncate">📍 {s.address}</div>
+                    )}
+                    {s.contact && (
+                      <div className="text-sm text-gray-500 mt-1">📞 {s.contact}</div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           <h1 className="text-2xl font-bold mb-6">
-            {searchParams.q ? `搜索"${searchParams.q}"` : "培训机构"}
+            {searchParams.q ? `搜索"${searchParams.q}"` : "入驻培训机构"}
             <span className="text-gray-400 text-lg ml-2">({total})</span>
           </h1>
 
@@ -228,46 +270,6 @@ export default async function InstitutionsPage({
                   {i + 1}
                 </Link>
               ))}
-            </div>
-          )}
-
-          {/* 教育局备案机构（系统录入，独立于用户入驻机构） */}
-          {schools.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-gray-100">
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-xl font-bold">教育局备案机构</h2>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
-                  系统名录 · {schools.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {schools.map((s) => (
-                  <Link
-                    key={s.id}
-                    href={`/schools/${s.id}`}
-                    className="card overflow-hidden group p-5"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-lg group-hover:text-primary-600 transition-colors">
-                        {s.name}
-                      </h3>
-                      <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 whitespace-nowrap">
-                        教育局备案
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-400 mt-1">{s.district || "厦门"}</div>
-                    {s.authority && (
-                      <div className="text-sm text-gray-500 mt-2">主管部门：{s.authority}</div>
-                    )}
-                    {s.address && (
-                      <div className="text-sm text-gray-500 mt-1 truncate">📍 {s.address}</div>
-                    )}
-                    {s.contact && (
-                      <div className="text-sm text-gray-500 mt-1">📞 {s.contact}</div>
-                    )}
-                  </Link>
-                ))}
-              </div>
             </div>
           )}
         </div>
