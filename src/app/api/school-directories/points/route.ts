@@ -4,6 +4,8 @@ import { DISTRICTS } from "@/lib/utils";
 
 // 地图点接口：返回系统机构名录（用于「在地图上找机构」）
 // GET /api/school-directories/points?district=思明区
+// 始终读取数据库最新数据（机构名录会随后台录入/批量导入变化，不应被缓存）
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const district = request.nextUrl.searchParams.get("district") || "";
 
