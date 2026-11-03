@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const questions = await prisma.question.findMany({ where: { isPublic: true }, select: { id: true, updatedAt: true } });
   const teachers = await prisma.teacher.findMany({ select: { id: true, updatedAt: true } });
   const categories = await prisma.category.findMany({ select: { slug: true, updatedAt: true } });
+  const schools = await prisma.schoolDirectory.findMany({ where: { status: "PUBLISHED" }, select: { id: true, updatedAt: true } });
 
   const staticPages = [
     { url: baseUrl, lastModified: new Date(), priority: 1 },
@@ -66,6 +67,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  const schoolPages = schools.map((s) => ({
+    url: `${baseUrl}/schools/${s.id}`,
+    lastModified: s.updatedAt,
+    priority: 0.6,
+  }));
+
   const districtPages = DISTRICTS.map((d) => ({
     url: `${baseUrl}/courses/district/${encodeURIComponent(d)}`,
     lastModified: new Date(),
@@ -81,5 +88,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...questionPages,
     ...categoryPages,
     ...districtPages,
+    ...schoolPages,
   ];
 }
