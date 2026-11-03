@@ -83,10 +83,12 @@ function schoolNearestKm(s: SchoolDTO, loc: { lng: number; lat: number }): numbe
 
 export default function InstitutionsMapPanel({
   initialDistrict,
+  defaultOpen = false,
 }: {
   initialDistrict?: string;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [district, setDistrict] = useState(initialDistrict || "");
   const [insts, setInsts] = useState<InstDTO[]>([]);
   const [schools, setSchools] = useState<SchoolDTO[]>([]);

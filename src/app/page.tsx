@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatPrice, DISTRICTS } from "@/lib/utils";
+import { DISTRICTS } from "@/lib/utils";
 import { SITE_NAME, SITE_DESC } from "@/lib/constants";
 import AdSlot from "@/components/ad/AdSlot";
+import InstitutionsMapPanel from "@/components/institutions/InstitutionsMapPanel";
 import type { Metadata } from "next";
 
 // 首页使用 ISR 缓存：构建时预渲染，之后每 60s 重新验证。
@@ -25,45 +26,12 @@ function formatStatNumber(n: number): string {
 export default async function HomePage() {
   // 数据库查询包 .catch 兜底：构建期(ISR 预渲染)或运行时若远程 Turso 短暂不可达/
   // 出现偶发异常，降级为空数据而非整页 500 / 构建失败。生产表结构缺失请走 DDL 补齐。
-  const [institutions, courses, articles, categoriesRaw, stats] = await Promise.all([
-    prisma.institution
-      .findMany({
-        where: { status: "APPROVED" },
-        orderBy: { rating: "desc" },
-        take: 8,
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          cover: true,
-          logo: true,
-          district: true,
-          rating: true,
-          reviewCount: true,
-          courseCount: true,
-        },
-      })
-      .catch(() => []),
-    prisma.course
-      .findMany({
-        where: { status: "ACTIVE" },
-        include: { institution: true, category: true },
-        orderBy: { createdAt: "desc" },
-        take: 8,
-      })
-      .catch(() => []),
+  const [articles, stats] = await Promise.all([
     prisma.article
       .findMany({
         where: { published: true },
         orderBy: { publishedAt: "desc" },
         take: 6,
-      })
-      .catch(() => []),
-    prisma.category
-      .findMany({
-        where: { parentId: null },
-        include: { children: { orderBy: { name: "asc" } } },
-        orderBy: { name: "asc" },
       })
       .catch(() => []),
     // 统计数据：从数据库实时读取
@@ -75,14 +43,6 @@ export default async function HomePage() {
       DISTRICTS.length,
     ]).catch(() => [0, 0, 0, 0, DISTRICTS.length]),
   ]);
-
-  // 首页热门分类展示顺序：第一行 4 个（中小学辅导 / 体育运动 / 学历提升 / 考证培训），其余放第二行
-  const HOME_CAT_ORDER = ["k12", "sports", "degree", "certification", "art", "vocational", "language"];
-  const categories = [...categoriesRaw].sort((a, b) => {
-    const ia = HOME_CAT_ORDER.indexOf(a.slug);
-    const ib = HOME_CAT_ORDER.indexOf(b.slug);
-    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-  });
 
   return (
     <div>
@@ -143,7 +103,7 @@ export default async function HomePage() {
       {/* 主内容 - 居中展示 */}
       <div className="container-main py-8">
         <div className="max-w-5xl mx-auto space-y-12">
-          {/* Articles (培训资讯) - 移至热门培训分类上方 */}
+          {/* 培训资讯 */}
             <section>
               <div className="flex justify-between items-end mb-10">
                 <div>
@@ -194,145 +154,18 @@ export default async function HomePage() {
               )}
             </section>
 
-            {/* Category Navigation */}
+            {/* 在地图上找机构 */}
             <section>
-              <div className="text-center mb-10">
-                <h2 className="text-2xl md:text-3xl font-bold">热门培训分类</h2>
-                <p className="text-gray-500 mt-2">选择你感兴趣的培训方向，发现优质课程</p>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {categories.map((cat) => (
-                  <div key={cat.id} className="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition-shadow">
-                    <Link href={`/courses/category/${cat.slug}`} className="flex items-center gap-3 mb-3 group">
-                      <span className="text-3xl">{cat.icon}</span>
-                      <span className="text-lg font-bold text-gray-800 group-hover:text-primary-600 transition-colors">{cat.name}</span>
-                    </Link>
-                    <div className="flex flex-wrap gap-2">
-                      {cat.children.map((sub) => (
-                        <Link
-                          key={sub.id}
-                          href={`/courses/category/${sub.slug}`}
-                          className="text-sm text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                        >
-                          {sub.icon} {sub.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Recommended Institutions */}
-            <section className="bg-white rounded-2xl p-6">
               <div className="flex justify-between items-end mb-10">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold">推荐机构</h2>
-                  <p className="text-gray-500 mt-2">高评分优质培训机构</p>
+                  <h2 className="text-2xl md:text-3xl font-bold">在地图上找机构</h2>
+                  <p className="text-gray-500 mt-2">全市培训机构与教育局备案机构分布，按区域或就近筛选</p>
                 </div>
                 <Link href="/institutions" className="text-primary-600 font-medium hover:underline">
-                  查看全部 →
+                  进入找机构 →
                 </Link>
               </div>
-              {institutions.length === 0 ? (
-                <div className="text-center text-gray-400 py-12">暂无机构数据，请先添加种子数据</div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {institutions.map((inst) => (
-                    <Link key={inst.id} href={`/institutions/${inst.id}`} className="card overflow-hidden group">
-                      {/* Cover image */}
-                      <div className="h-32 bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
-                        {inst.cover ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={inst.cover}
-                            alt={inst.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-4xl">🏫</div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          {inst.logo ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={inst.logo}
-                              alt={inst.name}
-                              className="w-10 h-10 rounded-xl object-cover border"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center text-sm font-bold text-primary-600">
-                              {inst.name.slice(0, 2)}
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-800 truncate group-hover:text-primary-600 transition-colors">{inst.name}</div>
-                            <div className="text-xs text-gray-400">{inst.district}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                          <span className="text-orange-400">★</span>
-                          <span>{inst.rating.toFixed(1)}</span>
-                          <span className="mx-1">·</span>
-                          <span>{inst.reviewCount}条评价</span>
-                          <span className="mx-1">·</span>
-                          <span>{inst.courseCount}门课程</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Latest Courses */}
-            <section>
-              <div className="flex justify-between items-end mb-10">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold">最新课程</h2>
-                  <p className="text-gray-500 mt-2">近期上新的热门培训课程</p>
-                </div>
-                <Link href="/courses" className="text-primary-600 font-medium hover:underline">
-                  查看全部 →
-                </Link>
-              </div>
-              {courses.length === 0 ? (
-                <div className="text-center text-gray-400 py-12">课程正在陆续上线，敬请期待</div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {courses.map((course) => (
-                    <Link key={course.id} href={`/courses/${course.id}`} className="card group overflow-hidden">
-                      <div className="h-40 bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
-                        {course.cover ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={course.cover}
-                            alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-5xl">📖</div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <span className="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full">
-                          {course.category?.name}
-                        </span>
-                        <h3 className="font-semibold mt-2 group-hover:text-primary-600 transition-colors line-clamp-2">
-                          {course.title}
-                        </h3>
-                        <div className="text-xs text-gray-400 mt-1">{course.institution?.name}</div>
-                        <div className="flex items-center justify-between mt-3">
-                          <span className="text-lg font-bold text-accent-600">{formatPrice(course.price)}</span>
-                          <span className="text-xs text-gray-400">详情 →</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <InstitutionsMapPanel defaultOpen />
             </section>
 
             {/* District Quick Links */}
