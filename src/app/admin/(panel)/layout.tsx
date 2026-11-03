@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { adminLogout } from "../actions";
 
-const NAV = [
+const NAV: { href: string; label: string; icon: string; hardNav?: boolean }[] = [
   { href: "/admin", label: "概览", icon: "📊" },
   { href: "/admin/courses", label: "课程管理", icon: "📚" },
   { href: "/admin/institutions", label: "机构管理", icon: "🏫" },
-  { href: "/admin/school-directories", label: "学校名录", icon: "🏛️" },
+  // 名录数据实时变化，改用完整文档导航，避开 Next.js 14 客户端 Router Cache
+  { href: "/admin/school-directories", label: "学校名录", icon: "🏛️", hardNav: true },
   { href: "/admin/teachers", label: "老师管理", icon: "👨‍🏫" },
   { href: "/admin/teacher-reviews", label: "老师评价", icon: "⭐" },
   { href: "/admin/categories", label: "分类管理", icon: "🗂️" },
@@ -35,16 +36,32 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           厦门培训网 · 后台
         </div>
         <nav className="flex-1 py-4 overflow-y-auto">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-5 py-3 text-sm hover:bg-slate-800 transition-colors"
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+          {NAV.map((item) => {
+            const cls =
+              "flex items-center gap-3 px-5 py-3 text-sm hover:bg-slate-800 transition-colors";
+            const content = (
+              <>
+                <span className="text-base">{item.icon}</span>
+                {item.label}
+              </>
+            );
+            // force-dynamic 只禁用服务端缓存；Next.js 14 的客户端 Router Cache
+            // 仍会缓存 RSC payload，软导航点击可能一直复用「空列表」旧结果，
+            // 而搜索表单是 GET 硬导航、绕过该缓存，因此能看到数据。
+            // 名录页改用完整文档导航，每次点击都重新服务端渲染。
+            if (item.hardNav) {
+              return (
+                <a key={item.href} href={item.href} className={cls}>
+                  {content}
+                </a>
+              );
+            }
+            return (
+              <Link key={item.href} href={item.href} prefetch={false} className={cls}>
+                {content}
+              </Link>
+            );
+          })}
         </nav>
         <div className="p-4 border-t border-slate-800">
           <form action={adminLogout}>

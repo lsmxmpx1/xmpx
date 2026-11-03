@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { fmtDateTime } from "@/lib/format";
 import { deleteSchoolDirectory } from "./actions";
@@ -11,12 +12,17 @@ export default async function AdminSchoolDirectories({
 }: {
   searchParams: { q?: string };
 }) {
+  // 名录随后台录入/批量导入实时变化：显式退出所有服务端缓存，
+  // 不允许复用构建期或历史请求留下的旧结果。
+  noStore();
   const q = searchParams.q?.trim();
-  const schools = await prisma.schoolDirectory.findMany({
-    where: q ? { name: { contains: q } } : undefined,
-    orderBy: { updatedAt: "desc" },
-    take: 200,
-  });
+  const schools = await prisma.schoolDirectory
+    .findMany({
+      where: q ? { name: { contains: q } } : undefined,
+      orderBy: { updatedAt: "desc" },
+      take: 200,
+    })
+    .catch(() => [] as Awaited<ReturnType<typeof prisma.schoolDirectory.findMany>>);
 
   return (
     <div>
