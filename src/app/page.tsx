@@ -14,35 +14,18 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/** 格式化首页统计数字：>=10000 显示"X万+"，否则加逗号 */
-function formatStatNumber(n: number): string {
-  if (n >= 10_000) {
-    const wan = Math.floor(n / 10_000);
-    return n % 10_000 === 0 ? `${wan}万+` : `${wan}万+`;
-  }
-  return n.toLocaleString("zh-CN");
-}
-
 export default async function HomePage() {
   // 数据库查询包 .catch 兜底：构建期(ISR 预渲染)或运行时若远程 Turso 短暂不可达/
   // 出现偶发异常，降级为空数据而非整页 500 / 构建失败。生产表结构缺失请走 DDL 补齐。
-  const [articles, stats] = await Promise.all([
-    prisma.article
-      .findMany({
-        where: { published: true },
-        orderBy: { publishedAt: "desc" },
-        take: 6,
-      })
-      .catch(() => []),
-    // 统计数据：从数据库实时读取
-    Promise.all([
-      prisma.institution.count({ where: { status: "APPROVED" } }),
-      prisma.course.count({ where: { status: "ACTIVE" } }),
-      prisma.review.count(),
-      prisma.teacher.count(),
-      DISTRICTS.length,
-    ]).catch(() => [0, 0, 0, 0, DISTRICTS.length]),
-  ]);
+  // TODO: 首页统计条（入驻机构/培训课程/用户评价/认证老师/覆盖区域）因数据量不足已临时下线，
+  // 有数据后恢复 stats count 查询 + Stats 区块（可参考 git 历史中 cccfde9 版本）。
+  const articles = await prisma.article
+    .findMany({
+      where: { published: true },
+      orderBy: { publishedAt: "desc" },
+      take: 6,
+    })
+    .catch(() => []);
 
   return (
     <div>
@@ -79,23 +62,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="bg-white -mt-8 relative z-10 container-main">
-        <div className="grid grid-cols-5 divide-x bg-white rounded-2xl shadow-lg p-6">
-          {[
-            { value: formatStatNumber(stats[0]), label: "入驻机构" },
-            { value: formatStatNumber(stats[1]), label: "培训课程" },
-            { value: formatStatNumber(stats[2]), label: "用户评价" },
-            { value: formatStatNumber(stats[3]), label: "认证老师" },
-            { value: String(stats[4]), label: "覆盖区域" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-primary-600">{stat.value}</div>
-              <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Stats 统计条：数据量不足已临时下线，有数据后恢复（见上方 TODO） */}
 
       {/* HOME_TOP 广告位 */}
       <AdSlot position={["HOME_TOP", "HOME_BANNER"]} variant="banner" className="container-main mt-8" />
